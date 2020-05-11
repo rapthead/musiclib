@@ -5,10 +5,15 @@ import (
 	"os"
 	"path"
 
-	"github.com/rapthead/musiclib/pkg/fs/pubsub"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/utils"
 )
+
+type FuseEntity struct {
+	OriginPath     string      `json:"originPath"`
+	FusePath       string      `json:"fusePath"`
+	VorbisComments [][2]string `json:"vorbisComments"`
+}
 
 type ProgressInfo struct {
 	Path    string
@@ -19,7 +24,7 @@ type ProgressInfo struct {
 func Sync(
 	musiclibRoot string,
 	fuseStore store.FuseStore,
-	entities []pubsub.FuseEntity,
+	entities []FuseEntity,
 ) (<-chan ProgressInfo, <-chan error) {
 	errorChan := make(chan error)
 	progressChan := make(chan ProgressInfo)

@@ -6,30 +6,30 @@ import (
 	"log"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/rapthead/musiclib/config"
 	"github.com/rapthead/musiclib/persistance"
-	"github.com/rapthead/musiclib/pkg/fs/pubsub"
-	"github.com/rapthead/musiclib/utils"
 )
 
 var (
-	queries       *persistance.Queries
-	sqlDB         *sql.DB
-	refreshPubSub pubsub.Refresh
-	musiclibRoot  string
+	queries      *persistance.Queries
+	sqlDB        *sql.DB
+	rdb          *redis.Client
+	musiclibRoot string
 	// redisClient *redis.Client
 )
 
 func init() {
-	musiclibRoot = utils.MustGetEnv("MUSICLIB_ROOT")
+	conf := config.Config
+	musiclibRoot = conf.MusiclibRoot
 	if sqldb, err := sql.Open(
 		"postgres",
 		fmt.Sprintf(
 			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-			utils.MustGetEnv("PGHOST"),
-			utils.MustGetEnv("PGPORT"),
-			utils.MustGetEnv("PGUSER"),
-			utils.MustGetEnv("PGPASSWORD"),
-			utils.MustGetEnv("PGDATABASE"),
+			conf.PgHost,
+			conf.PgPort,
+			conf.PgUser,
+			conf.PgPassword,
+			conf.PgDatabase,
 		),
 	); err != nil {
 		log.Fatal(err)
@@ -37,12 +37,6 @@ func init() {
 		sqlDB = sqldb
 	}
 
-	redisOptions, err := redis.ParseURL(utils.MustGetEnv("REDIS_URL"))
-	if err != nil {
-		log.Fatal("can't parse REDIS_URL env")
-	}
-	redisClient := redis.NewClient(redisOptions)
-
+	rdb = redis.NewClient(conf.RedisOpts)
 	queries = persistance.New(sqlDB)
-	refreshPubSub = pubsub.NewRefresh(redisClient)
 }

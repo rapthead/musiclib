@@ -4,11 +4,12 @@ import (
 	"os"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/sirupsen/logrus"
+
+	"github.com/rapthead/musiclib/cmd/musiclib-mount/syncworker"
+	"github.com/rapthead/musiclib/config"
 	"github.com/rapthead/musiclib/pkg/fs/fuse"
 	"github.com/rapthead/musiclib/pkg/fs/pubsub"
-	"github.com/rapthead/musiclib/pkg/fs/sync"
-	"github.com/rapthead/musiclib/utils"
-	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -17,26 +18,20 @@ func init() {
 }
 
 func syncWorker(rdb *redis.Client, logger *logrus.Entry, musiclibRoot string) {
-	sync.NewSyncWorker(pubsub.NewRefresh(rdb), rdb, logger, musiclibRoot).Serve()
+	syncworker.NewSyncWorker(pubsub.NewRefresh(rdb), rdb, logger, musiclibRoot).Serve()
 }
 
 func main() {
 	logger := logrus.New()
+	conf := config.Config
 
-	musiclibRoot := utils.MustGetEnv("MUSICLIB_ROOT")
-	mountPath := utils.MustGetEnv("MOUNT_PATH")
-
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADR"),
-		Password: "",
-		DB:       1,
-	})
+	rdb := redis.NewClient(conf.RedisOpts)
 	go syncWorker(
 		rdb, logrus.NewEntry(logger).WithField("module", "sync"),
-		musiclibRoot,
+		conf.MusiclibRoot,
 	)
 	fuse.Mount(
 		rdb, logrus.NewEntry(logger).WithField("module", "mount"),
-		mountPath,
+		conf.MusiclibMountPath,
 	)
 }

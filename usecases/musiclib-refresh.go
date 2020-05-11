@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rapthead/musiclib/pkg/fs/pubsub"
+	"github.com/rapthead/musiclib/config"
+	"github.com/rapthead/musiclib/pkg/fs/store"
+	"github.com/rapthead/musiclib/pkg/fs/sync"
 )
 
 const (
@@ -19,12 +21,14 @@ type FuseEntity struct {
 }
 
 func Refresh(ctx context.Context) {
+	conf := config.Config
+
 	allMetadata, err := queries.GetAllMetadata(ctx)
 	if err != nil {
 		log.Fatal("Unable to fetch metadata", err)
 	}
 
-	fuseEntities := make([]pubsub.FuseEntity, len(allMetadata), len(allMetadata))
+	fuseEntities := make([]sync.FuseEntity, len(allMetadata), len(allMetadata))
 	for i, meta := range allMetadata {
 		fusePath := fmt.Sprintf(
 			"%s–%d–%s/%02d-%s.flac",
@@ -48,12 +52,31 @@ func Refresh(ctx context.Context) {
 			{"TITLE", meta.TrackTitle},
 			{"TRACKNUMBER", string(meta.TrackNumber)},
 		}
-		fuseEntities[i] = pubsub.FuseEntity{
+		fuseEntities[i] = sync.FuseEntity{
 			OriginPath:     meta.Path,
 			FusePath:       fusePath,
 			VorbisComments: vorbisComments,
 		}
 	}
 
-	refreshPubSub.Pub(fuseEntities)
+	redisPipe := rdb.Pipeline()
+	redisPipe.FlushDB()
+
+	progressChan, errorChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
+	for {
+		select {
+		case pi := <-progressChan:
+			log.Printf("process %d of %d: %s", pi.Current, pi.Total, pi.Path)
+		case err := <-errorChan:
+			log.Print("sync error:", err)
+		}
+
+		if progressChan == nil && errorChan == nil {
+			break
+		}
+	}
+
+	if _, err := redisPipe.Exec(); err != nil {
+		log.Fatal("redis pipeline exec error", err)
+	}
 }

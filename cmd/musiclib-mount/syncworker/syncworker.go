@@ -1,9 +1,12 @@
-package sync
+package syncworker
 
 import (
+	"log"
+
 	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/pkg/fs/pubsub"
 	"github.com/rapthead/musiclib/pkg/fs/store"
+	"github.com/rapthead/musiclib/pkg/fs/sync"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,7 +39,7 @@ func (s SyncWorker) Serve() {
 		redisPipe.FlushDB()
 
 		fuseStore := store.NewFuseStore(redisPipe)
-		progressChan, errorChan := Sync(
+		progressChan, errorChan := sync.Sync(
 			s.musiclibRoot,
 			fuseStore,
 			entities,
@@ -49,6 +52,14 @@ func (s SyncWorker) Serve() {
 			case err := <-errorChan:
 				s.logger.Error(err)
 			}
+
+			if progressChan == nil && errorChan == nil {
+				break
+			}
+		}
+
+		if _, err := redisPipe.Exec(); err != nil {
+			log.Fatal("redis pipeline exec error", err)
 		}
 	}
 }

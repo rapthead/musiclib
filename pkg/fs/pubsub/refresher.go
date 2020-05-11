@@ -5,15 +5,10 @@ import (
 	"log"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/rapthead/musiclib/pkg/fs/sync"
 )
 
 const doRefreshRecieveChannel = "fuse-refresh"
-
-type FuseEntity struct {
-	OriginPath     string      `json:"originPath"`
-	FusePath       string      `json:"fusePath"`
-	VorbisComments [][2]string `json:"vorbisComments"`
-}
 
 type Refresh struct {
 	rdb *redis.Client
@@ -23,7 +18,7 @@ func NewRefresh(rdb *redis.Client) Refresh {
 	return Refresh{rdb}
 }
 
-func (r Refresh) Pub(entities []FuseEntity) {
+func (r Refresh) Pub(entities []sync.FuseEntity) {
 	jsonEntities, err := json.Marshal(entities)
 	if err != nil {
 		log.Fatal("Can't json Encode FuseEntities:", err)
@@ -35,15 +30,15 @@ func (r Refresh) Pub(entities []FuseEntity) {
 	}
 }
 
-func (r Refresh) Sub() <-chan []FuseEntity {
-	ch := make(chan []FuseEntity)
+func (r Refresh) Sub() <-chan []sync.FuseEntity {
+	ch := make(chan []sync.FuseEntity)
 
 	rdb := r.rdb
 	rdbCh := rdb.Subscribe(doRefreshRecieveChannel).Channel()
 
 	go func() {
 		for msg := range rdbCh {
-			var entities []FuseEntity
+			var entities []sync.FuseEntity
 			json.Unmarshal([]byte(msg.Payload), &entities)
 			ch <- entities
 		}
