@@ -1,0 +1,20 @@
+version: '1'
+packages:
+- schema: persistance/schema.sql
+  queries: persistance/query/
+  name: persistance
+  emit_json_tags: true
+  path: persistance
+  # overrides:
+  # - go_type: github.com/rapthead/musiclib.gtk/persistance/sql/types.UUID
+  #   db_type: uuid
+  #   'null': false
+  # - go_type: github.com/rapthead/musiclib.gtk/persistance/sql/types.NullUUID
+  #   db_type: uuid
+  #   'null': true
+  # - go_type: github.com/rapthead/musiclib.gtk/persistance/sql/types.NullString
+  #   db_type: text
+  #   'null': true
+  # - go_type: github.com/rapthead/musiclib.gtk/persistance/sql/types.NullString
+  #   db_type: varchar
+  #   'null': true
