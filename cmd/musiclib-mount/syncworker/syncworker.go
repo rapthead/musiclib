@@ -39,22 +39,17 @@ func (s SyncWorker) Serve() {
 		redisPipe.FlushDB()
 
 		fuseStore := store.NewFuseStore(redisPipe)
-		progressChan, errorChan := sync.Sync(
+		progressChan := sync.Sync(
 			s.musiclibRoot,
 			fuseStore,
 			entities,
 		)
 
-		for {
-			select {
-			case pi := <-progressChan:
+		for pi := range progressChan {
+			if pi.Error != nil {
+				s.logger.Error("sync error:", pi.Error)
+			} else {
 				s.logger.Infof("process %d of %d: %s", pi.Current, pi.Total, pi.Path)
-			case err := <-errorChan:
-				s.logger.Error(err)
-			}
-
-			if progressChan == nil && errorChan == nil {
-				break
 			}
 		}
 

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/config"
+	"github.com/rapthead/musiclib/persistance"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/sync"
 )
@@ -14,13 +16,20 @@ const (
 	doRefreshChannel = "fuse-refresh"
 )
 
+type RefreshDeps interface {
+	RedisClient() *redis.Client
+	Queries() *persistance.Queries
+}
+
 type FuseEntity struct {
 	OriginPath     string      `json:"originPath"`
 	FusePath       string      `json:"fusePath"`
 	VorbisComments [][2]string `json:"vorbisComments"`
 }
 
-func Refresh(ctx context.Context) {
+func Refresh(deps RefreshDeps, ctx context.Context) {
+	rdb := deps.RedisClient()
+	queries := deps.Queries()
 	conf := config.Config
 
 	allMetadata, err := queries.GetAllMetadata(ctx)
@@ -62,21 +71,17 @@ func Refresh(ctx context.Context) {
 	redisPipe := rdb.Pipeline()
 	redisPipe.FlushDB()
 
-	progressChan, errorChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
-	for {
-		select {
-		case pi := <-progressChan:
+	// log.Println(fuseEntities)
+	progressChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
+	for pi := range progressChan {
+		if pi.Error != nil {
+			log.Println("sync error:", pi.Error)
+		} else {
 			log.Printf("process %d of %d: %s", pi.Current, pi.Total, pi.Path)
-		case err := <-errorChan:
-			log.Print("sync error:", err)
-		}
-
-		if progressChan == nil && errorChan == nil {
-			break
 		}
 	}
 
 	if _, err := redisPipe.Exec(); err != nil {
-		log.Fatal("redis pipeline exec error", err)
+		log.Fatal("redis pipeline exec error:", err)
 	}
 }

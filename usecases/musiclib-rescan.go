@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/google/uuid"
 	"github.com/mewkiz/flac"
 	"github.com/mewkiz/flac/meta"
@@ -38,6 +39,10 @@ type AlbumFilesInfo struct {
 type rescanCase struct {
 	ctx  context.Context
 	root string
+
+	sqlClient   *sql.DB
+	redisClient *redis.Client
+	queries     *persistance.Queries
 }
 
 func (r rescanCase) absToRel(absPath string) relPath {
@@ -156,12 +161,12 @@ func (r rescanCase) findNewAlbumDirs() []relPath {
 		log.Fatal("Can't glob while rescan:", err)
 	}
 
-	existenCommitedPaths, err := queries.GetCommitedAlbumPaths(ctx)
+	existenCommitedPaths, err := r.queries.GetCommitedAlbumPaths(ctx)
 	if err != nil {
 		log.Fatal("Can't fetch existen commited album paths:", err)
 	}
 
-	existenDraftPaths, err := queries.GetDraftAlbumPaths(ctx)
+	existenDraftPaths, err := r.queries.GetDraftAlbumPaths(ctx)
 	if err != nil {
 		log.Fatal("Can't fetch existen commited album paths:", err)
 	}
@@ -276,12 +281,12 @@ func (r rescanCase) Do() error {
 		draftData = r.addReplayGain(draftData)
 		log.Println("process result", draftData)
 
-		tx, err := sqlDB.Begin()
+		tx, err := r.sqlClient.Begin()
 		if err != nil {
 			log.Fatal("Can't start transaction", err)
 		}
 
-		txQueries := queries.WithTx(tx)
+		txQueries := r.queries.WithTx(tx)
 		if err := txQueries.InsertDraftAlbum(ctx, draftData.Album); err != nil {
 			tx.Rollback()
 			log.Fatal("Can't insert draft album: ", err)
@@ -297,6 +302,20 @@ func (r rescanCase) Do() error {
 	return nil
 }
 
-func Rescan(ctx context.Context) error {
-	return rescanCase{ctx, musiclibRoot}.Do()
+type RescanDeps interface {
+	MusiclibRoot() string
+	SQLClient() *sql.DB
+	RedisClient() *redis.Client
+	Queries() *persistance.Queries
+}
+
+func Rescan(deps RescanDeps, ctx context.Context) error {
+	return rescanCase{
+		ctx,
+		deps.MusiclibRoot(),
+
+		deps.SQLClient(),
+		deps.RedisClient(),
+		deps.Queries(),
+	}.Do()
 }

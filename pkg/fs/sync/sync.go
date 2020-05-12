@@ -19,34 +19,33 @@ type ProgressInfo struct {
 	Path    string
 	Total   int
 	Current int
+	Error   error
 }
 
 func Sync(
 	musiclibRoot string,
 	fuseStore store.FuseStore,
 	entities []FuseEntity,
-) (<-chan ProgressInfo, <-chan error) {
-	errorChan := make(chan error)
+) <-chan ProgressInfo {
 	progressChan := make(chan ProgressInfo)
 	go func() {
+		defer close(progressChan)
 		total := len(entities)
 		for i, entity := range entities {
-			progressChan <- ProgressInfo{
-				entity.OriginPath,
-				total,
-				i,
-			}
-
 			absPath := path.Join(musiclibRoot, entity.OriginPath)
 			stat, err := os.Stat(absPath)
 			if err != nil {
-				errorChan <- fmt.Errorf("Stat origin path error %s: %w", absPath, err)
+				progressChan <- ProgressInfo{
+					Error: fmt.Errorf("Stat origin path error %s: %w", absPath, err),
+				}
 				continue
 			}
 
 			blockStart, blockEnd, err := utils.GetVorbisCommentPos(absPath)
 			if err != nil {
-				errorChan <- fmt.Errorf("Vorbis parsing error %s: %w", absPath, err)
+				progressChan <- ProgressInfo{
+					Error: fmt.Errorf("Vorbis parsing error %s: %w", absPath, err),
+				}
 				continue
 			}
 
@@ -54,7 +53,9 @@ func Sync(
 				"musiclib", entity.VorbisComments,
 			)
 			if err != nil {
-				errorChan <- fmt.Errorf("Encode new vorbis error %s: %w", absPath, err)
+				progressChan <- ProgressInfo{
+					Error: fmt.Errorf("Encode new vorbis error %s: %w", absPath, err),
+				}
 				continue
 			}
 
@@ -65,9 +66,14 @@ func Sync(
 				MetaBlock:        metaBlock,
 				Size:             uint64(stat.Size() + int64(len(metaBlock)) - (blockEnd - blockStart)),
 			})
+
+			progressChan <- ProgressInfo{
+				entity.OriginPath,
+				total,
+				i + 1,
+				nil,
+			}
 		}
-		close(progressChan)
-		close(errorChan)
 	}()
-	return progressChan, errorChan
+	return progressChan
 }

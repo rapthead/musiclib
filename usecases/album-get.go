@@ -8,13 +8,18 @@ import (
 	"github.com/rapthead/musiclib/persistance"
 )
 
+type GetAlbumDetailsDeps interface {
+	Queries() persistance.Queries
+}
+
 type AlbumDetails struct {
 	Artist persistance.Artist
 	Album  persistance.Album
 	Tracks []persistance.Track
 }
 
-func GetAlbumDetails(ctx context.Context, id uuid.UUID) AlbumDetails {
+func GetAlbumDetails(dep GetAlbumDetailsDeps, ctx context.Context, id uuid.UUID) AlbumDetails {
+	queries := dep.Queries()
 	album, err := queries.GetCommitedAlbumByID(ctx, id)
 	if err != nil {
 		log.Fatal("Unable to fetch album:", err)

@@ -2,18 +2,27 @@ package usecases
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/rapthead/musiclib/persistance"
 )
+
+type UpdateAlbumDeps interface {
+	SQLClient() sql.DB
+	Queries() persistance.Queries
+}
 
 type UpdateAlbumParams struct {
 	Album  persistance.UpdateAlbumParams
 	Tracks []persistance.UpdateTrackParams
 }
 
-func UpdateAlbum(ctx context.Context, params UpdateAlbumParams) {
-	tx, err := sqlDB.Begin()
+func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumParams) {
+	sqlClient := deps.SQLClient()
+	queries := deps.Queries()
+
+	tx, err := sqlClient.Begin()
 	if err != nil {
 		log.Fatal("Can't start transaction", err)
 	}

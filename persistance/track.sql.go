@@ -23,7 +23,7 @@ FROM album
 JOIN artist ON album.artist_id = artist.id
 JOIN track ON track.album_id = album.id
 WHERE album.state = 'enabled'
-ORDER BY album.id
+ORDER BY artist.name ASC, year ASC, track_number ASC
 `
 
 type GetAllMetadataRow struct {
