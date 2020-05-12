@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	usecases.Rescan(context.TODO())
+	usecases.Refresh(context.TODO())
 }
