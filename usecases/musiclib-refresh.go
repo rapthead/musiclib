@@ -79,9 +79,6 @@ func Refresh(deps RefreshDeps, ctx context.Context) {
 			// DISCTOTAL=1
 			// TRACKTOTAL=8
 		}
-		if i == 1 {
-			fmt.Println(vorbisComments)
-		}
 		fuseEntities[i] = sync.FuseEntity{
 			OriginPath:     meta.Path,
 			FusePath:       fusePath,
