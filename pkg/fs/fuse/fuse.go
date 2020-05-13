@@ -189,6 +189,7 @@ func (s *MusiclibFS) Open(name string, flags uint32, context *fuse.Context) (fil
 }
 
 func Mount(rdb *redis.Client, logger *log.Entry, mountPoint string) {
+	logger.Level = log.DebugLevel
 	logger.Debug("Mount")
 	fuseStore := store.NewFuseStore(rdb)
 	nfs := pathfs.NewPathNodeFs(NewMusiclibFS(fuseStore, logger), nil)

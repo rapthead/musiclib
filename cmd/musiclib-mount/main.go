@@ -12,11 +12,12 @@ import (
 
 func init() {
 	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.DebugLevel)
 }
 
 func main() {
 	logger := logrus.New()
+	logger.SetLevel(logrus.DebugLevel)
+
 	conf := config.Config
 
 	rdb := redis.NewClient(conf.RedisOpts)
