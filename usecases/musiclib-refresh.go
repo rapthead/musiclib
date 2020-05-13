@@ -84,7 +84,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) {
 		}
 	}
 
-	for errText := range allErrors {
+	for _, errText := range allErrors {
 		log.Println(errText)
 	}
 
