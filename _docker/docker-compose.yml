@@ -2,7 +2,7 @@ version: '2'
 services:
   postgres:
     restart: always
-    image: postgres:11
+    image: postgres:12
     container_name: musiclib-postgres
     volumes:
       - ${PWD}/postgres.init.db/:/docker-entrypoint-initdb.d/:ro

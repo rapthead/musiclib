@@ -73,12 +73,19 @@ func Refresh(deps RefreshDeps, ctx context.Context) {
 
 	// log.Println(fuseEntities)
 	progressChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
+	var allErrors []string
 	for pi := range progressChan {
 		if pi.Error != nil {
-			log.Println("sync error:", pi.Error)
+			errorText := fmt.Sprintf("sync error: %s", pi.Error)
+			allErrors = append(allErrors, errorText)
+			log.Println(errorText)
 		} else {
 			log.Printf("process %d of %d: %s", pi.Current, pi.Total, pi.Path)
 		}
+	}
+
+	for errText := range allErrors {
+		log.Println(errText)
 	}
 
 	if _, err := redisPipe.Exec(); err != nil {
