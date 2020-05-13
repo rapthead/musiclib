@@ -18,7 +18,13 @@ SELECT
         extract(year from date)::INT as year,
         track.track_artist as track_artist_name,
         track.title as track_title,
-        track.track_num as track_number
+        track.track_num as track_number,
+
+        album.rg_gain as album_rg_gain,
+        album.rg_peak as album_rg_peak,
+
+        track.rg_gain as track_rg_gain,
+        track.rg_peak as track_rg_peak
 FROM album
 JOIN artist ON album.artist_id = artist.id
 JOIN track ON track.album_id = album.id
@@ -34,6 +40,10 @@ type GetAllMetadataRow struct {
 	TrackArtistName sql.NullString `json:"track_artist_name"`
 	TrackTitle      string         `json:"track_title"`
 	TrackNumber     int64          `json:"track_number"`
+	AlbumRgGain     float32        `json:"album_rg_gain"`
+	AlbumRgPeak     float32        `json:"album_rg_peak"`
+	TrackRgGain     float32        `json:"track_rg_gain"`
+	TrackRgPeak     float32        `json:"track_rg_peak"`
 }
 
 func (q *Queries) GetAllMetadata(ctx context.Context) ([]GetAllMetadataRow, error) {
@@ -53,6 +63,10 @@ func (q *Queries) GetAllMetadata(ctx context.Context) ([]GetAllMetadataRow, erro
 			&i.TrackArtistName,
 			&i.TrackTitle,
 			&i.TrackNumber,
+			&i.AlbumRgGain,
+			&i.AlbumRgPeak,
+			&i.TrackRgGain,
+			&i.TrackRgPeak,
 		); err != nil {
 			return nil, err
 		}

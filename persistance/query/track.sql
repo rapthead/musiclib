@@ -47,7 +47,13 @@ SELECT
         extract(year from date)::INT as year,
         track.track_artist as track_artist_name,
         track.title as track_title,
-        track.track_num as track_number
+        track.track_num as track_number,
+
+        album.rg_gain as album_rg_gain,
+        album.rg_peak as album_rg_peak,
+
+        track.rg_gain as track_rg_gain,
+        track.rg_peak as track_rg_peak
 FROM album
 JOIN artist ON album.artist_id = artist.id
 JOIN track ON track.album_id = album.id

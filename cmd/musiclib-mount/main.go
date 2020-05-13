@@ -10,15 +10,12 @@ import (
 	"github.com/rapthead/musiclib/pkg/fs/fuse"
 )
 
-func init() {
-	logrus.SetOutput(os.Stdout)
-}
-
 func main() {
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
-
 	conf := config.Config
+
+	logger := logrus.New()
+	logger.SetOutput(os.Stdout)
+	logger.SetLevel(conf.LogLevel)
 
 	rdb := redis.NewClient(conf.RedisOpts)
 	fuse.Mount(

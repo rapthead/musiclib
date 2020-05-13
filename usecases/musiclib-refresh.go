@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/config"
@@ -56,10 +57,30 @@ func Refresh(deps RefreshDeps, ctx context.Context) {
 		vorbisComments := [][2]string{
 			{"ALBUMARTIST", meta.AlbumArtistName},
 			{"ARTIST", artistTag},
-			{"DATE", string(meta.Year)},
+			{"DATE", strconv.Itoa(int(meta.Year))},
 			{"ALBUM", meta.AlbumTitle},
 			{"TITLE", meta.TrackTitle},
-			{"TRACKNUMBER", string(meta.TrackNumber)},
+			{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TrackNumber)},
+
+			{"REPLAYGAIN_REFERENCE_LOUDNESS", "89.0 dB"},
+			{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.AlbumRgGain)},
+			{"REPLAYGAIN_ALBUM_PEAK", fmt.Sprintf("%.8f", meta.AlbumRgPeak)},
+
+			{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", meta.TrackRgGain)},
+			{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", meta.TrackRgPeak)},
+
+			// CATALOGNUMBER=REBL021
+			// DATE=2017
+			// DISCNUMBER=1
+			// GENRE=Ska
+			// GENRE=Punk
+			// LABEL=Rebel Alliance Recordings
+			// MEDIA=CD
+			// DISCTOTAL=1
+			// TRACKTOTAL=8
+		}
+		if i == 1 {
+			fmt.Println(vorbisComments)
 		}
 		fuseEntities[i] = sync.FuseEntity{
 			OriginPath:     meta.Path,

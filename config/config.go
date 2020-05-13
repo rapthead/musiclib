@@ -5,9 +5,11 @@ import (
 	"os"
 
 	"github.com/go-redis/redis/v7"
+	"github.com/sirupsen/logrus"
 )
 
 type ConfigData struct {
+	LogLevel   logrus.Level
 	PgHost     string
 	PgPort     string
 	PgUser     string
@@ -24,24 +26,40 @@ var Config ConfigData
 
 func init() {
 	Config = ConfigData{
-		PgHost:     MustGetEnv("PGHOST"),
-		PgPort:     MustGetEnv("PGPORT"),
-		PgUser:     MustGetEnv("PGUSER"),
-		PgPassword: MustGetEnv("PGPASSWORD"),
-		PgDatabase: MustGetEnv("PGDATABASE"),
+		PgHost:     mustGetEnv("PGHOST"),
+		PgPort:     mustGetEnv("PGPORT"),
+		PgUser:     mustGetEnv("PGUSER"),
+		PgPassword: mustGetEnv("PGPASSWORD"),
+		PgDatabase: mustGetEnv("PGDATABASE"),
 
-		MusiclibRoot:      MustGetEnv("LIB_ROOT"),
-		MusiclibMountPath: MustGetEnv("MOUNT_PATH"),
+		MusiclibRoot:      mustGetEnv("LIB_ROOT"),
+		MusiclibMountPath: mustGetEnv("MOUNT_PATH"),
 	}
-	redisOptions, err := redis.ParseURL(MustGetEnv("REDIS_URL"))
+
+	logLevelEnv := getEnv("LOG_LEVEL")
+	if logLevelEnv != "" {
+		if logLevel, err := logrus.ParseLevel(getEnv("LOG_LEVEL")); err != nil {
+			Config.LogLevel = logLevel
+		} else {
+			log.Fatalln("can't parse LOG_LEVEL environment variable", err)
+		}
+	} else {
+		Config.LogLevel = logrus.WarnLevel
+	}
+
+	redisOptions, err := redis.ParseURL(mustGetEnv("REDIS_URL"))
 	if err != nil {
 		log.Fatal("can't parse MUSICLIB_REDIS_URL env")
 	}
 	Config.RedisOpts = redisOptions
 }
 
-func MustGetEnv(key string) string {
-	envVal := os.Getenv("MUSICLIB_" + key)
+func getEnv(key string) string {
+	return os.Getenv("MUSICLIB_" + key)
+}
+
+func mustGetEnv(key string) string {
+	envVal := getEnv(key)
 	if envVal == "" {
 		log.Fatal("expected environment variable")
 	}
