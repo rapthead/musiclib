@@ -121,6 +121,8 @@ func NewMusiclibFS(fuseStore store.FuseStore, logger *log.Entry) *MusiclibFS {
 }
 
 func (s *MusiclibFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
+	logEntry := s.logger.WithField("name", name)
+	logEntry.Debug("GetAttr")
 	fsType, err := s.store.Type(name)
 	if err != nil {
 		if err == store.NotFound {
