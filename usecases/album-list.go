@@ -8,7 +8,7 @@ import (
 )
 
 type ListAlbumsDeps interface {
-	Queries() persistance.Queries
+	Queries() *persistance.Queries
 }
 
 func ListAlbums(deps ListAlbumsDeps, ctx context.Context) []persistance.ListAlbumsRow {

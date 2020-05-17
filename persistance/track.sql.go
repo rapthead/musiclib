@@ -122,6 +122,46 @@ func (q *Queries) GetCommitedTracksByAlbumID(ctx context.Context, albumID uuid.U
 	return items, nil
 }
 
+const getDraftTracksByAlbumID = `-- name: GetDraftTracksByAlbumID :many
+SELECT track_num, title, track_artist, disc, lirycs, rg_peak, rg_gain, path, length, id, album_id FROM draft_track
+WHERE album_id = $1
+`
+
+func (q *Queries) GetDraftTracksByAlbumID(ctx context.Context, albumID uuid.UUID) ([]DraftTrack, error) {
+	rows, err := q.db.QueryContext(ctx, getDraftTracksByAlbumID, albumID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DraftTrack
+	for rows.Next() {
+		var i DraftTrack
+		if err := rows.Scan(
+			&i.TrackNum,
+			&i.Title,
+			&i.TrackArtist,
+			&i.Disc,
+			&i.Lirycs,
+			&i.RgPeak,
+			&i.RgGain,
+			&i.Path,
+			&i.Length,
+			&i.ID,
+			&i.AlbumID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertDraftTrack = `-- name: InsertDraftTrack :exec
 INSERT INTO draft_track (
     id,

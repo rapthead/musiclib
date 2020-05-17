@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>draft albums</title>
+
+        <!--Import Google Icon Font-->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!--Import materialize.css-->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    </head>
+    <body>
+        <div class="container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Draft Artist</th>
+                        <th>Album Title</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{range $album := .}}
+                    <tr>
+                        <th><a href="/draft/{{ $album.ID }}">{{ $album.Path }}</a></th>
+                        <td>{{ $album.Artist.String }}</td>
+                        <td>{{ $album.Title.String }}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>

@@ -39,6 +39,10 @@ INSERT INTO draft_track (
 SELECT * FROM track
 WHERE album_id = $1;
 
+-- name: GetDraftTracksByAlbumID :many
+SELECT * FROM draft_track
+WHERE album_id = $1;
+
 -- name: GetAllMetadata :many
 SELECT
         concat(album.path, '/', track.path)::TEXT as path,

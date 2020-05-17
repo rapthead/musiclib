@@ -1,0 +1,44 @@
+// Table page template. Implements BasePage methods.
+
+{% code
+type DraftAlbumsRow interface {
+    URL()    string
+    Path()   string
+    Artist() string
+    Title()  string
+}
+
+type DraftAlbumsPage struct {
+    Rows []DraftAlbumsRow
+}
+%}
+
+
+{% func (p *DraftAlbumsPage) Title() %}
+    Draft albums
+{% endfunc %}
+
+
+{% func (p *DraftAlbumsPage) Body() %}
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Path</th>
+                    <th>Draft Artist</th>
+                    <th>Album Title</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {%- for _, r := range p.Rows -%}
+                <tr>
+                    <th><a href="{%s r.URL() %}">{%s r.Path() %}</a></th>
+                    <td>{%s r.Artist() %}</td>
+                    <td>{%s r.Title() %}</td>
+                </tr>
+                {%- endfor -%}
+            </tbody>
+        </table>
+    </div>
+{% endfunc %}

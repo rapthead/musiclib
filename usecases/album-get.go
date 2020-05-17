@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/rapthead/musiclib/persistance"
@@ -18,26 +18,27 @@ type AlbumDetails struct {
 	Tracks []persistance.Track
 }
 
-func GetAlbumDetails(dep GetAlbumDetailsDeps, ctx context.Context, id uuid.UUID) AlbumDetails {
+func GetAlbumDetails(dep GetAlbumDetailsDeps, ctx context.Context, id uuid.UUID) (AlbumDetails, error) {
 	queries := dep.Queries()
+
+	result := AlbumDetails{}
 	album, err := queries.GetCommitedAlbumByID(ctx, id)
 	if err != nil {
-		log.Fatal("Unable to fetch album:", err)
+		return result, fmt.Errorf("Unable to fetch album: %w", err)
 	}
+	result.Album = album
 
 	artist, err := queries.GetArtistById(ctx, id)
 	if err != nil {
-		log.Fatal("Unable to fetch album:", err)
+		return result, fmt.Errorf("Unable to fetch artist: %w", err)
 	}
+	result.Artist = artist
 
 	tracks, err := queries.GetCommitedTracksByAlbumID(ctx, id)
 	if err != nil {
-		log.Fatal("Unable to fetch album tracks:", err)
+		return result, fmt.Errorf("Unable to fetch tracks: %w", err)
 	}
+	result.Tracks = tracks
 
-	return AlbumDetails{
-		Artist: artist,
-		Album:  album,
-		Tracks: tracks,
-	}
+	return result, nil
 }

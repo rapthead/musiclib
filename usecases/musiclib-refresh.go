@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/config"
@@ -40,14 +41,31 @@ func Refresh(deps RefreshDeps, ctx context.Context) {
 
 	fuseEntities := make([]sync.FuseEntity, len(allMetadata), len(allMetadata))
 	for i, meta := range allMetadata {
-		fusePath := fmt.Sprintf(
-			"%s–%d–%s/%02d-%s.flac",
+		fusePathDirname := fmt.Sprintf(
+			"%s–%d–%s",
 			meta.AlbumArtistName,
 			meta.Year,
 			meta.AlbumTitle,
+		)
+		fusePathBaseName := fmt.Sprintf(
+			"%02d-%s.flac",
 			meta.TrackNumber,
 			meta.TrackTitle,
 		)
+
+		replacer := strings.NewReplacer(
+			"<", "_",
+			">", "_",
+			":", "_",
+			"\"", "_",
+			"/", "_",
+			"\\", "_",
+			"|", "_",
+			"?", "_",
+			"*", "_",
+			",", "_",
+		)
+		fusePath := replacer.Replace(fusePathDirname) + "/" + replacer.Replace(fusePathBaseName)
 
 		artistTag := meta.AlbumArtistName
 		if meta.TrackArtistName.Valid {

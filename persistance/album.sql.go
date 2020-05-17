@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 )
 
 const getCommitedAlbumByID = `-- name: GetCommitedAlbumByID :one
@@ -70,50 +69,34 @@ func (q *Queries) GetCommitedAlbumPaths(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const getDraftAlbumByID = `-- name: GetDraftAlbumByID :many
-SELECT created_at, updated_at, path, title, date, release_date, barcode, source_id, comment, edition_title, mbid, rg_peak, rg_gain, type, download_source, id, artist_id, artist FROM draft_album WHERE id = ANY($1::uuid[])
+const getDraftAlbumByID = `-- name: GetDraftAlbumByID :one
+SELECT created_at, updated_at, path, title, date, release_date, barcode, source_id, comment, edition_title, mbid, rg_peak, rg_gain, type, download_source, id, artist_id, artist FROM draft_album WHERE id = $1::uuid
 `
 
-func (q *Queries) GetDraftAlbumByID(ctx context.Context, dollar_1 []uuid.UUID) ([]DraftAlbum, error) {
-	rows, err := q.db.QueryContext(ctx, getDraftAlbumByID, pq.Array(dollar_1))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []DraftAlbum
-	for rows.Next() {
-		var i DraftAlbum
-		if err := rows.Scan(
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.Path,
-			&i.Title,
-			&i.Date,
-			&i.ReleaseDate,
-			&i.Barcode,
-			&i.SourceID,
-			&i.Comment,
-			&i.EditionTitle,
-			&i.Mbid,
-			&i.RgPeak,
-			&i.RgGain,
-			&i.Type,
-			&i.DownloadSource,
-			&i.ID,
-			&i.ArtistID,
-			&i.Artist,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetDraftAlbumByID(ctx context.Context, dollar_1 uuid.UUID) (DraftAlbum, error) {
+	row := q.db.QueryRowContext(ctx, getDraftAlbumByID, dollar_1)
+	var i DraftAlbum
+	err := row.Scan(
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Path,
+		&i.Title,
+		&i.Date,
+		&i.ReleaseDate,
+		&i.Barcode,
+		&i.SourceID,
+		&i.Comment,
+		&i.EditionTitle,
+		&i.Mbid,
+		&i.RgPeak,
+		&i.RgGain,
+		&i.Type,
+		&i.DownloadSource,
+		&i.ID,
+		&i.ArtistID,
+		&i.Artist,
+	)
+	return i, err
 }
 
 const getDraftAlbumPaths = `-- name: GetDraftAlbumPaths :many
@@ -232,6 +215,51 @@ func (q *Queries) ListAlbums(ctx context.Context) ([]ListAlbumsRow, error) {
 			&i.AlbumDate,
 			&i.AlbumTitle,
 			&i.AlbumState,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDraftAlbums = `-- name: ListDraftAlbums :many
+SELECT
+    draft_album.id AS album_id,
+    draft_album.path AS album_path,
+    draft_album.date AS album_date,
+    draft_album.title AS album_title
+FROM draft_album
+ORDER BY album_path ASC, draft_album.date ASC, draft_album.title ASC
+`
+
+type ListDraftAlbumsRow struct {
+	AlbumID    uuid.UUID      `json:"album_id"`
+	AlbumPath  string         `json:"album_path"`
+	AlbumDate  sql.NullTime   `json:"album_date"`
+	AlbumTitle sql.NullString `json:"album_title"`
+}
+
+func (q *Queries) ListDraftAlbums(ctx context.Context) ([]ListDraftAlbumsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDraftAlbums)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDraftAlbumsRow
+	for rows.Next() {
+		var i ListDraftAlbumsRow
+		if err := rows.Scan(
+			&i.AlbumID,
+			&i.AlbumPath,
+			&i.AlbumDate,
+			&i.AlbumTitle,
 		); err != nil {
 			return nil, err
 		}

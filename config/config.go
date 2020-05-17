@@ -9,12 +9,9 @@ import (
 )
 
 type ConfigData struct {
-	LogLevel   logrus.Level
-	PgHost     string
-	PgPort     string
-	PgUser     string
-	PgPassword string
-	PgDatabase string
+	Debug           bool
+	LogLevel        logrus.Level
+	PostgresConnStr string
 
 	RedisOpts *redis.Options
 
@@ -26,11 +23,8 @@ var Config ConfigData
 
 func init() {
 	Config = ConfigData{
-		PgHost:     mustGetEnv("PGHOST"),
-		PgPort:     mustGetEnv("PGPORT"),
-		PgUser:     mustGetEnv("PGUSER"),
-		PgPassword: mustGetEnv("PGPASSWORD"),
-		PgDatabase: mustGetEnv("PGDATABASE"),
+		Debug:           true,
+		PostgresConnStr: mustGetEnv("POSTGRES_CONN_STR"),
 
 		MusiclibRoot:      mustGetEnv("LIB_ROOT"),
 		MusiclibMountPath: mustGetEnv("MOUNT_PATH"),
@@ -61,7 +55,7 @@ func getEnv(key string) string {
 func mustGetEnv(key string) string {
 	envVal := getEnv(key)
 	if envVal == "" {
-		log.Fatal("expected environment variable")
+		log.Fatalln("expected environment variable", key)
 	}
 	return envVal
 }

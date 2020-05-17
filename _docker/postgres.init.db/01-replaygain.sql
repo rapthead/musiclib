@@ -9521,6 +9521,7 @@ ALTER TABLE track
     ALTER COLUMN rg_gain SET NOT NULL;
 
 ALTER TABLE draft_album
+    ALTER COLUMN download_source SET NOT NULL,
     ALTER COLUMN rg_peak SET NOT NULL,
     ALTER COLUMN rg_gain SET NOT NULL;
 
