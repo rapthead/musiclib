@@ -1,22 +1,61 @@
-// Table page template. Implements BasePage methods.
+{% import "strconv" %}
 
 {% code
 type AlbumData interface {
-    URL()    string
-    Path()   string
-    Artist() string
-    Title()  string
+    ID()             string
+    Path()           string
+    Artist()         string
+    Title()          string
+    Type()           string
+    DownloadSource() string
+    Year()           *int
+    ReleaseYear()    *int
+}
+
+type TrackData interface {
+    ID()          string
+    Path()        string
+    TrackArtist() string
+    Title()       string
+    Disc()        int
+    TrackNum()    int
 }
 
 type DraftAlbumDetailsPage struct {
-    Album AlbumData
+    AllDownloadSources  []string
+    AllAlbumTypes       []string
+
+    Album               AlbumData
+    Tracks              []TrackData
+}
+
+type baseInputConfig struct {
+    wraperClass string
+    disabled    bool
+    name        string
+    label       string
 }
 
 type strInputConfig struct {
-    disabled bool
-    name     string
-    label    string
-    value    string
+    baseInputConfig
+    value       string
+}
+
+type intInputConfig struct {
+    baseInputConfig
+    value       *int
+    min         *int
+}
+
+type selectConfig struct {
+    baseInputConfig
+
+    options     []string
+    selected    string
+}
+
+func takeIntPtr(val int) *int {
+    return &val
 }
 %}
 
@@ -26,45 +65,244 @@ type strInputConfig struct {
 {% endfunc %}
 
 {% func (p *DraftAlbumDetailsPage) Body() %}
-    <form class="container" method="POST" action="./">
+    <form class="container" method="POST" enctype="multipart/form-data">
         <div class="card">
             <div class="row">
-                <div class="input-field col s6">
-                    {%=
-                        p.makeStrInput(strInputConfig{
-                            name: "Artist",
-                            label: "Draft artist",
-                            value: p.Album.Artist(),
-                        })
-                    %}
-                </div>
+                <input type="hidden" name="album.id" value="{%s p.Album.ID() %}" />
 
-                <div class="input-field col s6">
-                    {%=
-                        p.makeStrInput(strInputConfig{
-                            name: "Artist",
+                {%=
+                    makeStrInput(strInputConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.artist",
                             label: "Draft artist",
-                            value: p.Album.Artist(),
-                        })
-                    %}
-                </div>
+                        },
+                        value: p.Album.Artist(),
+                    })
+                %}
+
+                {%=
+                    makeStrInput(strInputConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.title",
+                            label: "Title",
+                        },
+                        value: p.Album.Title(),
+                    })
+                %}
+
+                {%=
+                    makeStrInput(strInputConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            disabled: true,
+                            name: "album.path",
+                            label: "Path",
+                        },
+                        value: p.Album.Path(),
+                    })
+                %}
+
+                {%=
+                    makeIntInput(intInputConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.year",
+                            label: "Year",
+                        },
+                        value: p.Album.Year(),
+                        min: takeIntPtr(1990),
+                    })
+                %}
+
+                {%=
+                    makeIntInput(intInputConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.release_year",
+                            label: "Release year",
+                        },
+                        value: p.Album.ReleaseYear(),
+                        min: takeIntPtr(1990),
+                    })
+                %}
+
+                {%=
+                    makeSelect(selectConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.type",
+                            label: "Type",
+                        },
+
+                        options:  p.AllAlbumTypes,
+                        selected: p.Album.Type(),
+                    })
+                %}
+
+                {%=
+                    makeSelect(selectConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.download_source",
+                            label: "Download source",
+                        },
+
+                        options:  p.AllDownloadSources,
+                        selected: p.Album.DownloadSource(),
+                    })
+                %}
             </div>
         </div>
+
+        <table class="card">
+            <!--thead>
+                <tr>
+                    <th>Path</th>
+                    <th>Title</th>
+                    <th></th>
+                </tr>
+            </thead-->
+
+            <tbody>
+                {% for i, t := range p.Tracks %}
+                <tr>
+                    <th>
+                        <input
+                            type="hidden"
+                            name="{%s "tracks." + strconv.Itoa(i) + ".id" %}"
+                            value="{%s t.ID() %}"
+                        />
+
+                        {%=
+                            makeStrInput(strInputConfig{
+                                baseInputConfig: baseInputConfig{
+                                    name: "tracks." + strconv.Itoa(i) + ".path",
+                                    label: "Path",
+                                    disabled: true,
+                                },
+
+                                value: t.Path(),
+                            })
+                        %}
+                    </th>
+                    <td>
+                        {%=
+                            makeStrInput(strInputConfig{
+                                baseInputConfig: baseInputConfig{
+                                    name: "tracks." + strconv.Itoa(i) + ".title",
+                                    label: "Title",
+                                },
+
+                                value: t.Title(),
+                            })
+                        %}
+                    </td>
+                    <td>
+                        {%=
+                            makeIntInput(intInputConfig{
+                                baseInputConfig: baseInputConfig{
+                                    name: "tracks." + strconv.Itoa(i) + ".track_num",
+                                    label: "Track number",
+                                },
+
+                                min: takeIntPtr(0),
+                                value: takeIntPtr(t.TrackNum()),
+                            })
+                        %}
+                    </td>
+                    <td>
+                        {%=
+                            makeIntInput(intInputConfig{
+                                baseInputConfig: baseInputConfig{
+                                    name: "tracks." + strconv.Itoa(i) + ".disc",
+                                    label: "Disc number",
+                                },
+
+                                min: takeIntPtr(0),
+                                value: takeIntPtr(t.Disc()),
+                            })
+                        %}
+                    </td>
+                    <td>
+                        {%=
+                            makeStrInput(strInputConfig{
+                                baseInputConfig: baseInputConfig{
+                                    name: "tracks." + strconv.Itoa(i) + ".track_artist",
+                                    label: "TrackArtist",
+                                },
+
+                                value: t.TrackArtist(),
+                            })
+                        %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <footer class="row right-align">
+            <button class="btn waves-effect waves-light" type="submit">
+                Save
+                <i class="material-icons right"></i>
+            </button>
+        </footer>
     </form>
 {% endfunc %}
 
-{% func (p *DraftAlbumDetailsPage) makeStrInput(c strInputConfig) %}
-    <div class="input-field col s6">
-        <input
-            id="{%s c.name %}"
-            {% if c.disabled %}
-                disabled
+{% func makeIntInput(c intInputConfig) %}
+<div class="input-field {%s c.wraperClass %}">
+    <input
+        id="{%s c.name %}"
+        {% if c.disabled %}
+            disabled
+        {% endif %}
+        type="number"
+        class="validate"
+        name="{%s c.name %}"
+        {% if c.value != nil %}
+            value="{%d *c.value %}"
+        {% endif %}
+        {% if c.min != nil %}
+            min="{%d *c.min %}"
+        {% endif %}
+    >
+    <label for="{%s c.name %}">{%s c.label %}</label>
+</div>
+{% endfunc %}
+
+{% func makeStrInput(c strInputConfig) %}
+<div class="input-field {%s c.wraperClass %}">
+    <input
+        id="{%s c.name %}"
+        {% if c.disabled %}
+            disabled
+        {% endif %}
+        type="text"
+        class="validate"
+        name="{%s c.name %}"
+        value="{%s c.value %}"
+    >
+    <label for="{%s c.name %}">{%s c.label %}</label>
+</div>
+{% endfunc %}
+
+{% func makeSelect(c selectConfig) %}
+<div class="input-field {%s c.wraperClass %}">
+    <select
+        name="{%s c.name %}"
+        id="{%s c.name %}"
+    >
+        {% for _, option := range c.options %}
+        <option
+            {% if option == c.selected %}
+            selected
             {% endif %}
-            type="text"
-            class="validate"
-            name="{%s c.name %}"
-            value="{%s c.value %}"
-        >
-        <label for="{%s c.name %}">{%s c.label %}</label>
-    </div>
+            value="{%s option %}"
+            >{%s option %}</option>
+        {% endfor %}
+    </select>
+    <label for="{%s c.name %}">{%s c.label %}</label>
+</div>
 {% endfunc %}

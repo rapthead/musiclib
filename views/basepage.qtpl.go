@@ -66,34 +66,40 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
 	p.StreamBody(qw422016)
 //line basepage.qtpl:27
 	qw422016.N().S(`
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var elems = document.querySelectorAll('select');
+                var instances = M.FormSelect.init(elems, {});
+            });
+        </script>
     </body>
 </html>
 `)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 }
 
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 func WritePageTemplate(qq422016 qtio422016.Writer, p Page) {
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	StreamPageTemplate(qw422016, p)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	qt422016.ReleaseWriter(qw422016)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 }
 
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 func PageTemplate(p Page) string {
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	qb422016 := qt422016.AcquireByteBuffer()
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	WritePageTemplate(qb422016, p)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	qs422016 := string(qb422016.B)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	qt422016.ReleaseByteBuffer(qb422016)
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 	return qs422016
-//line basepage.qtpl:30
+//line basepage.qtpl:36
 }

@@ -9,20 +9,22 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-redis/redis/v7"
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
+	"github.com/guregu/null/zero"
+	"github.com/jmoiron/sqlx"
 	"github.com/mewkiz/flac"
 	"github.com/mewkiz/flac/meta"
-	"github.com/rapthead/musiclib/persistance"
+	"github.com/rapthead/musiclib/models"
+	"github.com/rapthead/musiclib/persistance2"
 )
 
 type relPath string
 
 type DraftData struct {
-	Album  persistance.InsertDraftAlbumParams
-	Tracks map[relPath]persistance.InsertDraftTrackParams
+	Album  models.DraftAlbum
+	Tracks map[relPath]models.DraftTrack
 }
 
 type FlacFileInfo struct {
@@ -40,9 +42,9 @@ type rescanCase struct {
 	ctx  context.Context
 	root string
 
-	sqlClient   *sql.DB
+	sqlxClient  *sqlx.DB
 	redisClient *redis.Client
-	queries     *persistance.Queries
+	queries     *persistance2.Queries
 }
 
 func (r rescanCase) absToRel(absPath string) relPath {
@@ -59,34 +61,41 @@ func (r rescanCase) relToAbs(path relPath) string {
 
 func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 	pathComponents := strings.Split(string(albumTagsInfo.RelPath), string(os.PathSeparator))
-	var downloadSource persistance.DownloadSourceEnum
+	var downloadSource models.DownloadSourceEnum
 	switch pathComponents[0] {
 	case "my":
-		downloadSource = persistance.DownloadSourceEnumMY
+		downloadSource = models.DownloadSourceEnumMY
 	case "what.cd":
-		downloadSource = persistance.DownloadSourceEnumWHATCD
+		downloadSource = models.DownloadSourceEnumWHATCD
 	case "redacted.ch":
-		downloadSource = persistance.DownloadSourceEnumREDACTEDCH
+		downloadSource = models.DownloadSourceEnumREDACTEDCH
 	case "bandcamp.com", "soundcloud.com":
-		downloadSource = persistance.DownloadSourceEnumWHATCD
+		downloadSource = models.DownloadSourceEnumWHATCD
 	default:
 		log.Fatal("Unknown source:", pathComponents[0])
 	}
-	draftAlbum := persistance.InsertDraftAlbumParams{
-		ID:             uuid.New(),
+	draftAlbum := models.DraftAlbum{
+		ID:             uuid.Must(uuid.NewV4()),
 		Path:           string(albumTagsInfo.RelPath),
-		Type:           persistance.AlbumTypeEnumLP,
+		Type:           models.AlbumTypeEnumLP,
 		DownloadSource: downloadSource,
 	}
 
 	tracksInfo := albumTagsInfo.TracksInfo
-	draftTracks := make(map[relPath]persistance.InsertDraftTrackParams, len(tracksInfo))
+	draftTracks := make(map[relPath]models.DraftTrack, len(tracksInfo))
 	for path, trackInfo := range tracksInfo {
-		draftTrack := persistance.InsertDraftTrackParams{
-			ID:      uuid.New(),
+		trackNormalPath, err := filepath.Rel(
+			string(albumTagsInfo.RelPath),
+			string(path),
+		)
+		if err != nil {
+			log.Fatal("error on normalizing track path:", err)
+		}
+		draftTrack := models.DraftTrack{
+			ID:      uuid.Must(uuid.NewV4()),
 			AlbumID: draftAlbum.ID,
-			Path:    string(path),
-			Length:  int64(trackInfo.Seconds),
+			Path:    trackNormalPath,
+			Length:  uint(trackInfo.Seconds),
 		}
 		for _, tag := range trackInfo.Tags {
 			tagName := tag[0]
@@ -94,40 +103,22 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 
 			switch strings.ToLower(tagName) {
 			case "album":
-				draftAlbum.Title = sql.NullString{
-					String: tagValue,
-					Valid:  true,
-				}
+				draftAlbum.Title = zero.StringFrom(tagValue)
 			case "artist":
-				draftAlbum.Artist = sql.NullString{
-					String: tagValue,
-					Valid:  true,
-				}
+				draftAlbum.Artist = zero.StringFrom(tagValue)
 			case "date":
 				if year, err := strconv.Atoi(tagValue); err == nil {
-					draftAlbum.Date = sql.NullTime{
-						Time:  time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC),
-						Valid: true,
-					}
+					draftAlbum.Year = zero.IntFrom(int64(year))
 				}
 			case "title":
-				draftTrack.Title = sql.NullString{
-					String: tagValue,
-					Valid:  true,
-				}
+				draftTrack.Title = zero.StringFrom(tagValue)
 			case "tracknumber":
 				if trackNum, err := strconv.Atoi(tagValue); err != nil {
-					draftTrack.TrackNum = sql.NullInt64{
-						Int64: int64(trackNum),
-						Valid: true,
-					}
+					draftTrack.TrackNum = zero.IntFrom(int64(trackNum))
 				}
 			case "discnumber":
 				if discnumber, err := strconv.Atoi(tagValue); err == nil {
-					draftTrack.Disc = sql.NullInt64{
-						Int64: int64(discnumber),
-						Valid: true,
-					}
+					draftTrack.Disc = zero.IntFrom(int64(discnumber))
 				}
 			}
 		}
@@ -161,21 +152,16 @@ func (r rescanCase) findNewAlbumDirs() []relPath {
 		log.Fatal("Can't glob while rescan:", err)
 	}
 
-	existenCommitedPaths, err := r.queries.GetCommitedAlbumPaths(ctx)
+	existenPaths, err := r.queries.GetExistenPaths(ctx)
 	if err != nil {
-		log.Fatal("Can't fetch existen commited album paths:", err)
-	}
-
-	existenDraftPaths, err := r.queries.GetDraftAlbumPaths(ctx)
-	if err != nil {
-		log.Fatal("Can't fetch existen commited album paths:", err)
+		log.Fatal("Can't fetch existen album paths:", err)
 	}
 
 	existenAlbumPaths := make(
 		map[relPath]struct{},
-		len(existenCommitedPaths)+len(existenDraftPaths),
+		len(existenPaths),
 	)
-	for _, path := range append(existenCommitedPaths, existenDraftPaths...) {
+	for _, path := range existenPaths {
 		existenAlbumPaths[relPath(path)] = struct{}{}
 	}
 
@@ -209,28 +195,16 @@ func (r rescanCase) addReplayGain(draftData DraftData) DraftData {
 		log.Fatal("replaygain calculation failed", err)
 	}
 
-	draftData.Album.RgGain = sql.NullFloat64{
-		Float64: calcResult.AlbumGain,
-		Valid:   true,
-	}
-	draftData.Album.RgPeak = sql.NullFloat64{
-		Float64: calcResult.AlbumPeak,
-		Valid:   true,
-	}
+	draftData.Album.RgGain = calcResult.AlbumGain
+	draftData.Album.RgPeak = calcResult.AlbumGain
 
-	updatedDraftTracks := make(map[relPath]persistance.InsertDraftTrackParams, len(draftData.Tracks))
+	updatedDraftTracks := make(map[relPath]models.DraftTrack, len(draftData.Tracks))
 	for _, trackGain := range calcResult.Tracks {
 		relPath := r.absToRel(trackGain.Path)
 		draftTrack := draftData.Tracks[relPath]
 
-		draftTrack.RgPeak = sql.NullFloat64{
-			Float64: trackGain.Peak,
-			Valid:   true,
-		}
-		draftTrack.RgGain = sql.NullFloat64{
-			Float64: trackGain.Gain,
-			Valid:   true,
-		}
+		draftTrack.RgPeak = trackGain.Peak
+		draftTrack.RgGain = trackGain.Gain
 		updatedDraftTracks[relPath] = draftTrack
 	}
 
@@ -281,7 +255,8 @@ func (r rescanCase) Do() error {
 		draftData = r.addReplayGain(draftData)
 		log.Println("process result", draftData)
 
-		tx, err := r.sqlClient.Begin()
+		txOptions := sql.TxOptions{}
+		tx, err := r.sqlxClient.BeginTxx(ctx, &txOptions)
 		if err != nil {
 			log.Fatal("Can't start transaction", err)
 		}
@@ -304,9 +279,9 @@ func (r rescanCase) Do() error {
 
 type RescanDeps interface {
 	MusiclibRoot() string
-	SQLClient() *sql.DB
+	SQLXClient() *sqlx.DB
 	RedisClient() *redis.Client
-	Queries() *persistance.Queries
+	Queries2() *persistance2.Queries
 }
 
 func Rescan(deps RescanDeps, ctx context.Context) error {
@@ -314,8 +289,8 @@ func Rescan(deps RescanDeps, ctx context.Context) error {
 		ctx,
 		deps.MusiclibRoot(),
 
-		deps.SQLClient(),
+		deps.SQLXClient(),
 		deps.RedisClient(),
-		deps.Queries(),
+		deps.Queries2(),
 	}.Do()
 }

@@ -14,8 +14,8 @@ type UpdateAlbumDeps interface {
 }
 
 type UpdateAlbumParams struct {
-	Album  persistance.UpdateAlbumParams
-	Tracks []persistance.UpdateTrackParams
+	Album  persistance.UpdateAlbumParams   `schema:"album"`
+	Tracks []persistance.UpdateTrackParams `schema:"tracks"`
 }
 
 func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumParams) {

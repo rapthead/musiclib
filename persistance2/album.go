@@ -27,21 +27,30 @@ func (p *Queries) GetDraftAlbumByID(ctx context.Context, id uuid.UUID) (models.D
 	return draftAlbum, err
 }
 
+func (p *Queries) GetExistenPaths(ctx context.Context) ([]string, error) {
+	paths := []string{}
+	err := p.db.GetContext(ctx, &paths, `
+        SELECT path FROM draft_album
+        UNION ALL
+        SELECT path FROM album
+    `)
+	return paths, err
+}
+
 func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftAlbum) error {
 	result, err := p.db.NamedExecContext(ctx, `
         UPDATE draft_album SET
-            artist_id		= :artist_id,
             title			= :title,
-            date			= :date,
+            artist_id		= :artist_id,
+            year			= :year,
+            release_year	= :release_year,
             mbid			= :mbid,
             type			= :type,
             edition_title	= :edition_title,
-            release_date	= :release_date,
             barcode			= :barcode,
             download_source	= :download_source,
             source_id		= :source_id,
             comment			= :comment,
-            state		    = :state,
 
             updated_at = NOW()
         WHERE id = :id;
@@ -53,6 +62,44 @@ func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftA
 		return fmt.Errorf("draft album updation error, can't get affected rows count: %w", err)
 	} else if affectedCount == 0 {
 		return errors.New("draft album was not found")
+	}
+	return nil
+}
+
+func (p *Queries) InsertDraftAlbum(ctx context.Context, draftAlbum models.DraftAlbum) error {
+	_, err := p.db.NamedExecContext(ctx, `
+        INSERT INTO draft_album (
+            id,
+            artist,
+            title,
+            year,
+            type,
+            download_source,
+            path,
+
+            rg_gain,
+            rg_peak,
+
+            created_at,
+            updated_at
+        ) VALUES (
+            :id,
+            :artist,
+            :title,
+            :year,
+            :type,
+            :download_source,
+            :path,
+
+            :rg_gain,
+            :rg_peak,
+
+            NOW(),
+            NOW()
+        )
+    `, draftAlbum)
+	if err != nil {
+		return fmt.Errorf("draft album insertion error: %w", err)
 	}
 	return nil
 }

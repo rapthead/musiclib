@@ -11,7 +11,7 @@ import (
 )
 
 type UpdateDraftAlbumDeps interface {
-	SQLXClient() sqlx.DB
+	SQLXClient() *sqlx.DB
 	Queries2() *persistance2.Queries
 }
 
