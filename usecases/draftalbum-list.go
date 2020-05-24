@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	"github.com/rapthead/musiclib/models"
-	"github.com/rapthead/musiclib/persistance2"
+	"github.com/rapthead/musiclib/persistance"
 )
 
 type ListDraftAlbumsDeps interface {
-	Queries2() *persistance2.Queries
+	Queries() *persistance.Queries
 }
 
 func ListDraftAlbums(deps ListDraftAlbumsDeps, ctx context.Context) ([]models.DraftAlbum, error) {
-	queries := deps.Queries2()
+	queries := deps.Queries()
 	draftAlbums, err := queries.ListDraftAlbums(ctx)
 	if draftAlbums == nil {
 		draftAlbums = []models.DraftAlbum{}

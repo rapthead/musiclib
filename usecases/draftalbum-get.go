@@ -6,21 +6,22 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/rapthead/musiclib/models"
-	"github.com/rapthead/musiclib/persistance2"
+	"github.com/rapthead/musiclib/persistance"
 )
 
 type GetDraftAlbumDetailsDeps interface {
-	Queries2() *persistance2.Queries
+	Queries() *persistance.Queries
 }
 
 type DraftAlbumDetails struct {
 	Artist      *models.Artist
 	DraftAlbum  models.DraftAlbum
 	DraftTracks []models.DraftTrack
+	DraftCovers []models.DraftCover
 }
 
 func GetDraftAlbumDetails(dep GetDraftAlbumDetailsDeps, ctx context.Context, id uuid.UUID) (DraftAlbumDetails, error) {
-	queries := dep.Queries2()
+	queries := dep.Queries()
 	result := DraftAlbumDetails{}
 
 	album, err := queries.GetDraftAlbumByID(ctx, id)
@@ -42,6 +43,12 @@ func GetDraftAlbumDetails(dep GetDraftAlbumDetailsDeps, ctx context.Context, id 
 		return result, fmt.Errorf("Unable to fetch tracks: %w", err)
 	}
 	result.DraftTracks = draftTracks
+
+	draftCovers, err := queries.GetDraftCoversByAlbumID(ctx, id)
+	if err != nil {
+		return result, fmt.Errorf("Unable to fetch covers: %w", err)
+	}
+	result.DraftCovers = draftCovers
 
 	return result, nil
 }

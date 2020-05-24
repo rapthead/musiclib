@@ -71,35 +71,40 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
                 var elems = document.querySelectorAll('select');
                 var instances = M.FormSelect.init(elems, {});
             });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var elems = document.querySelectorAll('.materialboxed');
+                var instances = M.Materialbox.init(elems, {});
+            });
         </script>
     </body>
 </html>
 `)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 }
 
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 func WritePageTemplate(qq422016 qtio422016.Writer, p Page) {
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	StreamPageTemplate(qw422016, p)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	qt422016.ReleaseWriter(qw422016)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 }
 
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 func PageTemplate(p Page) string {
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	qb422016 := qt422016.AcquireByteBuffer()
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	WritePageTemplate(qb422016, p)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	qs422016 := string(qb422016.B)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	qt422016.ReleaseByteBuffer(qb422016)
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 	return qs422016
-//line basepage.qtpl:36
+//line basepage.qtpl:41
 }

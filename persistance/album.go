@@ -1,9 +1,10 @@
-package persistance2
+package persistance
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/gofrs/uuid"
 	"github.com/rapthead/musiclib/models"
@@ -28,12 +29,20 @@ func (p *Queries) GetDraftAlbumByID(ctx context.Context, id uuid.UUID) (models.D
 }
 
 func (p *Queries) GetExistenPaths(ctx context.Context) ([]string, error) {
-	paths := []string{}
-	err := p.db.GetContext(ctx, &paths, `
+	rows, err := p.db.QueryContext(ctx, `
         SELECT path FROM draft_album
         UNION ALL
         SELECT path FROM album
     `)
+	defer rows.Close()
+	paths := make([]string, 0)
+	for rows.Next() {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			log.Fatal(err)
+		}
+		paths = append(paths, path)
+	}
 	return paths, err
 }
 

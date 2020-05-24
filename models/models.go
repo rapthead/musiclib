@@ -49,6 +49,14 @@ type DraftTrack struct {
 	Length      uint        `schema:"-"             json:"length"          db:"length"`
 }
 
+type DraftCover struct {
+	ID               uuid.UUID     `schema:"id"              json:"id"                  db:"id"`
+	OriginalFilename string        `schema:"-"               json:"original_filename"   db:"original_filename"`
+	AlbumID          uuid.UUID     `schema:"-"               json:"album_id"            db:"album_id"`
+	Sort             zero.Int      `schema:"sort"            json:"sort"                db:"sort"`
+	Type             CoverTypeEnum `schema:"type"            json:"type"                db:"type"`
+}
+
 type Metadata struct {
 	Path            string      `json:"path"                 db:"path"`
 	AlbumArtistName string      `json:"album_artist_name"    db:"album_artist_name"`
@@ -123,4 +131,71 @@ func (e *DownloadSourceEnum) Scan(src interface{}) error {
 		return fmt.Errorf("unsupported scan type for DownloadSourceEnum: %T", src)
 	}
 	return nil
+}
+
+type CoverTypeEnum string
+
+const (
+	CoverTypeEnumBackOut  CoverTypeEnum = "back out"
+	CoverTypeEnumFrontOut CoverTypeEnum = "front out"
+	CoverTypeEnumBackIn   CoverTypeEnum = "back in"
+	CoverTypeEnumFrontIn  CoverTypeEnum = "front in"
+	CoverTypeEnumDisc     CoverTypeEnum = "disc"
+	CoverTypeEnumIn       CoverTypeEnum = "in"
+	CoverTypeEnumOut      CoverTypeEnum = "out"
+	CoverTypeEnumBooklet  CoverTypeEnum = "booklet"
+	CoverTypeEnumOther    CoverTypeEnum = "other"
+)
+
+var AllCoverTypeEnum = []CoverTypeEnum{
+	CoverTypeEnumBackOut,
+	CoverTypeEnumFrontOut,
+	CoverTypeEnumBackIn,
+	CoverTypeEnumFrontIn,
+	CoverTypeEnumDisc,
+	CoverTypeEnumIn,
+	CoverTypeEnumOut,
+	CoverTypeEnumBooklet,
+	CoverTypeEnumOther,
+}
+
+func (e *CoverTypeEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CoverTypeEnum(s)
+	case string:
+		*e = CoverTypeEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CoverTypeEnum: %T", src)
+	}
+	return nil
+}
+
+type ImageTypeEnum string
+
+func NewImageTypeEnum(mimeStr string) (ImageTypeEnum, error) {
+	switch mimeStr {
+	case string(ImageTypeEnumJPEG):
+		return ImageTypeEnumJPEG, nil
+	case string(ImageTypeEnumPNG):
+		return ImageTypeEnumJPEG, nil
+	default:
+		return ImageTypeEnumJPEG, fmt.Errorf("unknown cover mime type: %s", mimeStr)
+	}
+}
+
+const (
+	ImageTypeEnumJPEG ImageTypeEnum = "image/jpeg"
+	ImageTypeEnumPNG  ImageTypeEnum = "image/png"
+)
+
+func (e ImageTypeEnum) MakeExt() string {
+	switch e {
+	case ImageTypeEnumJPEG:
+		return "jpeg"
+	case ImageTypeEnumPNG:
+		return "png"
+	default:
+		panic("assertion error: unknown image type")
+	}
 }

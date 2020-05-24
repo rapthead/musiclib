@@ -17,7 +17,7 @@ import (
 	"github.com/mewkiz/flac"
 	"github.com/mewkiz/flac/meta"
 	"github.com/rapthead/musiclib/models"
-	"github.com/rapthead/musiclib/persistance2"
+	"github.com/rapthead/musiclib/persistance"
 )
 
 type relPath string
@@ -44,7 +44,7 @@ type rescanCase struct {
 
 	sqlxClient  *sqlx.DB
 	redisClient *redis.Client
-	queries     *persistance2.Queries
+	queries     *persistance.Queries
 }
 
 func (r rescanCase) absToRel(absPath string) relPath {
@@ -107,14 +107,19 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 			case "artist":
 				draftAlbum.Artist = zero.StringFrom(tagValue)
 			case "date":
-				if year, err := strconv.Atoi(tagValue); err == nil {
+				dateParts := strings.Split(tagValue, "-")
+				if year, err := strconv.Atoi(dateParts[0]); err == nil {
 					draftAlbum.Year = zero.IntFrom(int64(year))
+				} else {
+					log.Println("can't decode date tag", err)
 				}
 			case "title":
 				draftTrack.Title = zero.StringFrom(tagValue)
 			case "tracknumber":
-				if trackNum, err := strconv.Atoi(tagValue); err != nil {
+				if trackNum, err := strconv.Atoi(tagValue); err == nil {
 					draftTrack.TrackNum = zero.IntFrom(int64(trackNum))
+				} else {
+					log.Println("can't decode tracknumber tag", err)
 				}
 			case "discnumber":
 				if discnumber, err := strconv.Atoi(tagValue); err == nil {
@@ -281,7 +286,7 @@ type RescanDeps interface {
 	MusiclibRoot() string
 	SQLXClient() *sqlx.DB
 	RedisClient() *redis.Client
-	Queries2() *persistance2.Queries
+	Queries() *persistance.Queries
 }
 
 func Rescan(deps RescanDeps, ctx context.Context) error {
@@ -291,6 +296,6 @@ func Rescan(deps RescanDeps, ctx context.Context) error {
 
 		deps.SQLXClient(),
 		deps.RedisClient(),
-		deps.Queries2(),
+		deps.Queries(),
 	}.Do()
 }

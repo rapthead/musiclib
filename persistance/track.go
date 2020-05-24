@@ -1,4 +1,4 @@
-package persistance2
+package persistance
 
 import (
 	"context"
@@ -10,13 +10,13 @@ import (
 )
 
 func (p *Queries) GetDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]models.DraftTrack, error) {
-	draftAlbums := []models.DraftTrack{}
-	err := p.db.SelectContext(ctx, &draftAlbums, `
+	draftTracks := []models.DraftTrack{}
+	err := p.db.SelectContext(ctx, &draftTracks, `
         SELECT * FROM draft_track
         WHERE album_id = $1
         ORDER BY path ASC
     `, id)
-	return draftAlbums, err
+	return draftTracks, err
 }
 
 func (p *Queries) UpdateDraftTrack(ctx context.Context, draftTrack models.DraftTrack) error {

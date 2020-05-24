@@ -8,6 +8,7 @@ type AlbumData interface {
     Title()          string
     Type()           string
     DownloadSource() string
+    SourceID()       string
     Year()           *int
     ReleaseYear()    *int
 }
@@ -17,16 +18,26 @@ type TrackData interface {
     Path()        string
     TrackArtist() string
     Title()       string
-    Disc()        int
-    TrackNum()    int
+    Disc()        *int
+    TrackNum()    *int
+}
+
+type CoverData interface {
+    ID()          string
+    Filename()    string
+    URL()         string
+    Sort()        *int
+    Type()        string
 }
 
 type DraftAlbumDetailsPage struct {
     AllDownloadSources  []string
     AllAlbumTypes       []string
+    AllCoverTypes       []string
 
     Album               AlbumData
     Tracks              []TrackData
+    Covers              []CoverData
 }
 
 type baseInputConfig struct {
@@ -153,97 +164,202 @@ func takeIntPtr(val int) *int {
                         selected: p.Album.DownloadSource(),
                     })
                 %}
+
+                {%=
+                    makeStrInput(strInputConfig{
+                        baseInputConfig: baseInputConfig{
+                            wraperClass: "col s6",
+                            name: "album.source_id",
+                            label: "Source id",
+                        },
+
+                        value: p.Album.SourceID(),
+                    })
+                %}
             </div>
         </div>
 
-        <table class="card">
-            <!--thead>
-                <tr>
-                    <th>Path</th>
-                    <th>Title</th>
-                    <th></th>
-                </tr>
-            </thead-->
+        <div class="card">
+            <table>
+                <!--thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Title</th>
+                        <th></th>
+                    </tr>
+                </thead-->
 
-            <tbody>
-                {% for i, t := range p.Tracks %}
-                <tr>
-                    <th>
-                        <input
-                            type="hidden"
-                            name="{%s "tracks." + strconv.Itoa(i) + ".id" %}"
-                            value="{%s t.ID() %}"
-                        />
+                <tbody>
+                    {% for i, t := range p.Tracks %}
+                    <tr>
+                        <th>
+                            <input
+                                type="hidden"
+                                name="{%s "tracks." + strconv.Itoa(i) + ".id" %}"
+                                value="{%s t.ID() %}"
+                            />
 
-                        {%=
-                            makeStrInput(strInputConfig{
-                                baseInputConfig: baseInputConfig{
-                                    name: "tracks." + strconv.Itoa(i) + ".path",
-                                    label: "Path",
-                                    disabled: true,
-                                },
+                            {%=
+                                makeStrInput(strInputConfig{
+                                    baseInputConfig: baseInputConfig{
+                                        name: "tracks." + strconv.Itoa(i) + ".path",
+                                        label: "Path",
+                                        disabled: true,
+                                    },
 
-                                value: t.Path(),
-                            })
-                        %}
-                    </th>
-                    <td>
-                        {%=
-                            makeStrInput(strInputConfig{
-                                baseInputConfig: baseInputConfig{
-                                    name: "tracks." + strconv.Itoa(i) + ".title",
-                                    label: "Title",
-                                },
+                                    value: t.Path(),
+                                })
+                            %}
+                        </th>
+                        <td>
+                            {%=
+                                makeStrInput(strInputConfig{
+                                    baseInputConfig: baseInputConfig{
+                                        name: "tracks." + strconv.Itoa(i) + ".title",
+                                        label: "Title",
+                                    },
 
-                                value: t.Title(),
-                            })
-                        %}
-                    </td>
-                    <td>
-                        {%=
-                            makeIntInput(intInputConfig{
-                                baseInputConfig: baseInputConfig{
-                                    name: "tracks." + strconv.Itoa(i) + ".track_num",
-                                    label: "Track number",
-                                },
+                                    value: t.Title(),
+                                })
+                            %}
+                        </td>
+                        <td>
+                            {%=
+                                makeIntInput(intInputConfig{
+                                    baseInputConfig: baseInputConfig{
+                                        name: "tracks." + strconv.Itoa(i) + ".track_num",
+                                        label: "Track number",
+                                    },
 
-                                min: takeIntPtr(0),
-                                value: takeIntPtr(t.TrackNum()),
-                            })
-                        %}
-                    </td>
-                    <td>
-                        {%=
-                            makeIntInput(intInputConfig{
-                                baseInputConfig: baseInputConfig{
-                                    name: "tracks." + strconv.Itoa(i) + ".disc",
-                                    label: "Disc number",
-                                },
+                                    min: takeIntPtr(0),
+                                    value: t.TrackNum(),
+                                })
+                            %}
+                        </td>
+                        <td>
+                            {%=
+                                makeIntInput(intInputConfig{
+                                    baseInputConfig: baseInputConfig{
+                                        name: "tracks." + strconv.Itoa(i) + ".disc",
+                                        label: "Disc number",
+                                    },
 
-                                min: takeIntPtr(0),
-                                value: takeIntPtr(t.Disc()),
-                            })
-                        %}
-                    </td>
-                    <td>
-                        {%=
-                            makeStrInput(strInputConfig{
-                                baseInputConfig: baseInputConfig{
-                                    name: "tracks." + strconv.Itoa(i) + ".track_artist",
-                                    label: "TrackArtist",
-                                },
+                                    min: takeIntPtr(0),
+                                    value: t.Disc(),
+                                })
+                            %}
+                        </td>
+                        <td>
+                            {%=
+                                makeStrInput(strInputConfig{
+                                    baseInputConfig: baseInputConfig{
+                                        name: "tracks." + strconv.Itoa(i) + ".track_artist",
+                                        label: "TrackArtist",
+                                    },
 
-                                value: t.TrackArtist(),
-                            })
-                        %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                                    value: t.TrackArtist(),
+                                })
+                            %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="row">
+            {% for i, c := range p.Covers %}
+                {% if i % 2 == 0 %}
+                <div class="clearfix"></div>
+                {% endif %}
+                <div class ="col s6">
+                    <div class="row">
+                        <div class="col s6">
+                            <input
+                                type="hidden"
+                                name="{%s "covers." + strconv.Itoa(i) + ".id" %}"
+                                value="{%s c.ID() %}"
+                            />
+
+                            <img class="materialboxed responsive-img" src="{%s c.URL() %}" />
+                        </div>
+
+                        <div class="col s6">
+                            <div class="row">
+                                <div class="col s12">
+                                    <h4>{%s c.Filename() %}</h4>
+                                </div>
+
+                                <div class="col s6">
+                                    {%=
+                                        makeSelect(selectConfig{
+                                            baseInputConfig: baseInputConfig{
+                                                name: "covers." + strconv.Itoa(i) + ".type",
+                                                label: "Cover type",
+                                            },
+
+                                            options:  p.AllCoverTypes,
+                                            selected: c.Type(),
+                                        })
+                                    %}
+                                </div>
+
+                                <div class="col s6">
+                                    {%=
+                                        makeIntInput(intInputConfig{
+                                            baseInputConfig: baseInputConfig{
+                                                name: "covers." + strconv.Itoa(i) + ".sort",
+                                                label: "Sort",
+                                            },
+
+                                            min: takeIntPtr(0),
+                                            value: c.Sort(),
+                                        })
+                                    %}
+                                </div>
+
+                                <div class="col s12">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            name="{%s "delete_covers" %}"
+                                            value="{%s c.ID() %}"
+                                        />
+                                        <span>Delete</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+
+        <div class="card" id="covers">
+            <div class="row">
+                <div class="col s12">
+                    <div class="file-field input-field">
+                        <div class="btn">
+                            <span>Upload files</span>
+                            <input
+                                type="file"
+                                name="covers"
+                                accept="image/jpeg, image/png"
+                                multiple
+                            >
+                        </div>
+                        <div class="file-path-wrapper">
+                            <input class="file-path validate" type="text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <footer class="row right-align">
-            <button class="btn waves-effect waves-light" type="submit">
+            <button id="submit-button" class="btn waves-effect waves-light" type="submit">
                 Save
                 <i class="material-icons right"></i>
             </button>

@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/config"
-	"github.com/rapthead/musiclib/persistance2"
+	"github.com/rapthead/musiclib/persistance"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/sync"
 )
@@ -20,7 +20,7 @@ const (
 
 type RefreshDeps interface {
 	RedisClient() *redis.Client
-	Queries2() *persistance2.Queries
+	Queries() *persistance.Queries
 }
 
 type FuseEntity struct {
@@ -31,7 +31,7 @@ type FuseEntity struct {
 
 func Refresh(deps RefreshDeps, ctx context.Context) {
 	rdb := deps.RedisClient()
-	queries := deps.Queries2()
+	queries := deps.Queries()
 	conf := config.Config
 
 	allMetadata, err := queries.GetAllMetadata(ctx)

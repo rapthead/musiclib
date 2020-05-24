@@ -9,7 +9,8 @@ BEGIN;
     ALTER TABLE album
         ALTER COLUMN year SET NOT NULL,
         ADD CONSTRAINT album_year_check CHECK (year > 1900 AND year <= EXTRACT(YEAR FROM CURRENT_DATE)),
-        ADD CONSTRAINT album_release_year_check CHECK (release_year IS NULL OR (release_year > 1900 AND year <= EXTRACT(YEAR FROM CURRENT_DATE)))
+        ADD CONSTRAINT album_release_year_check CHECK (release_year IS NULL OR (release_year > 1900 AND year <= EXTRACT(YEAR FROM CURRENT_DATE))),
+        ADD CONSTRAINT album_years_check CHECK (year <= release_year IS NOT FALSE)
     ;
     ALTER TABLE draft_album
         DROP COLUMN date,
