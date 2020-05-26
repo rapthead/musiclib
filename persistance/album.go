@@ -51,6 +51,7 @@ func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftA
         UPDATE draft_album SET
             title			= :title,
             artist_id		= :artist_id,
+            artist		    = :artist,
             year			= :year,
             release_year	= :release_year,
             mbid			= :mbid,

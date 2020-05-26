@@ -93,6 +93,21 @@ var AllAlbumTypeEnum = []AlbumTypeEnum{
 	AlbumTypeEnumLive,
 }
 
+func (e AlbumTypeEnum) IsValid() bool {
+	switch e {
+	case
+		AlbumTypeEnumLP,
+		AlbumTypeEnumEP,
+		AlbumTypeEnumAnthology,
+		AlbumTypeEnumSoundtrack,
+		AlbumTypeEnumCompilation,
+		AlbumTypeEnumSingle,
+		AlbumTypeEnumLive:
+		return true
+	}
+	return false
+}
+
 func (e *AlbumTypeEnum) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
@@ -119,6 +134,18 @@ var AllDownloadSourceEnum = []DownloadSourceEnum{
 	DownloadSourceEnumWHATCD,
 	DownloadSourceEnumWAFFLESFM,
 	DownloadSourceEnumREDACTEDCH,
+}
+
+func (e DownloadSourceEnum) IsValid() bool {
+	switch e {
+	case
+		DownloadSourceEnumMY,
+		DownloadSourceEnumWHATCD,
+		DownloadSourceEnumWAFFLESFM,
+		DownloadSourceEnumREDACTEDCH:
+		return true
+	}
+	return false
 }
 
 func (e *DownloadSourceEnum) Scan(src interface{}) error {
@@ -159,6 +186,23 @@ var AllCoverTypeEnum = []CoverTypeEnum{
 	CoverTypeEnumOther,
 }
 
+func (e CoverTypeEnum) IsValid() bool {
+	switch e {
+	case
+		CoverTypeEnumBackOut,
+		CoverTypeEnumFrontOut,
+		CoverTypeEnumBackIn,
+		CoverTypeEnumFrontIn,
+		CoverTypeEnumDisc,
+		CoverTypeEnumIn,
+		CoverTypeEnumOut,
+		CoverTypeEnumBooklet,
+		CoverTypeEnumOther:
+		return true
+	}
+	return false
+}
+
 func (e *CoverTypeEnum) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
@@ -188,6 +232,16 @@ const (
 	ImageTypeEnumJPEG ImageTypeEnum = "image/jpeg"
 	ImageTypeEnumPNG  ImageTypeEnum = "image/png"
 )
+
+func (e ImageTypeEnum) IsValid() bool {
+	switch e {
+	case
+		ImageTypeEnumJPEG,
+		ImageTypeEnumPNG:
+		return true
+	}
+	return false
+}
 
 func (e ImageTypeEnum) MakeExt() string {
 	switch e {

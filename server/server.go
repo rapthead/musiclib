@@ -84,7 +84,7 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		albumID := chi.URLParam(r, "albumID")
 		draftUpdateHandler(
 			draftUpdateParams{
-				albumID:             albumID,
+				albumIDStr:          albumID,
 				onSuccessRedirectTo: "/draft/" + albumID,
 			},
 			w, r,
