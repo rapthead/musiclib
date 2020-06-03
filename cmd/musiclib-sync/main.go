@@ -10,7 +10,12 @@ import (
 
 func main() {
 	logChan := usecases.Refresh(deps.New(), context.TODO())
-	for logLine := range logChan {
-		fmt.Println(logLine)
+	for logEvent := range logChan {
+		info, err := logEvent.Info(), logEvent.Err()
+		if err != nil {
+			fmt.Println("error: ", err.Error())
+		} else {
+			fmt.Println("info: ", info)
+		}
 	}
 }

@@ -38,9 +38,16 @@ type AlbumFilesInfo struct {
 	TracksInfo map[relPath]FlacFileInfo
 }
 
+type Logger interface {
+	Fatal(error)
+	Error(error)
+	Info(string)
+}
+
 type rescanCase struct {
-	ctx  context.Context
-	root string
+	ctx    context.Context
+	root   string
+	logger Logger
 
 	sqlxClient  *sqlx.DB
 	redisClient *redis.Client
@@ -50,7 +57,7 @@ type rescanCase struct {
 func (r rescanCase) absToRel(absPath string) relPath {
 	rel, err := filepath.Rel(r.root, absPath)
 	if err != nil {
-		log.Fatal("can't convert abs path to rel", err)
+		r.logger.Fatal(fmt.Errorf("can't convert abs path to rel %w", err))
 	}
 	return relPath(rel)
 }
@@ -59,7 +66,7 @@ func (r rescanCase) relToAbs(path relPath) string {
 	return filepath.Join(r.root, string(path))
 }
 
-func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
+func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, error) {
 	pathComponents := strings.Split(string(albumTagsInfo.RelPath), string(os.PathSeparator))
 	var downloadSource models.DownloadSourceEnum
 	switch pathComponents[0] {
@@ -72,7 +79,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 	case "bandcamp.com", "soundcloud.com":
 		downloadSource = models.DownloadSourceEnumWHATCD
 	default:
-		log.Fatal("Unknown source:", pathComponents[0])
+		return DraftData{}, fmt.Errorf("Unknown source: %s", pathComponents[0])
 	}
 	draftAlbum := models.DraftAlbum{
 		ID:             uuid.Must(uuid.NewV4()),
@@ -89,7 +96,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 			string(path),
 		)
 		if err != nil {
-			log.Fatal("error on normalizing track path:", err)
+			return DraftData{}, fmt.Errorf("Error on normalizing track path: %w", err)
 		}
 		draftTrack := models.DraftTrack{
 			ID:      uuid.Must(uuid.NewV4()),
@@ -111,7 +118,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 				if year, err := strconv.Atoi(dateParts[0]); err == nil {
 					draftAlbum.Year = zero.IntFrom(int64(year))
 				} else {
-					log.Println("can't decode date tag", err)
+					r.logger.Error(fmt.Errorf("Can't decode date tag %w", err))
 				}
 			case "title":
 				draftTrack.Title = zero.StringFrom(tagValue)
@@ -119,7 +126,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 				if trackNum, err := strconv.Atoi(tagValue); err == nil {
 					draftTrack.TrackNum = zero.IntFrom(int64(trackNum))
 				} else {
-					log.Println("can't decode tracknumber tag", err)
+					r.logger.Error(fmt.Errorf("Can't decode tracknumber tag %w", err))
 				}
 			case "discnumber":
 				if discnumber, err := strconv.Atoi(tagValue); err == nil {
@@ -129,7 +136,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) DraftData {
 		}
 		draftTracks[path] = draftTrack
 	}
-	return DraftData{draftAlbum, draftTracks}
+	return DraftData{draftAlbum, draftTracks}, nil
 }
 
 func (r rescanCase) findAlbumFlacFiles(albumDir relPath) []relPath {
@@ -144,22 +151,24 @@ func (r rescanCase) findAlbumFlacFiles(albumDir relPath) []relPath {
 		return nil
 	})
 	if err != nil {
-		log.Fatal(err)
+		r.logger.Error(fmt.Errorf("Can't fs walk %w", err))
+		return flacPaths
 	}
 	return flacPaths
 }
 
-func (r rescanCase) findNewAlbumDirs() []relPath {
+func (r rescanCase) findNewAlbumDirs() ([]relPath, error) {
 	ctx := r.ctx
+	var newAlbumDirs []relPath
 
 	absAlbumDirectories, err := filepath.Glob(r.root + "/*/*")
 	if err != nil {
-		log.Fatal("Can't glob while rescan:", err)
+		return newAlbumDirs, fmt.Errorf("Can't glob while rescan: %w", err)
 	}
 
 	existenPaths, err := r.queries.GetExistenPaths(ctx)
 	if err != nil {
-		log.Fatal("Can't fetch existen album paths:", err)
+		return newAlbumDirs, fmt.Errorf("Can't fetch existen album paths: %w", err)
 	}
 
 	existenAlbumPaths := make(
@@ -170,14 +179,13 @@ func (r rescanCase) findNewAlbumDirs() []relPath {
 		existenAlbumPaths[relPath(path)] = struct{}{}
 	}
 
-	var newAlbumDirs []relPath
 	for _, absAlbumDir := range absAlbumDirectories {
 		albumDir := r.absToRel(absAlbumDir)
 		if _, found := existenAlbumPaths[albumDir]; found {
 			continue
 		}
 		if fileInfo, err := os.Lstat(absAlbumDir); err != nil {
-			log.Fatal("can't stat dir", absAlbumDir, err)
+			return newAlbumDirs, fmt.Errorf("can't stat dir %s %w", absAlbumDir, err)
 		} else if fileInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 			continue
 		}
@@ -186,10 +194,10 @@ func (r rescanCase) findNewAlbumDirs() []relPath {
 			albumDir,
 		)
 	}
-	return newAlbumDirs
+	return newAlbumDirs, nil
 }
 
-func (r rescanCase) addReplayGain(draftData DraftData) DraftData {
+func (r rescanCase) addReplayGain(draftData DraftData) (DraftData, error) {
 	absTrackPaths := make([]string, 0, len(draftData.Tracks))
 	for trackPath := range draftData.Tracks {
 		absTrackPaths = append(absTrackPaths, r.relToAbs(trackPath))
@@ -197,7 +205,7 @@ func (r rescanCase) addReplayGain(draftData DraftData) DraftData {
 
 	calcResult, err := CalcReplaygain(absTrackPaths)
 	if err != nil {
-		log.Fatal("replaygain calculation failed", err)
+		return draftData, fmt.Errorf("replaygain calculation failed %w", err)
 	}
 
 	draftData.Album.RgGain = calcResult.AlbumGain
@@ -213,7 +221,7 @@ func (r rescanCase) addReplayGain(draftData DraftData) DraftData {
 		updatedDraftTracks[relPath] = draftTrack
 	}
 
-	return DraftData{draftData.Album, updatedDraftTracks}
+	return DraftData{draftData.Album, updatedDraftTracks}, nil
 }
 
 func (r rescanCase) getFlacInfo(flacPaths []relPath) (map[relPath]FlacFileInfo, error) {
@@ -221,7 +229,7 @@ func (r rescanCase) getFlacInfo(flacPaths []relPath) (map[relPath]FlacFileInfo, 
 	for _, flacPath := range flacPaths {
 		stream, err := flac.ParseFile(r.relToAbs(flacPath))
 		if err != nil {
-			log.Fatal("can't parse flac file!", flacPath, err)
+			return flacInfoMap, fmt.Errorf("can't parse flac file! %s: %w", flacPath, err)
 		}
 		defer stream.Close()
 		flacFileInfo := FlacFileInfo{
@@ -242,44 +250,78 @@ func (r rescanCase) getFlacInfo(flacPaths []relPath) (map[relPath]FlacFileInfo, 
 	return flacInfoMap, nil
 }
 
-func (r rescanCase) Do() error {
+func (r rescanCase) Do() {
 	ctx := r.ctx
 
-	newAlbumDirs := r.findNewAlbumDirs()
-	fmt.Println("newAlbumDirs", newAlbumDirs)
+	logError := func(description string, err error) {
+		r.logger.Error(fmt.Errorf("%s: %w", description, err))
+	}
+	logInfo := func(info string) {
+		r.logger.Info(info)
+	}
+
+	newAlbumDirs, err := r.findNewAlbumDirs()
+	if err != nil {
+		logError("can't find new album dirs", err)
+	}
+
+	{
+		logStr := "new album dirs: "
+		for i, newAlbumDir := range newAlbumDirs {
+			if i != 0 {
+				logStr += ", "
+			}
+			logStr += string(newAlbumDir)
+		}
+		logInfo(logStr)
+	}
 
 	for _, albumDir := range newAlbumDirs {
+		logInfo("Processing dir: " + string(albumDir))
+
 		flacPaths := r.findAlbumFlacFiles(albumDir)
 		tracksTags, err := r.getFlacInfo(flacPaths)
 		if err != nil {
-			log.Print("album processing error", albumDir, err)
+			logError("Album processing error", err)
 			continue
 		}
 
-		draftData := r.processAlbumTags(AlbumFilesInfo{albumDir, tracksTags})
-		draftData = r.addReplayGain(draftData)
-		log.Println("process result", draftData)
+		draftData, err := r.processAlbumTags(AlbumFilesInfo{albumDir, tracksTags})
+		if err != nil {
+			logError("Album tags processing error", err)
+			continue
+		}
+
+		draftData, err = r.addReplayGain(draftData)
+		if err != nil {
+			logError("Replaygain calculation error", err)
+			continue
+		}
+
+		logInfo(fmt.Sprintln("process result", draftData))
 
 		txOptions := sql.TxOptions{}
 		tx, err := r.sqlxClient.BeginTxx(ctx, &txOptions)
 		if err != nil {
-			log.Fatal("Can't start transaction", err)
+			logError("Can't start transaction", err)
+			return
 		}
 
 		txQueries := r.queries.WithTx(tx)
 		if err := txQueries.InsertDraftAlbum(ctx, draftData.Album); err != nil {
 			tx.Rollback()
-			log.Fatal("Can't insert draft album: ", err)
+			logError("Can't insert draft album", err)
+			return
 		}
 		for _, track := range draftData.Tracks {
 			if err := txQueries.InsertDraftTrack(ctx, track); err != nil {
 				tx.Rollback()
-				log.Fatal("Can't insert draft album: ", err)
+				logError("Can't insert draft track", err)
+				return
 			}
 		}
 		tx.Commit()
 	}
-	return nil
 }
 
 type RescanDeps interface {
@@ -289,13 +331,42 @@ type RescanDeps interface {
 	Queries() *persistance.Queries
 }
 
-func Rescan(deps RescanDeps, ctx context.Context) error {
-	return rescanCase{
-		ctx,
-		deps.MusiclibRoot(),
+type rescanLogger struct {
+	ch chan<- LogEvent
+}
 
-		deps.SQLXClient(),
-		deps.RedisClient(),
-		deps.Queries(),
-	}.Do()
+func (r rescanLogger) Fatal(err error) {
+	r.ch <- LogEntry{
+		err: err,
+	}
+	log.Fatal(err)
+}
+
+func (r rescanLogger) Error(err error) {
+	r.ch <- LogEntry{
+		err: err,
+	}
+}
+
+func (r rescanLogger) Info(info string) {
+	r.ch <- LogEntry{
+		info: info,
+	}
+}
+
+func Rescan(deps RescanDeps, ctx context.Context) <-chan LogEvent {
+	logChan := make(chan LogEvent)
+	go func() {
+		defer close(logChan)
+		rescanCase{
+			ctx,
+			deps.MusiclibRoot(),
+
+			rescanLogger{logChan},
+			deps.SQLXClient(),
+			deps.RedisClient(),
+			deps.Queries(),
+		}.Do()
+	}()
+	return logChan
 }

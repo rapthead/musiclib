@@ -118,22 +118,50 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		EventStreamHandler(logChan, w, r)
 	})
 
+	r.Get("/rescan", func(w http.ResponseWriter, r *http.Request) {
+		p := &views.SyncPage{
+			SSEUrl: "/rescan/sse",
+		}
+		views.WritePageTemplate(w, p)
+	})
+
+	r.Get("/rescan/sse", func(w http.ResponseWriter, r *http.Request) {
+		logChan := usecases.Rescan(d, r.Context())
+		EventStreamHandler(logChan, w, r)
+	})
+
 	return r
 }
 
-func EventStreamHandler(logChan <-chan string, w http.ResponseWriter, r *http.Request) {
+func EventStreamHandler(
+	logChan <-chan usecases.LogEvent,
+	w http.ResponseWriter, r *http.Request,
+) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(200)
 
 	doFlush := func() {}
 	if f, ok := w.(http.Flusher); ok {
 		doFlush = f.Flush
 	}
 
-	for logLine := range logChan {
-		fmt.Fprintf(w, "data: %s\n\n", strings.Replace(logLine, "\n", "\\n", -1))
+	sendEvent := func(event string, data string) {
+		fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, strings.Replace(data, "\n", "\\n", -1))
 		doFlush()
 	}
+
+	for logEvent := range logChan {
+		info, err := logEvent.Info(), logEvent.Err()
+		if err != nil {
+			sendEvent("error", err.Error())
+		} else {
+			sendEvent("info", info)
+		}
+	}
+
+	fmt.Fprint(w, "retry: 15000\nevent: end\ndata:\n\n")
+	doFlush()
 }

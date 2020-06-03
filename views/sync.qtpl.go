@@ -73,47 +73,57 @@ func (p *SyncPage) StreamBody(qw422016 *qt422016.Writer) {
 
     <script>
         function start() {
-            console.log("start")
             const output = document.getElementById("output");
             const eventSource = new EventSource(`)
-//line sync.qtpl:26
+//line sync.qtpl:25
 	qw422016.N().Q(p.SSEUrl)
-//line sync.qtpl:26
+//line sync.qtpl:25
 	qw422016.N().S(`);
-            eventSource.onmessage = function(event) {
-                console.warn(event)
-                const logLine = document.createTextNode(event.data+"\n");
+
+            function addLogLine(str) {
+                const logLine = document.createTextNode(str+"\n");
                 output.insertBefore(logLine, output.firstChild);
-            };
+            }
+
+            eventSource.addEventListener('info', (event) => {
+                addLogLine(event.data)
+            })
+            eventSource.addEventListener('error', (event) => {
+                addLogLine(event.data)
+            })
+            eventSource.addEventListener('end', (event) => {
+                addLogLine('===FINISH===')
+                eventSource.close()
+            })
         }
     </script>
 </div>
 `)
-//line sync.qtpl:35
+//line sync.qtpl:45
 }
 
-//line sync.qtpl:35
+//line sync.qtpl:45
 func (p *SyncPage) WriteBody(qq422016 qtio422016.Writer) {
-//line sync.qtpl:35
+//line sync.qtpl:45
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line sync.qtpl:35
+//line sync.qtpl:45
 	p.StreamBody(qw422016)
-//line sync.qtpl:35
+//line sync.qtpl:45
 	qt422016.ReleaseWriter(qw422016)
-//line sync.qtpl:35
+//line sync.qtpl:45
 }
 
-//line sync.qtpl:35
+//line sync.qtpl:45
 func (p *SyncPage) Body() string {
-//line sync.qtpl:35
+//line sync.qtpl:45
 	qb422016 := qt422016.AcquireByteBuffer()
-//line sync.qtpl:35
+//line sync.qtpl:45
 	p.WriteBody(qb422016)
-//line sync.qtpl:35
+//line sync.qtpl:45
 	qs422016 := string(qb422016.B)
-//line sync.qtpl:35
+//line sync.qtpl:45
 	qt422016.ReleaseByteBuffer(qb422016)
-//line sync.qtpl:35
+//line sync.qtpl:45
 	return qs422016
-//line sync.qtpl:35
+//line sync.qtpl:45
 }

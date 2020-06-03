@@ -60,22 +60,26 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
         <!-- Compiled and minified JavaScript -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     </head>
-    <body>
-        <nav>
+    <body class="body">
+        <nav id="main-menu">
             <div class="nav-wrapper">
                 <a href="#" class="brand-logo right">Musiclib</a>
                 <ul id="nav-mobile" class="left hide-on-med-and-down">
                     <li><a href="/draft">Draft albums</a></li>
                     <li><a href="/sync">Sync</a></li>
+                    <li><a href="/rescan">Rescan new drafts</a></li>
                 </ul>
             </div>
         </nav>
 
-        `)
-//line basepage.qtpl:37
+        <div id="page-content">
+            `)
+//line basepage.qtpl:39
 	p.StreamBody(qw422016)
-//line basepage.qtpl:37
+//line basepage.qtpl:39
 	qw422016.N().S(`
+        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var elems = document.querySelectorAll('select');
@@ -90,31 +94,31 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
     </body>
 </html>
 `)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 }
 
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 func WritePageTemplate(qq422016 qtio422016.Writer, p Page) {
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	StreamPageTemplate(qw422016, p)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	qt422016.ReleaseWriter(qw422016)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 }
 
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 func PageTemplate(p Page) string {
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	qb422016 := qt422016.AcquireByteBuffer()
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	WritePageTemplate(qb422016, p)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	qs422016 := string(qb422016.B)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	qt422016.ReleaseByteBuffer(qb422016)
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 	return qs422016
-//line basepage.qtpl:51
+//line basepage.qtpl:55
 }

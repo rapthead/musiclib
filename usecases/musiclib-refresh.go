@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/config"
@@ -29,17 +28,21 @@ type FuseEntity struct {
 	VorbisComments [][2]string `json:"vorbisComments"`
 }
 
-func Refresh(deps RefreshDeps, ctx context.Context) <-chan string {
+func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 	rdb := deps.RedisClient()
 	queries := deps.Queries()
 	conf := config.Config
 
-	logChan := make(chan string)
+	logChan := make(chan LogEvent)
 	logError := func(err error) {
-		logChan <- err.Error()
+		logChan <- LogEntry{
+			err: err,
+		}
 	}
 	logInfo := func(info string) {
-		logChan <- info
+		logChan <- LogEntry{
+			info: info,
+		}
 	}
 
 	go func() {
@@ -120,7 +123,6 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan string {
 		progressChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
 		var allErrors []string
 		for pi := range progressChan {
-			time.Sleep(time.Millisecond * 50)
 			if pi.Error != nil {
 				err := fmt.Errorf("sync error: %w", pi.Error)
 				logError(err)

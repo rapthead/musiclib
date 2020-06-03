@@ -23,18 +23,22 @@ Page prints a page implementing Page interface.
         <!-- Compiled and minified JavaScript -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     </head>
-    <body>
-        <nav>
+    <body class="body">
+        <nav id="main-menu">
             <div class="nav-wrapper">
                 <a href="#" class="brand-logo right">Musiclib</a>
                 <ul id="nav-mobile" class="left hide-on-med-and-down">
                     <li><a href="/draft">Draft albums</a></li>
                     <li><a href="/sync">Sync</a></li>
+                    <li><a href="/rescan">Rescan new drafts</a></li>
                 </ul>
             </div>
         </nav>
 
-        {%= p.Body() %}
+        <div id="page-content">
+            {%= p.Body() %}
+        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var elems = document.querySelectorAll('select');
