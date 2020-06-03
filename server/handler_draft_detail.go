@@ -296,6 +296,7 @@ func makeDraftDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *htt
 type draftUpdateParams struct {
 	albumIDStr          string
 	onSuccessRedirectTo string
+	onDeleteRedirectTo  string
 }
 
 func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.ResponseWriter, r *http.Request) {
@@ -313,100 +314,110 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 			return
 		}
 
-		showError := func(w http.ResponseWriter, err error, code int) {
-			p := &views.DraftAlbumDetailsPage{
-				Error:  err,
-				Album:  DraftAlbumForm{&draftAlbumDetails.DraftAlbum},
-				Tracks: newTracksData(draftAlbumDetails.DraftTracks),
-				Covers: newCoversData(draftAlbumDetails.DraftCovers),
-			}
-			fmt.Println(p.Error)
-			w.WriteHeader(code)
-			views.WritePageTemplate(w, p)
-		}
-
 		err = r.ParseMultipartForm(1024 * 1024)
 		if err != nil {
 			showError(w, fmt.Errorf("unable to parse data: %w", err), http.StatusBadRequest)
 			return
 		}
-
 		vals := values{r.PostForm}
-		draftAlbum := draftAlbumDetails.DraftAlbum
-		err = DraftAlbumForm{&draftAlbum}.Merge(vals)
-		if err != nil {
-			showError(w, fmt.Errorf("unable to merge album data: %w", err), http.StatusBadRequest)
-			return
+		_, doDelete := vals.Values["delete"]
+		if doDelete {
+			err := usecases.DeleteDraftAlbum(
+				d, r.Context(), draftAlbumID,
+			)
+			if err != nil {
+				showError(w, err, http.StatusInternalServerError)
+				return
+			}
+			http.Redirect(w, r, p.onDeleteRedirectTo, http.StatusSeeOther)
+		} else {
+			showError := func(w http.ResponseWriter, err error, code int) {
+				p := &views.DraftAlbumDetailsPage{
+					Error:  err,
+					Album:  DraftAlbumForm{&draftAlbumDetails.DraftAlbum},
+					Tracks: newTracksData(draftAlbumDetails.DraftTracks),
+					Covers: newCoversData(draftAlbumDetails.DraftCovers),
+				}
+				w.WriteHeader(code)
+				views.WritePageTemplate(w, p)
+			}
+
+			draftAlbum := draftAlbumDetails.DraftAlbum
+			err = DraftAlbumForm{&draftAlbum}.Merge(vals)
+			if err != nil {
+				showError(w, fmt.Errorf("unable to merge album data: %w", err), http.StatusBadRequest)
+				return
+			}
+
+			draftTracks := draftAlbumDetails.DraftTracks
+			for i := range draftTracks {
+				draftTrackPtr := &draftTracks[i]
+				err = DraftTrackForm{draftTrackPtr}.Merge(vals)
+				if err != nil {
+					showError(w, fmt.Errorf("unable to merge track data: %w", err), http.StatusBadRequest)
+					return
+				}
+			}
+
+			var deleteCovers []uuid.UUID
+			draftCovers := draftAlbumDetails.DraftCovers
+			for i := range draftCovers {
+				draftCoverPtr := &draftCovers[i]
+				f := DraftCoverForm{draftCoverPtr}
+				err = f.Merge(vals)
+				if err != nil {
+					showError(w, fmt.Errorf("unable to merge cover data: %w", err), http.StatusBadRequest)
+					return
+				}
+				if f.IsDeleted(vals) {
+					deleteCovers = append(deleteCovers, draftCoverPtr.ID)
+				}
+			}
+
+			fhs := r.MultipartForm.File["covers"]
+			newCovers := make([]models.DraftCover, len(fhs), len(fhs))
+			for i, fh := range fhs {
+				imageType, err := models.NewImageTypeEnum(fh.Header.Get("Content-Type"))
+				if err != nil {
+					wrapedErr := fmt.Errorf("file %s have wrong mime type: %w", fh.Filename, err)
+					showError(w, wrapedErr, http.StatusBadRequest)
+					return
+				}
+				cover := models.DraftCover{
+					ID:               uuid.Must(uuid.NewV4()),
+					OriginalFilename: fh.Filename,
+					AlbumID:          draftAlbumID,
+					Sort:             zero.Int{},
+					Type:             models.CoverTypeEnumFrontOut,
+				}
+
+				file, err := fh.Open()
+				if err != nil {
+					showError(w, fmt.Errorf("unable to open uploaded cover: %w", err), http.StatusInternalServerError)
+					return
+				}
+				err = coversStorage.Save(cover.ID, imageType, file)
+				file.Close()
+				if err != nil {
+					wrapedErr := fmt.Errorf("cant't save cover image: %w", err)
+					showError(w, wrapedErr, http.StatusInternalServerError)
+					return
+				}
+				newCovers[i] = cover
+			}
+
+			usecases.UpdateDraftAlbum(
+				d, r.Context(), usecases.UpdateDraftAlbumParams{
+					Album:        draftAlbum,
+					Tracks:       draftTracks,
+					Covers:       draftCovers,
+					DeleteCovers: deleteCovers,
+					NewCovers:    newCovers,
+				},
+			)
+
+			http.Redirect(w, r, p.onSuccessRedirectTo+"#footer", http.StatusSeeOther)
 		}
-
-		draftTracks := draftAlbumDetails.DraftTracks
-		for i := range draftTracks {
-			draftTrackPtr := &draftTracks[i]
-			err = DraftTrackForm{draftTrackPtr}.Merge(vals)
-			if err != nil {
-				showError(w, fmt.Errorf("unable to merge track data: %w", err), http.StatusBadRequest)
-				return
-			}
-		}
-
-		var deleteCovers []uuid.UUID
-		draftCovers := draftAlbumDetails.DraftCovers
-		for i := range draftCovers {
-			draftCoverPtr := &draftCovers[i]
-			f := DraftCoverForm{draftCoverPtr}
-			err = f.Merge(vals)
-			if err != nil {
-				showError(w, fmt.Errorf("unable to merge cover data: %w", err), http.StatusBadRequest)
-				return
-			}
-			if f.IsDeleted(vals) {
-				deleteCovers = append(deleteCovers, draftCoverPtr.ID)
-			}
-		}
-
-		fhs := r.MultipartForm.File["covers"]
-		newCovers := make([]models.DraftCover, len(fhs), len(fhs))
-		for i, fh := range fhs {
-			imageType, err := models.NewImageTypeEnum(fh.Header.Get("Content-Type"))
-			if err != nil {
-				wrapedErr := fmt.Errorf("file %s have wrong mime type: %w", fh.Filename, err)
-				showError(w, wrapedErr, http.StatusBadRequest)
-				return
-			}
-			cover := models.DraftCover{
-				ID:               uuid.Must(uuid.NewV4()),
-				OriginalFilename: fh.Filename,
-				AlbumID:          draftAlbumID,
-				Sort:             zero.Int{},
-				Type:             models.CoverTypeEnumFrontOut,
-			}
-
-			file, err := fh.Open()
-			if err != nil {
-				showError(w, fmt.Errorf("unable to open uploaded cover: %w", err), http.StatusInternalServerError)
-				return
-			}
-			err = coversStorage.Save(cover.ID, imageType, file)
-			file.Close()
-			if err != nil {
-				wrapedErr := fmt.Errorf("cant't save cover image: %w", err)
-				showError(w, wrapedErr, http.StatusInternalServerError)
-				return
-			}
-			newCovers[i] = cover
-		}
-
-		usecases.UpdateDraftAlbum(
-			d, r.Context(), usecases.UpdateDraftAlbumParams{
-				Album:        draftAlbum,
-				Tracks:       draftTracks,
-				Covers:       draftCovers,
-				DeleteCovers: deleteCovers,
-				NewCovers:    newCovers,
-			},
-		)
-
-		http.Redirect(w, r, p.onSuccessRedirectTo+"#submit-button", http.StatusSeeOther)
 	}
 }
 
@@ -414,7 +425,6 @@ func showError(w http.ResponseWriter, err error, code int) {
 	p := &views.ErrorPage{
 		Error: err,
 	}
-	fmt.Println(p.Error)
 	w.WriteHeader(code)
 	views.WritePageTemplate(w, p)
 }

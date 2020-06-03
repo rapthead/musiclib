@@ -1,13 +1,15 @@
 {% code
 type ErrorPage struct {
-    Error               error
+    Error   error
 }
 %}
 
 {% func (p *ErrorPage) Title() %}Error{% endfunc %}
 
 {% func (p *ErrorPage) Body() %}
-<div class="container card-panel red white-text">
-    {%s p.Error.Error() %}
+<div class="container">
+    <div class="card-panel red white-text">
+        {%s p.Error.Error() %}
+    </div>
 </div>
 {% endfunc %}

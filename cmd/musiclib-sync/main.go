@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/rapthead/musiclib/deps"
 	"github.com/rapthead/musiclib/usecases"
 )
 
 func main() {
-	// deps := deps.New()
-	usecases.Refresh(deps.New(), context.TODO())
+	logChan := usecases.Refresh(deps.New(), context.TODO())
+	for logLine := range logChan {
+		fmt.Println(logLine)
+	}
 }

@@ -26,7 +26,11 @@ func GetDraftAlbumDetails(dep GetDraftAlbumDetailsDeps, ctx context.Context, id 
 
 	album, err := queries.GetDraftAlbumByID(ctx, id)
 	if err != nil {
-		return result, fmt.Errorf("Unable to fetch album: %w", err)
+		if err == persistance.DraftAlbumNotFound {
+			return result, err
+		} else {
+			return result, fmt.Errorf("Unable to fetch album: %w", err)
+		}
 	}
 	result.DraftAlbum = album
 

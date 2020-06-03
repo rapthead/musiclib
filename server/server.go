@@ -1,13 +1,17 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
 	"github.com/rapthead/musiclib/deps"
 	"github.com/rapthead/musiclib/models"
+	"github.com/rapthead/musiclib/usecases"
+	"github.com/rapthead/musiclib/views"
 )
 
 // draft album to view data mapper
@@ -72,6 +76,10 @@ func MakeRoutes(d deps.Deps) http.Handler {
 	r.Use(middleware.RedirectSlashes)
 
 	draftListHandler := makeDraftListHandler(d)
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/draft", http.StatusSeeOther)
+	})
+
 	r.Get("/draft", draftListHandler)
 
 	draftDetailsHandler := makeDraftDetailsHandler(d)
@@ -85,6 +93,7 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		draftUpdateHandler(
 			draftUpdateParams{
 				albumIDStr:          albumID,
+				onDeleteRedirectTo:  "/draft/",
 				onSuccessRedirectTo: "/draft/" + albumID,
 			},
 			w, r,
@@ -97,5 +106,34 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		coverHandler(coverIDStr, w, r)
 	})
 
+	r.Get("/sync", func(w http.ResponseWriter, r *http.Request) {
+		p := &views.SyncPage{
+			SSEUrl: "/sync/sse",
+		}
+		views.WritePageTemplate(w, p)
+	})
+
+	r.Get("/sync/sse", func(w http.ResponseWriter, r *http.Request) {
+		logChan := usecases.Refresh(d, r.Context())
+		EventStreamHandler(logChan, w, r)
+	})
+
 	return r
+}
+
+func EventStreamHandler(logChan <-chan string, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	doFlush := func() {}
+	if f, ok := w.(http.Flusher); ok {
+		doFlush = f.Flush
+	}
+
+	for logLine := range logChan {
+		fmt.Fprintf(w, "data: %s\n\n", strings.Replace(logLine, "\n", "\\n", -1))
+		doFlush()
+	}
 }

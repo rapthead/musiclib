@@ -59,39 +59,41 @@ func (p *ErrorPage) Title() string {
 func (p *ErrorPage) StreamBody(qw422016 *qt422016.Writer) {
 //line error.qtpl:9
 	qw422016.N().S(`
-<div class="container card-panel red white-text">
-    `)
-//line error.qtpl:11
+<div class="container">
+    <div class="card-panel red white-text">
+        `)
+//line error.qtpl:12
 	qw422016.E().S(p.Error.Error())
-//line error.qtpl:11
+//line error.qtpl:12
 	qw422016.N().S(`
+    </div>
 </div>
 `)
-//line error.qtpl:13
+//line error.qtpl:15
 }
 
-//line error.qtpl:13
+//line error.qtpl:15
 func (p *ErrorPage) WriteBody(qq422016 qtio422016.Writer) {
-//line error.qtpl:13
+//line error.qtpl:15
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line error.qtpl:13
+//line error.qtpl:15
 	p.StreamBody(qw422016)
-//line error.qtpl:13
+//line error.qtpl:15
 	qt422016.ReleaseWriter(qw422016)
-//line error.qtpl:13
+//line error.qtpl:15
 }
 
-//line error.qtpl:13
+//line error.qtpl:15
 func (p *ErrorPage) Body() string {
-//line error.qtpl:13
+//line error.qtpl:15
 	qb422016 := qt422016.AcquireByteBuffer()
-//line error.qtpl:13
+//line error.qtpl:15
 	p.WriteBody(qb422016)
-//line error.qtpl:13
+//line error.qtpl:15
 	qs422016 := string(qb422016.B)
-//line error.qtpl:13
+//line error.qtpl:15
 	qt422016.ReleaseByteBuffer(qb422016)
-//line error.qtpl:13
+//line error.qtpl:15
 	return qs422016
-//line error.qtpl:13
+//line error.qtpl:15
 }

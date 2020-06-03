@@ -61,10 +61,20 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     </head>
     <body>
+        <nav>
+            <div class="nav-wrapper">
+                <a href="#" class="brand-logo right">Musiclib</a>
+                <ul id="nav-mobile" class="left hide-on-med-and-down">
+                    <li><a href="/draft">Draft albums</a></li>
+                    <li><a href="/sync">Sync</a></li>
+                </ul>
+            </div>
+        </nav>
+
         `)
-//line basepage.qtpl:27
+//line basepage.qtpl:37
 	p.StreamBody(qw422016)
-//line basepage.qtpl:27
+//line basepage.qtpl:37
 	qw422016.N().S(`
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -80,31 +90,31 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
     </body>
 </html>
 `)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 }
 
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 func WritePageTemplate(qq422016 qtio422016.Writer, p Page) {
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	StreamPageTemplate(qw422016, p)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	qt422016.ReleaseWriter(qw422016)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 }
 
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 func PageTemplate(p Page) string {
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	qb422016 := qt422016.AcquireByteBuffer()
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	WritePageTemplate(qb422016, p)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	qs422016 := string(qb422016.B)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	qt422016.ReleaseByteBuffer(qb422016)
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 	return qs422016
-//line basepage.qtpl:41
+//line basepage.qtpl:51
 }

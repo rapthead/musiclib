@@ -302,11 +302,24 @@ type selectConfig struct {
             </div>
         </div>
 
-        <footer class="row right-align">
-            <button id="submit-button" class="btn waves-effect waves-light" type="submit">
-                Save
-                <i class="material-icons right"></i>
-            </button>
+        <footer class="row" id="footer">
+            <div class="col s6">
+                <button
+                    class="btn waves-effect waves-light red"
+                    type="submit"
+                    name="delete"
+                >
+                    Delete
+                    <i class="material-delete right"></i>
+                </button>
+            </div>
+
+            <div class="col s6 right-align">
+                <button class="btn waves-effect waves-light" type="submit">
+                    Save
+                    <i class="material-icons right"></i>
+                </button>
+            </div>
         </footer>
     </form>
 {% endfunc %}

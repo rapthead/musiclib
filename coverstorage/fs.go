@@ -54,6 +54,10 @@ func (s FSCoverStorage) Get(id uuid.UUID) (string, io.ReadCloser, error) {
 	return ctype, file, nil
 }
 
+func (s FSCoverStorage) Delete(id uuid.UUID) error {
+	return os.Remove(s.makePath(id))
+}
+
 func (s FSCoverStorage) makePath(id uuid.UUID) string {
 	return path.Join("/tmp/covers", id.String())
 }

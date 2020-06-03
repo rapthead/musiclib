@@ -79,6 +79,7 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
                 artist.name as album_artist_name,
                 album.title as album_title,
                 album.year as year,
+                track.disc as track_disc,
                 track.track_artist as track_artist_name,
                 track.title as track_title,
                 track.track_num as track_number,

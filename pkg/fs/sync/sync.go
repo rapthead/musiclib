@@ -35,8 +35,14 @@ func Sync(
 			absPath := path.Join(musiclibRoot, entity.OriginPath)
 			stat, err := os.Stat(absPath)
 			if err != nil {
-				progressChan <- ProgressInfo{
-					Error: fmt.Errorf("Stat origin path error %s: %w", absPath, err),
+				if os.IsNotExist(err) {
+					progressChan <- ProgressInfo{
+						Error: fmt.Errorf("File not found %s", absPath),
+					}
+				} else {
+					progressChan <- ProgressInfo{
+						Error: fmt.Errorf("Stat origin path error %s: %w", absPath, err),
+					}
 				}
 				continue
 			}

@@ -2,6 +2,7 @@ package persistance
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -9,6 +10,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/rapthead/musiclib/models"
 )
+
+var DraftAlbumNotFound = errors.New("Draft album not found")
 
 func (p *Queries) ListDraftAlbums(ctx context.Context) ([]models.DraftAlbum, error) {
 	draftAlbums := []models.DraftAlbum{}
@@ -25,6 +28,9 @@ func (p *Queries) GetDraftAlbumByID(ctx context.Context, id uuid.UUID) (models.D
         SELECT * FROM draft_album
         WHERE id = $1
     `, id)
+	if err == sql.ErrNoRows {
+		return draftAlbum, DraftAlbumNotFound
+	}
 	return draftAlbum, err
 }
 
@@ -71,7 +77,7 @@ func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftA
 	if affectedCount, err := result.RowsAffected(); err != nil {
 		return fmt.Errorf("draft album updation error, can't get affected rows count: %w", err)
 	} else if affectedCount == 0 {
-		return errors.New("draft album was not found")
+		return DraftAlbumNotFound
 	}
 	return nil
 }
@@ -110,6 +116,24 @@ func (p *Queries) InsertDraftAlbum(ctx context.Context, draftAlbum models.DraftA
     `, draftAlbum)
 	if err != nil {
 		return fmt.Errorf("draft album insertion error: %w", err)
+	}
+	return nil
+}
+
+func (p *Queries) DeleteDraftAlbumByID(ctx context.Context, id uuid.UUID) error {
+	result, err := p.db.ExecContext(ctx, `
+        DELETE FROM draft_album
+        WHERE id = $1
+    `, id)
+	if err != nil {
+		return fmt.Errorf("draft album deletion error: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("cant get affected rows: %w", err)
+	}
+	if rowsAffected == 0 {
+		return DraftAlbumNotFound
 	}
 	return nil
 }

@@ -3,9 +3,9 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/rapthead/musiclib/config"
@@ -29,102 +29,116 @@ type FuseEntity struct {
 	VorbisComments [][2]string `json:"vorbisComments"`
 }
 
-func Refresh(deps RefreshDeps, ctx context.Context) {
+func Refresh(deps RefreshDeps, ctx context.Context) <-chan string {
 	rdb := deps.RedisClient()
 	queries := deps.Queries()
 	conf := config.Config
 
-	allMetadata, err := queries.GetAllMetadata(ctx)
-	if err != nil {
-		log.Fatal("Unable to fetch metadata", err)
+	logChan := make(chan string)
+	logError := func(err error) {
+		logChan <- err.Error()
+	}
+	logInfo := func(info string) {
+		logChan <- info
 	}
 
-	fuseEntities := make([]sync.FuseEntity, len(allMetadata), len(allMetadata))
-	for i, meta := range allMetadata {
-		fusePathDirname := fmt.Sprintf(
-			"%s–%d–%s",
-			meta.AlbumArtistName,
-			meta.Year,
-			meta.AlbumTitle,
-		)
-		fusePathBaseName := fmt.Sprintf(
-			"%02d-%s.flac",
-			meta.TrackNumber,
-			meta.TrackTitle,
-		)
-
-		replacer := strings.NewReplacer(
-			"<", "_",
-			">", "_",
-			":", "_",
-			"\"", "_",
-			"/", "_",
-			"\\", "_",
-			"|", "_",
-			"?", "_",
-			"*", "_",
-			",", "_",
-		)
-		fusePath := replacer.Replace(fusePathDirname) + "/" + replacer.Replace(fusePathBaseName)
-
-		artistTag := meta.AlbumArtistName
-		if meta.TrackArtistName.Valid {
-			artistTag = meta.TrackArtistName.String
+	go func() {
+		defer close(logChan)
+		allMetadata, err := queries.GetAllMetadata(ctx)
+		if err != nil {
+			logError(fmt.Errorf("Unable to fetch metadata: %w", err))
 		}
 
-		vorbisComments := [][2]string{
-			{"ALBUMARTIST", meta.AlbumArtistName},
-			{"ARTIST", artistTag},
-			{"DATE", strconv.Itoa(int(meta.Year))},
-			{"ALBUM", meta.AlbumTitle},
-			{"TITLE", meta.TrackTitle},
-			{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TrackNumber)},
+		fuseEntities := make([]sync.FuseEntity, len(allMetadata), len(allMetadata))
+		for i, meta := range allMetadata {
+			fusePathDirname := fmt.Sprintf(
+				"%s–%d–%s",
+				meta.AlbumArtistName,
+				meta.Year,
+				meta.AlbumTitle,
+			)
+			fusePathBaseName := fmt.Sprintf(
+				"%02d-%s.flac",
+				meta.TrackNumber,
+				meta.TrackTitle,
+			)
 
-			{"REPLAYGAIN_REFERENCE_LOUDNESS", "89.0 dB"},
-			{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.AlbumRgGain)},
-			{"REPLAYGAIN_ALBUM_PEAK", fmt.Sprintf("%.8f", meta.AlbumRgPeak)},
+			replacer := strings.NewReplacer(
+				"<", "_",
+				">", "_",
+				":", "_",
+				"\"", "_",
+				"/", "_",
+				"\\", "_",
+				"|", "_",
+				"?", "_",
+				"*", "_",
+				",", "_",
+			)
+			fusePath := replacer.Replace(fusePathDirname) + "/" + replacer.Replace(fusePathBaseName)
 
-			{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", meta.TrackRgGain)},
-			{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", meta.TrackRgPeak)},
+			artistTag := meta.AlbumArtistName
+			if meta.TrackArtistName.Valid {
+				artistTag = meta.TrackArtistName.String
+			}
 
-			// CATALOGNUMBER=REBL021
-			// DATE=2017
-			// DISCNUMBER=1
-			// GENRE=Ska
-			// GENRE=Punk
-			// LABEL=Rebel Alliance Recordings
-			// MEDIA=CD
-			// DISCTOTAL=1
-			// TRACKTOTAL=8
+			vorbisComments := [][2]string{
+				{"ALBUMARTIST", meta.AlbumArtistName},
+				{"ARTIST", artistTag},
+				{"DATE", strconv.Itoa(int(meta.Year))},
+				{"ALBUM", meta.AlbumTitle},
+				{"TITLE", meta.TrackTitle},
+				{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TrackNumber)},
+				{"DISCNUMBER", fmt.Sprintf("%02d", meta.TrackDisc)},
+
+				{"REPLAYGAIN_REFERENCE_LOUDNESS", "89.0 dB"},
+				{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.AlbumRgGain)},
+				{"REPLAYGAIN_ALBUM_PEAK", fmt.Sprintf("%.8f", meta.AlbumRgPeak)},
+
+				{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", meta.TrackRgGain)},
+				{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", meta.TrackRgPeak)},
+
+				// CATALOGNUMBER=REBL021
+				// DATE=2017
+				// GENRE=Ska
+				// GENRE=Punk
+				// LABEL=Rebel Alliance Recordings
+				// MEDIA=CD
+				// DISCTOTAL=1
+				// TRACKTOTAL=8
+			}
+			fuseEntities[i] = sync.FuseEntity{
+				OriginPath:     meta.Path,
+				FusePath:       fusePath,
+				VorbisComments: vorbisComments,
+			}
 		}
-		fuseEntities[i] = sync.FuseEntity{
-			OriginPath:     meta.Path,
-			FusePath:       fusePath,
-			VorbisComments: vorbisComments,
+
+		redisPipe := rdb.Pipeline()
+		redisPipe.FlushDB()
+
+		progressChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
+		var allErrors []string
+		for pi := range progressChan {
+			time.Sleep(time.Millisecond * 50)
+			if pi.Error != nil {
+				err := fmt.Errorf("sync error: %w", pi.Error)
+				logError(err)
+				allErrors = append(allErrors, err.Error())
+			} else {
+				logInfo(
+					fmt.Sprintf("process %d of %d: %s", pi.Current, pi.Total, pi.Path),
+				)
+			}
 		}
-	}
 
-	redisPipe := rdb.Pipeline()
-	redisPipe.FlushDB()
-
-	// log.Println(fuseEntities)
-	progressChan := sync.Sync(conf.MusiclibRoot, store.NewFuseStore(redisPipe), fuseEntities)
-	var allErrors []string
-	for pi := range progressChan {
-		if pi.Error != nil {
-			errorText := fmt.Sprintf("sync error: %s", pi.Error)
-			allErrors = append(allErrors, errorText)
-			log.Println(errorText)
-		} else {
-			log.Printf("process %d of %d: %s", pi.Current, pi.Total, pi.Path)
+		for _, errText := range allErrors {
+			logInfo(errText)
 		}
-	}
 
-	for _, errText := range allErrors {
-		log.Println(errText)
-	}
-
-	if _, err := redisPipe.Exec(); err != nil {
-		log.Fatal("redis pipeline exec error:", err)
-	}
+		if _, err := redisPipe.Exec(); err != nil {
+			logError(fmt.Errorf("redis pipeline exec error: %w", err))
+		}
+	}()
+	return logChan
 }

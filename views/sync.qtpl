@@ -1,0 +1,35 @@
+{% code
+type SyncPage struct {
+    SSEUrl  string
+}
+%}
+
+{% func (p *SyncPage) Title() %}Sync{% endfunc %}
+
+{% func (p *SyncPage) Body() %}
+<div class="container">
+    <button
+        class="btn waves-effect waves-light red"
+        type="submit"
+        name="delete"
+        onclick="start()"
+    >
+        Run
+        <i class="material-icons right">play_arrow</i>
+    </button>
+    <pre id="output"></pre>
+
+    <script>
+        function start() {
+            console.log("start")
+            const output = document.getElementById("output");
+            const eventSource = new EventSource({%q= p.SSEUrl %});
+            eventSource.onmessage = function(event) {
+                console.warn(event)
+                const logLine = document.createTextNode(event.data+"\n");
+                output.insertBefore(logLine, output.firstChild);
+            };
+        }
+    </script>
+</div>
+{% endfunc %}
