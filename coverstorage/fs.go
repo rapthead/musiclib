@@ -14,6 +14,7 @@ import (
 const sniffLen = 512
 
 type FSCoverStorage struct {
+	StoragePath string
 }
 
 func (s FSCoverStorage) Save(id uuid.UUID, mime models.ImageTypeEnum, reader io.Reader) error {
@@ -59,5 +60,5 @@ func (s FSCoverStorage) Delete(id uuid.UUID) error {
 }
 
 func (s FSCoverStorage) makePath(id uuid.UUID) string {
-	return path.Join("/tmp/covers", id.String())
+	return path.Join(s.StoragePath, id.String())
 }

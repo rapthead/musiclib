@@ -9,6 +9,7 @@ import (
 )
 
 type ConfigData struct {
+	CoversPath      string
 	Debug           bool
 	LogLevel        logrus.Level
 	PostgresConnStr string
@@ -24,6 +25,7 @@ var Config ConfigData
 func init() {
 	Config = ConfigData{
 		Debug:           true,
+		CoversPath:      mustGetEnv("COVERS_PATH"),
 		PostgresConnStr: mustGetEnv("POSTGRES_CONN_STR"),
 
 		MusiclibRoot:      mustGetEnv("LIB_ROOT"),

@@ -22,7 +22,7 @@ func New() Deps {
 	return Deps{
 		config.Config.MusiclibRoot,
 
-		coverstorage.FSCoverStorage{},
+		coverstorage.FSCoverStorage{StoragePath: config.Config.CoversPath},
 		sqlxClient,
 		makeRedis(),
 		persistance.New(sqlxClient),
