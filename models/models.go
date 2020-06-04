@@ -128,6 +128,7 @@ const (
 	DownloadSourceEnumWHATCD     DownloadSourceEnum = "WHAT_CD"
 	DownloadSourceEnumWAFFLESFM  DownloadSourceEnum = "WAFFLES_FM"
 	DownloadSourceEnumREDACTEDCH DownloadSourceEnum = "REDACTED_CH"
+	DownloadSourceEnumWEB        DownloadSourceEnum = "WEB"
 )
 
 var AllDownloadSourceEnum = []DownloadSourceEnum{
@@ -135,6 +136,7 @@ var AllDownloadSourceEnum = []DownloadSourceEnum{
 	DownloadSourceEnumWHATCD,
 	DownloadSourceEnumWAFFLESFM,
 	DownloadSourceEnumREDACTEDCH,
+	DownloadSourceEnumWEB,
 }
 
 func (e DownloadSourceEnum) IsValid() bool {
@@ -143,7 +145,8 @@ func (e DownloadSourceEnum) IsValid() bool {
 		DownloadSourceEnumMY,
 		DownloadSourceEnumWHATCD,
 		DownloadSourceEnumWAFFLESFM,
-		DownloadSourceEnumREDACTEDCH:
+		DownloadSourceEnumREDACTEDCH,
+		DownloadSourceEnumWEB:
 		return true
 	}
 	return false
