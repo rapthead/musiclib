@@ -15,7 +15,7 @@ BEGIN;
     );
 
     WITH updated_album AS (
-        UPDATE album SET path = 'what.cd/Random Hand - 2010 - Another Change Of Plan'
+        UPDATE album SET path = 'what.cd/Random Hand - 2010 - Another Change Of Plan [FLAC]'
         WHERE path = 'deleted/Random Hand-2010-Another Change of Plan'
         RETURNING id
     ) UPDATE track SET path = data.path
@@ -85,6 +85,28 @@ BEGIN;
     AND track_num = data.track_number;
 
     WITH updated_album AS (
+        UPDATE album SET path = 'what.cd/Iron Maiden (1992) - Fear Of The Dark [FLAC]'
+        WHERE path = 'deleted/Iron Maiden-1992-Fear of the Dark'
+        RETURNING id
+    ) UPDATE track SET path = data.path
+    FROM (VALUES
+        (1, '01 - Be Quick Or Be Dead.flac'),
+        (2, '02 - From Here To Eternity.flac'),
+        (3, '03 - Afraid To Shoot Strangers.flac'),
+        (4, '04 - Fear Is The Key.flac'),
+        (5, '05 - Childhood''s End.flac'),
+        (6, '06 - Wasting Love.flac'),
+        (7, '07 - The Fugitive.flac'),
+        (8, '08 - Chains Of Misery.flac'),
+        (9, '09 - The Apparition.flac'),
+        (10, '10 - Judas Be My Guide.flac'),
+        (11, '11 - Weekend Warrior.flac'),
+        (12, '12 - Fear Of The Dark.flac')
+    ) AS data(track_number, path), updated_album
+    WHERE updated_album.id = track.album_id
+    AND track_num = data.track_number;
+
+    WITH updated_album AS (
         UPDATE album SET path = 'what.cd/Bomb The Music Industry!-Scrambles FLAC'
         WHERE path = 'deleted/Bomb the Music Industry!-2009-Scrambles'
         RETURNING id
@@ -103,6 +125,29 @@ BEGIN;
         (11, '11 - Can I Pay My Rent In Fun .flac'),
         (12, '12 - Saddr Weirdr.flac'),
         (13, '13 - Sort of Like Being Pumped.flac')
+    ) AS data(track_number, path), updated_album
+    WHERE updated_album.id = track.album_id
+    AND track_num = data.track_number;
+
+    WITH updated_album AS (
+        UPDATE album SET path = 'waffles.fm/Fear Factory - Archetype'
+        WHERE path = 'deleted/Fear Factory-2004-Archetype'
+        RETURNING id
+    ) UPDATE track SET path = data.path
+    FROM (VALUES
+        (1, '01 - Fear Factory - Slave Labor.flac'),
+        (2, '02 - Fear Factory - Cyberwaste.flac'),
+        (3, '03 - Fear Factory - Act Of God.flac'),
+        (4, '04 - Fear Factory - Drones.flac'),
+        (5, '05 - Fear Factory - Archetype.flac'),
+        (6, '06 - Fear Factory - Corporate Cloning.flac'),
+        (7, '07 - Fear Factory - Bite The Hand That Bleeds.flac'),
+        (8, '08 - Fear Factory - Undercurrent.flac'),
+        (9, '09 - Fear Factory - Default Judgement.flac'),
+        (10, '10 - Fear Factory - Bonescraper.flac'),
+        (11, '11 - Fear Factory - Human Shields.flac'),
+        (12, '12 - Fear Factory - Ascension.flac'),
+        (13, '13 - Fear Factory - School [Nirvana Cover].flac')
     ) AS data(track_number, path), updated_album
     WHERE updated_album.id = track.album_id
     AND track_num = data.track_number;
