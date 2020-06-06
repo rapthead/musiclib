@@ -15,32 +15,10 @@ import (
 	"github.com/rapthead/musiclib/views"
 )
 
-var (
-	allCoverTypeStr      []string
-	allAlbumTypeStr      []string
-	allDownloadSourceStr []string
-)
-
-func init() {
-	allAlbumTypeStr = make([]string, len(models.AllAlbumTypeEnum), len(models.AllAlbumTypeEnum))
-	for i, albumType := range models.AllAlbumTypeEnum {
-		allAlbumTypeStr[i] = string(albumType)
-	}
-
-	allDownloadSourceStr = make([]string, len(models.AllDownloadSourceEnum), len(models.AllDownloadSourceEnum))
-	for i, downloadSource := range models.AllDownloadSourceEnum {
-		allDownloadSourceStr[i] = string(downloadSource)
-	}
-
-	allCoverTypeStr = make([]string, len(models.AllCoverTypeEnum), len(models.AllCoverTypeEnum))
-	for i, coverType := range models.AllCoverTypeEnum {
-		allCoverTypeStr[i] = string(coverType)
-	}
-}
-
 // draft album to view data mapper
 type DraftAlbumForm struct {
-	Model *models.DraftAlbum
+	Model      *models.DraftAlbum
+	AllArtists []models.Artist
 }
 
 func (r DraftAlbumForm) fieldName(fieldName string) string {
@@ -58,17 +36,22 @@ func (r DraftAlbumForm) Title() views.StrInputData {
 	}
 }
 
-func (r DraftAlbumForm) Artist() views.StrInputData {
-	return views.StrInputData{
-		Name:  r.fieldName("artist"),
-		Value: r.Model.Artist.String,
+func (r DraftAlbumForm) Artist() views.StrDatalistInputData {
+	options := make([]string, len(r.AllArtists)+1, len(r.AllArtists)+1)
+	for i, artist := range r.AllArtists {
+		options[i+1] = artist.Name
+	}
+	return views.StrDatalistInputData{
+		Name:    r.fieldName("artist"),
+		Value:   r.Model.Artist.String,
+		Options: options,
 	}
 }
 
-func (r DraftAlbumForm) SourceID() views.StrInputData {
+func (r DraftAlbumForm) SourceURL() views.StrInputData {
 	return views.StrInputData{
-		Name:  r.fieldName("source_id"),
-		Value: r.Model.SourceID.String,
+		Name:  r.fieldName("source_url"),
+		Value: r.Model.SourceURL.String,
 	}
 }
 
@@ -87,28 +70,36 @@ func (r DraftAlbumForm) ReleaseYear() views.IntInputData {
 }
 
 func (r DraftAlbumForm) Type() views.SelectInputData {
+	options := make([]views.SelectOption, len(models.AllAlbumTypeEnum), len(models.AllAlbumTypeEnum))
+	for i, albumType := range models.AllAlbumTypeEnum {
+		options[i] = views.SelectOption{
+			Label:    string(albumType),
+			Value:    string(albumType),
+			Selected: albumType == r.Model.Type,
+		}
+	}
 	return views.SelectInputData{
-		Name:     r.fieldName("type"),
-		Selected: string(r.Model.Type),
-		Options:  allAlbumTypeStr,
+		Name:    r.fieldName("type"),
+		Options: options,
 	}
 }
 
 func (r DraftAlbumForm) DownloadSource() views.SelectInputData {
+	options := make([]views.SelectOption, len(models.AllDownloadSourceEnum), len(models.AllDownloadSourceEnum))
+	for i, downloadSource := range models.AllDownloadSourceEnum {
+		options[i] = views.SelectOption{
+			Label:    string(downloadSource),
+			Value:    string(downloadSource),
+			Selected: downloadSource == r.Model.DownloadSource,
+		}
+	}
 	return views.SelectInputData{
-		Name:     r.fieldName("download_source"),
-		Selected: string(r.Model.DownloadSource),
-		Options:  allDownloadSourceStr,
+		Name:    r.fieldName("download_source"),
+		Options: options,
 	}
 }
 
 func (r DraftAlbumForm) Merge(v values) error {
-	r.Model.Title = zero.StringFrom(v.Get(r.fieldName("title")))
-	r.Model.Artist = zero.StringFrom(v.Get(r.fieldName("artist")))
-	r.Model.SourceID = zero.StringFrom(v.Get(r.fieldName("source_id")))
-	r.Model.Year = zero.IntFrom(v.GetInt(r.fieldName("year")))
-	r.Model.ReleaseYear = zero.IntFrom(v.GetInt(r.fieldName("release_year")))
-
 	albumType := models.AlbumTypeEnum(v.Get(r.fieldName("type")))
 	if !albumType.IsValid() {
 		return fmt.Errorf(
@@ -116,22 +107,44 @@ func (r DraftAlbumForm) Merge(v values) error {
 			r.fieldName("album_type"), albumType,
 		)
 	}
-	r.Model.Type = albumType
 
 	downloadSource := models.DownloadSourceEnum(v.Get(r.fieldName("download_source")))
 	if !downloadSource.IsValid() {
 		return fmt.Errorf(
-			"%s has unknown cover type value: %s",
+			"%s has unknown download source value: %s",
 			r.fieldName("download_source"), downloadSource,
 		)
 	}
+
+	r.Model.Title = zero.StringFrom(v.Get(r.fieldName("title")))
+	r.Model.Artist = zero.StringFrom(v.Get(r.fieldName("artist")))
+	r.Model.SourceURL = zero.StringFrom(v.Get(r.fieldName("source_url")))
+	r.Model.Year = zero.IntFrom(v.GetInt(r.fieldName("year")))
+	r.Model.ReleaseYear = zero.IntFrom(v.GetInt(r.fieldName("release_year")))
+	r.Model.Type = albumType
 	r.Model.DownloadSource = downloadSource
 	return nil
+}
+
+func newDraftAlbumData(album *models.DraftAlbum, allArtists []models.Artist) DraftAlbumForm {
+	return DraftAlbumForm{album, allArtists}
 }
 
 // draft track to view data mapper
 type DraftTrackForm struct {
 	Model *models.DraftTrack
+}
+
+func newTracksData(tracks []models.DraftTrack) []views.TrackData {
+	trackForms := make(
+		[]views.TrackData,
+		len(tracks),
+		len(tracks),
+	)
+	for i := range tracks {
+		trackForms[i] = DraftTrackForm{&tracks[i]}
+	}
+	return trackForms
 }
 
 func (r DraftTrackForm) fieldName(fieldName string) string {
@@ -178,18 +191,6 @@ func (r DraftTrackForm) Merge(v values) error {
 	return nil
 }
 
-func newTracksData(tracks []models.DraftTrack) []views.TrackData {
-	trackForms := make(
-		[]views.TrackData,
-		len(tracks),
-		len(tracks),
-	)
-	for i := range tracks {
-		trackForms[i] = DraftTrackForm{&tracks[i]}
-	}
-	return trackForms
-}
-
 // draft cover to view data mapper
 type DraftCoverForm struct {
 	Model *models.DraftCover
@@ -208,10 +209,17 @@ func (r DraftCoverForm) URL() string {
 }
 
 func (r DraftCoverForm) Type() views.SelectInputData {
+	options := make([]views.SelectOption, len(models.AllCoverTypeEnum), len(models.AllCoverTypeEnum))
+	for i, coverType := range models.AllCoverTypeEnum {
+		options[i] = views.SelectOption{
+			Label:    string(coverType),
+			Value:    string(coverType),
+			Selected: coverType == r.Model.Type,
+		}
+	}
 	return views.SelectInputData{
-		Name:     r.fieldName("type"),
-		Selected: string(r.Model.Type),
-		Options:  allCoverTypeStr,
+		Name:    r.fieldName("type"),
+		Options: options,
 	}
 }
 
@@ -285,7 +293,7 @@ func makeDraftDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *htt
 		}
 
 		p := &views.DraftAlbumDetailsPage{
-			Album:  DraftAlbumForm{&draftAlbumDetails.DraftAlbum},
+			Album:  newDraftAlbumData(&draftAlbumDetails.DraftAlbum, draftAlbumDetails.AllArtists),
 			Tracks: newTracksData(draftAlbumDetails.DraftTracks),
 			Covers: newCoversData(draftAlbumDetails.DraftCovers),
 		}
@@ -331,10 +339,14 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 			}
 			http.Redirect(w, r, p.onDeleteRedirectTo, http.StatusSeeOther)
 		} else {
+			draftAlbum := draftAlbumDetails.DraftAlbum
+			draftAlbumData := newDraftAlbumData(
+				&draftAlbum, draftAlbumDetails.AllArtists,
+			)
 			showError := func(w http.ResponseWriter, err error, code int) {
 				p := &views.DraftAlbumDetailsPage{
 					Error:  err,
-					Album:  DraftAlbumForm{&draftAlbumDetails.DraftAlbum},
+					Album:  draftAlbumData,
 					Tracks: newTracksData(draftAlbumDetails.DraftTracks),
 					Covers: newCoversData(draftAlbumDetails.DraftCovers),
 				}
@@ -342,8 +354,7 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 				views.WritePageTemplate(w, p)
 			}
 
-			draftAlbum := draftAlbumDetails.DraftAlbum
-			err = DraftAlbumForm{&draftAlbum}.Merge(vals)
+			err = draftAlbumData.Merge(vals)
 			if err != nil {
 				showError(w, fmt.Errorf("unable to merge album data: %w", err), http.StatusBadRequest)
 				return
@@ -406,7 +417,7 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 				newCovers[i] = cover
 			}
 
-			usecases.UpdateDraftAlbum(
+			err = usecases.UpdateDraftAlbum(
 				d, r.Context(), usecases.UpdateDraftAlbumParams{
 					Album:        draftAlbum,
 					Tracks:       draftTracks,
@@ -415,6 +426,20 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 					NewCovers:    newCovers,
 				},
 			)
+			if err != nil {
+				showError(w, err, http.StatusInternalServerError)
+				return
+			}
+
+			if _, doCommit := vals.Values["commit"]; doCommit {
+				err = usecases.CommitDraftAlbum(
+					d, r.Context(), draftAlbumID,
+				)
+				if err != nil {
+					showError(w, err, http.StatusInternalServerError)
+					return
+				}
+			}
 
 			http.Redirect(w, r, p.onSuccessRedirectTo+"#footer", http.StatusSeeOther)
 		}

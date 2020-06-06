@@ -14,7 +14,7 @@ type GetDraftAlbumDetailsDeps interface {
 }
 
 type DraftAlbumDetails struct {
-	Artist      *models.Artist
+	AllArtists  []models.Artist
 	DraftAlbum  models.DraftAlbum
 	DraftTracks []models.DraftTrack
 	DraftCovers []models.DraftCover
@@ -34,13 +34,11 @@ func GetDraftAlbumDetails(dep GetDraftAlbumDetailsDeps, ctx context.Context, id 
 	}
 	result.DraftAlbum = album
 
-	if album.ArtistID.Valid {
-		artist, err := queries.GetArtistById(ctx, album.ArtistID.UUID)
-		if err != nil {
-			return result, fmt.Errorf("Unable to fetch artist: %w", err)
-		}
-		result.Artist = &artist
+	artists, err := queries.ListArtists(ctx)
+	if err != nil {
+		return result, fmt.Errorf("Unable to fetch artist: %w", err)
 	}
+	result.AllArtists = artists
 
 	draftTracks, err := queries.GetDraftTracksByAlbumID(ctx, id)
 	if err != nil {

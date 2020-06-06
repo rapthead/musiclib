@@ -9,6 +9,8 @@ import (
 	"github.com/rapthead/musiclib/models"
 )
 
+var DraftTrackNotFound = errors.New("Draft track not found")
+
 func (p *Queries) GetDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]models.DraftTrack, error) {
 	draftTracks := []models.DraftTrack{}
 	err := p.db.SelectContext(ctx, &draftTracks, `
@@ -67,6 +69,46 @@ func (p *Queries) InsertDraftTrack(ctx context.Context, draftTrack models.DraftT
     `, draftTrack)
 	if err != nil {
 		return fmt.Errorf("draft track updation error: %w", err)
+	}
+	return nil
+}
+
+func (p *Queries) CommitDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) error {
+	result, err := p.db.ExecContext(ctx, `
+        INSERT INTO track (
+            id,
+            album_id,
+            track_artist,
+            disc,
+            length,
+            path,
+            title,
+            track_num,
+            rg_gain,
+            rg_peak
+        ) SELECT
+            id,
+            album_id,
+            track_artist,
+            disc,
+            length,
+            path,
+            title,
+            track_num,
+            rg_gain,
+            rg_peak
+        FROM draft_track
+        WHERE album_id = $1
+    `, id)
+	if err != nil {
+		return fmt.Errorf("draft track commit error: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("cant get affected rows: %w", err)
+	}
+	if rowsAffected == 0 {
+		return DraftTrackNotFound
 	}
 	return nil
 }

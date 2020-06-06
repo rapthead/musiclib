@@ -43,8 +43,8 @@ func (r draftAlbumViewData) DownloadSource() string {
 	return string(r.model.DownloadSource)
 }
 
-func (r draftAlbumViewData) SourceID() string {
-	return r.model.SourceID.String
+func (r draftAlbumViewData) SourceURL() string {
+	return r.model.SourceURL.String
 }
 
 func (r draftAlbumViewData) Year() *int {

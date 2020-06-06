@@ -17,13 +17,11 @@ type Artist struct {
 type DraftAlbum struct {
 	ID             uuid.UUID          `schema:"id"                  json:"id"                db:"id"`
 	Path           string             `schema:"-"                   json:"path"              db:"path"`
-	ArtistID       uuid.NullUUID      `schema:"artist_id"           json:"artist_id"         db:"artist_id"`
 	Artist         zero.String        `schema:"artist"              json:"artist"            db:"artist"`
 	Title          zero.String        `schema:"title"               json:"title"             db:"title"`
 	Year           zero.Int           `schema:"year"                json:"year"              db:"year"`
 	ReleaseYear    zero.Int           `schema:"release_year"        json:"release_year"      db:"release_year"`
 	Barcode        zero.String        `schema:"barcode"             json:"barcode"           db:"barcode"`
-	SourceID       zero.String        `schema:"source_id"           json:"source_id"         db:"source_id"`
 	Comment        zero.String        `schema:"comment"             json:"comment"           db:"comment"`
 	EditionTitle   zero.String        `schema:"edition_title"       json:"edition_title"     db:"edition_title"`
 	Mbid           zero.String        `schema:"mbid"                json:"mbid"              db:"mbid"`
@@ -31,6 +29,7 @@ type DraftAlbum struct {
 	RgGain         float64            `schema:"-"                   json:"rg_gain"           db:"rg_gain"`
 	Type           AlbumTypeEnum      `schema:"type"                json:"type"              db:"type"`
 	DownloadSource DownloadSourceEnum `schema:"download_source"     json:"download_source"   db:"download_source"`
+	SourceURL      zero.String        `schema:"source_url"          json:"source_url"        db:"source_url"`
 	CreatedAt      time.Time          `schema:"-"                   json:"created_at"        db:"created_at"`
 	UpdatedAt      time.Time          `schema:"-"                   json:"updated_at"        db:"updated_at"`
 }

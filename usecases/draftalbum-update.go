@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 	"database/sql"
-	"log"
+	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -24,48 +24,55 @@ type UpdateDraftAlbumParams struct {
 	DeleteCovers []uuid.UUID         `schema:"-"`
 }
 
-func UpdateDraftAlbum(deps UpdateDraftAlbumDeps, ctx context.Context, params UpdateDraftAlbumParams) {
-	sqlxClient := deps.SQLXClient()
-	queries := deps.Queries()
-
-	txOptions := sql.TxOptions{}
-	tx, err := sqlxClient.BeginTxx(ctx, &txOptions)
+func UpdateDraftAlbum(deps UpdateDraftAlbumDeps, ctx context.Context, params UpdateDraftAlbumParams) error {
+	tx, err := deps.SQLXClient().BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
-		log.Fatal("Can't start transaction", err)
+		return fmt.Errorf("Can't start transaction: %w", err)
 	}
+	txQueries := deps.Queries().WithTx(tx)
 
-	txQueries := queries.WithTx(tx)
-	err = txQueries.UpdateDraftAlbum(ctx, params.Album)
+	err = func() error {
+		err := txQueries.UpdateDraftAlbum(ctx, params.Album)
+		if err != nil {
+			return fmt.Errorf("Unable to update album: %w", err)
+		}
+
+		for _, draftTrack := range params.Tracks {
+			err = txQueries.UpdateDraftTrack(ctx, draftTrack)
+			if err != nil {
+				return fmt.Errorf("Unable to update track: %w", err)
+			}
+		}
+
+		for _, draftCover := range params.Covers {
+			err = txQueries.UpdateDraftCover(ctx, draftCover)
+			if err != nil {
+				return fmt.Errorf("Unable to update cover: %w", err)
+			}
+		}
+
+		for _, draftCover := range params.NewCovers {
+			err = txQueries.InsertDraftCover(ctx, draftCover)
+			if err != nil {
+				return fmt.Errorf("Unable to insert cover: %w", err)
+			}
+		}
+
+		for _, coverID := range params.DeleteCovers {
+			err = txQueries.DeleteDraftCover(ctx, coverID)
+			if err != nil {
+				return fmt.Errorf("Unable to delete cover: %w", err)
+			}
+		}
+		return nil
+	}()
+
 	if err != nil {
-		log.Fatal("Unable to update album:", err)
+		tx.Rollback()
+		return err
+	} else if err = tx.Commit(); err != nil {
+		return fmt.Errorf("Unable to commit transaction: %w", err)
+	} else {
+		return nil
 	}
-
-	for _, draftTrack := range params.Tracks {
-		err = txQueries.UpdateDraftTrack(ctx, draftTrack)
-		if err != nil {
-			log.Fatal("Unable to update track:", err)
-		}
-	}
-
-	for _, draftCover := range params.Covers {
-		err = txQueries.UpdateDraftCover(ctx, draftCover)
-		if err != nil {
-			log.Fatal("Unable to update cover:", err)
-		}
-	}
-
-	for _, draftCover := range params.NewCovers {
-		err = txQueries.InsertDraftCover(ctx, draftCover)
-		if err != nil {
-			log.Fatal("Unable to insert cover:", err)
-		}
-	}
-
-	for _, coverID := range params.DeleteCovers {
-		err = txQueries.DeleteDraftCover(ctx, coverID)
-		if err != nil {
-			log.Fatal("Unable to delete cover:", err)
-		}
-	}
-	tx.Commit()
 }

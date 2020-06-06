@@ -2,11 +2,14 @@ package persistance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gofrs/uuid"
 	"github.com/rapthead/musiclib/models"
 )
+
+var DraftCoverNotFound = errors.New("Draft cover not found")
 
 func (p *Queries) GetDraftCoversByAlbumID(ctx context.Context, id uuid.UUID) ([]models.DraftCover, error) {
 	draftCovers := []models.DraftCover{}
@@ -61,6 +64,34 @@ func (p *Queries) InsertDraftCover(ctx context.Context, draftCover models.DraftC
 	if err != nil {
 		fmt.Printf("%+v", draftCover)
 		return fmt.Errorf("draft cover insertion error: %w", err)
+	}
+	return nil
+}
+
+func (p *Queries) CommitDraftCoversByAlbumID(ctx context.Context, id uuid.UUID) error {
+	result, err := p.db.ExecContext(ctx, `
+        INSERT INTO cover (
+            id,
+            album_id,
+            sort,
+            type
+        ) SELECT
+            id,
+            album_id,
+            sort,
+            type
+        FROM draft_cover
+        WHERE album_id = $1
+    `, id)
+	if err != nil {
+		return fmt.Errorf("draft covers commit error: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("cant get affected rows: %w", err)
+	}
+	if rowsAffected == 0 {
+		return DraftCoverNotFound
 	}
 	return nil
 }

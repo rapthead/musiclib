@@ -4,10 +4,22 @@ package views
 
 import "github.com/gofrs/uuid"
 
+type SelectOption struct {
+	Value    string
+	Label    string
+	Selected bool
+	Disabled bool
+}
+
 type SelectInputData struct {
-	Name     string
-	Selected string
-	Options  []string
+	Name    string
+	Options []SelectOption
+}
+
+type StrDatalistInputData struct {
+	Name    string
+	Options []string
+	Value   string
 }
 
 type StrInputData struct {

@@ -56,7 +56,6 @@ func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftA
 	result, err := p.db.NamedExecContext(ctx, `
         UPDATE draft_album SET
             title			= :title,
-            artist_id		= :artist_id,
             artist		    = :artist,
             year			= :year,
             release_year	= :release_year,
@@ -65,7 +64,7 @@ func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftA
             edition_title	= :edition_title,
             barcode			= :barcode,
             download_source	= :download_source,
-            source_id		= :source_id,
+            source_url		= :source_url,
             comment			= :comment,
 
             updated_at = NOW()
@@ -127,6 +126,93 @@ func (p *Queries) DeleteDraftAlbumByID(ctx context.Context, id uuid.UUID) error 
     `, id)
 	if err != nil {
 		return fmt.Errorf("draft album deletion error: %w", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("cant get affected rows: %w", err)
+	}
+	if rowsAffected == 0 {
+		return DraftAlbumNotFound
+	}
+	return nil
+}
+
+func (p *Queries) CommitDraftAlbumByID(ctx context.Context, id uuid.UUID) error {
+	result, err := p.db.ExecContext(ctx, `
+        WITH existen_artist AS (
+            SELECT id FROM artist WHERE name = (
+                SELECT artist
+                FROM draft_album
+                WHERE id = $1
+            )
+        ), inserted_artist AS (
+            INSERT INTO artist (id, name)
+            SELECT uuid_generate_v4(), (
+                SELECT artist
+                FROM draft_album
+                WHERE id = $1
+            )
+            WHERE NOT EXISTS (SELECT * FROM existen_artist)
+            RETURNING id
+        )
+        INSERT INTO album (
+            id,
+            artist_id,
+            title,
+            state,
+            type,
+
+            edition_title,
+            mbid,
+            path,
+
+            barcode,
+            comment,
+
+            download_source,
+            source_url,
+
+            year,
+            release_year,
+
+            rg_gain,
+            rg_peak,
+
+            updated_at,
+            created_at
+        ) SELECT
+            id,
+            COALESCE(
+                (SELECT id FROM existen_artist),
+                (SELECT id FROM inserted_artist)
+            ),
+            title,
+            'disabled',
+            type,
+
+            edition_title,
+            mbid,
+            path,
+
+            barcode,
+            comment,
+
+            download_source,
+            source_url,
+
+            year,
+            release_year,
+
+            rg_gain,
+            rg_peak,
+
+            updated_at,
+            created_at
+        FROM draft_album
+        WHERE id = $1;
+    `, id)
+	if err != nil {
+		return fmt.Errorf("draft album commit error: %w", err)
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {

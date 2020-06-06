@@ -1,11 +1,11 @@
 {% code
 type AlbumData interface {
     Path()           string
-    Artist()         StrInputData
+    Artist()         StrDatalistInputData
     Title()          StrInputData
     Type()           SelectInputData
     DownloadSource() SelectInputData
-    SourceID()       StrInputData
+    SourceURL()      StrInputData
     Year()           IntInputData
     ReleaseYear()    IntInputData
 }
@@ -33,10 +33,20 @@ type DraftAlbumDetailsPage struct {
     Covers              []CoverData
 }
 
+type strDatalistInputConfig struct {
+    wraperClass string
+    disabled    bool
+    label       string
+    required    bool
+
+    data        StrDatalistInputData
+}
+
 type strInputConfig struct {
     wraperClass string
     disabled    bool
     label       string
+    required    bool
 
     data        StrInputData
 }
@@ -45,6 +55,7 @@ type intInputConfig struct {
     wraperClass string
     disabled    bool
     label       string
+    required    bool
 
     min         *int64
     data        IntInputData
@@ -54,6 +65,7 @@ type selectConfig struct {
     wraperClass string
     disabled    bool
     label       string
+    required    bool
 
     data        SelectInputData
 }
@@ -71,16 +83,17 @@ type selectConfig struct {
     </style>
     <form class="container" method="POST" enctype="multipart/form-data">
         {% if p.Error != nil %}
-        <div class="card-panel red white-text">
+        <div class="card-panel red white-text" id="error">
             {%s p.Error.Error() %}
         </div>
         {% endif %}
         <div class="card">
             <div class="row">
                 {%=
-                    makeStrInput(strInputConfig{
+                    makeStrDatalistInput(strDatalistInputConfig{
                         wraperClass: "col s6",
-                        label: "Draft artist",
+                        label: "Artist",
+                        required: true,
 
                         data: p.Album.Artist(),
                     })
@@ -90,6 +103,7 @@ type selectConfig struct {
                     makeStrInput(strInputConfig{
                         wraperClass: "col s6",
                         label: "Title",
+                        required: true,
 
                         data: p.Album.Title(),
                     })
@@ -111,6 +125,7 @@ type selectConfig struct {
                     makeIntInput(intInputConfig{
                         wraperClass: "col s6",
                         label: "Year",
+                        required: true,
 
                         data: p.Album.Year(),
                         min: takeIntPtr(1990),
@@ -131,6 +146,7 @@ type selectConfig struct {
                     makeSelect(selectConfig{
                         wraperClass: "col s6",
                         label: "Type",
+                        required: true,
 
                         data: p.Album.Type(),
                     })
@@ -140,6 +156,7 @@ type selectConfig struct {
                     makeSelect(selectConfig{
                         wraperClass: "col s6",
                         label: "Download source",
+                        required: true,
 
                         data: p.Album.DownloadSource(),
                     })
@@ -148,9 +165,9 @@ type selectConfig struct {
                 {%=
                     makeStrInput(strInputConfig{
                         wraperClass: "col s6",
-                        label: "Source id",
+                        label: "Source url",
 
-                        data: p.Album.SourceID(),
+                        data: p.Album.SourceURL(),
                     })
                 %}
             </div>
@@ -185,6 +202,7 @@ type selectConfig struct {
                             {%=
                                 makeStrInput(strInputConfig{
                                     label: "Title",
+                                    required: true,
 
                                     data: t.Title(),
                                 })
@@ -194,6 +212,7 @@ type selectConfig struct {
                             {%=
                                 makeIntInput(intInputConfig{
                                     label: "Track number",
+                                    required: true,
 
                                     min: takeIntPtr(0),
                                     data: t.TrackNum(),
@@ -204,6 +223,7 @@ type selectConfig struct {
                             {%=
                                 makeIntInput(intInputConfig{
                                     label: "Disc number",
+                                    required: true,
 
                                     min: takeIntPtr(0),
                                     data: t.Disc(),
@@ -257,6 +277,7 @@ type selectConfig struct {
                                     {%=
                                         makeIntInput(intInputConfig{
                                             label: "Sort",
+                                            required: true,
 
                                             data: c.Sort(),
                                         })
@@ -314,8 +335,19 @@ type selectConfig struct {
                 </button>
             </div>
 
-            <div class="col s6 right-align">
-                <button class="btn waves-effect waves-light" type="submit">
+            <div class="col s3 right-align">
+                <button
+                    class="btn waves-effect waves-light"
+                    type="submit"
+                    name="commit"
+                >
+                    Commit
+                    <i class="material-icons right"></i>
+                </button>
+            </div>
+
+            <div class="col s3 right-align">
+                <button class="btn waves-effect waves-light" type="submit" formnovalidate>
                     Save
                     <i class="material-icons right"></i>
                 </button>
@@ -329,9 +361,15 @@ type selectConfig struct {
 <div class="input-field {%s c.wraperClass %}">
     <input
         id="{%s id %}"
+
         {% if c.disabled %}
             disabled
         {% endif %}
+
+        {% if c.required %}
+        required
+        {% endif %}
+
         type="number"
         class="validate"
         {% if c.data.Name != "" %}
@@ -353,9 +391,15 @@ type selectConfig struct {
 <div class="input-field {%s c.wraperClass %}">
     <input
         id="{%s id %}"
+
         {% if c.disabled %}
         disabled
         {% endif %}
+
+        {% if c.required %}
+        required
+        {% endif %}
+
         type="text"
         class="validate"
         {% if c.data.Name != "" %}
@@ -378,13 +422,46 @@ type selectConfig struct {
     >
         {% for _, option := range c.data.Options %}
         <option
-            {% if option == c.data.Selected %}
+            {% if option.Selected %}
             selected
             {% endif %}
-            value="{%s option %}"
-            >{%s option %}</option>
+            value="{%s option.Value %}"
+            >{%s option.Label %}</option>
         {% endfor %}
     </select>
     <label for="{%s id %}">{%s c.label %}</label>
+</div>
+{% endfunc %}
+
+{% func makeStrDatalistInput(c strDatalistInputConfig) %}
+{% code id := makeInputID(c.data.Name) %}
+{% code datalistID := id + "-datalist" %}
+<div class="input-field {%s c.wraperClass %}">
+    <input
+        id="{%s id %}"
+        list="{%s datalistID %}"
+
+        {% if c.disabled %}
+        disabled
+        {% endif %}
+
+        {% if c.required %}
+        required
+        {% endif %}
+
+        type="text"
+        class="validate"
+        {% if c.data.Name != "" %}
+        name="{%s c.data.Name %}"
+        {% endif %}
+        value="{%s c.data.Value %}"
+    >
+    <label for="{%s id %}">{%s c.label %}</label>
+
+    <datalist id="{%s datalistID %}">
+        {% for _, option := range c.data.Options %}
+        <option value="{%s option %}"></option>
+        {% endfor %}
+    </datalist>	
 </div>
 {% endfunc %}
