@@ -6,6 +6,8 @@ type AlbumData interface {
     Type()           SelectInputData
     DownloadSource() SelectInputData
     SourceURL()      StrInputData
+    Barcode()        StrInputData
+    Comment()        StrInputData
     Year()           IntInputData
     ReleaseYear()    IntInputData
 }
@@ -32,43 +34,6 @@ type DraftAlbumDetailsPage struct {
     Tracks              []TrackData
     Covers              []CoverData
 }
-
-type strDatalistInputConfig struct {
-    wraperClass string
-    disabled    bool
-    label       string
-    required    bool
-
-    data        StrDatalistInputData
-}
-
-type strInputConfig struct {
-    wraperClass string
-    disabled    bool
-    label       string
-    required    bool
-
-    data        StrInputData
-}
-
-type intInputConfig struct {
-    wraperClass string
-    disabled    bool
-    label       string
-    required    bool
-
-    min         *int64
-    data        IntInputData
-}
-
-type selectConfig struct {
-    wraperClass string
-    disabled    bool
-    label       string
-    required    bool
-
-    data        SelectInputData
-}
 %}
 
 {% func (p *DraftAlbumDetailsPage) Title() %}
@@ -81,7 +46,7 @@ type selectConfig struct {
             word-break: break-all;
         }
     </style>
-    <form class="container" method="POST" enctype="multipart/form-data">
+    <form id="draft-album-detail-form" class="container" method="POST" enctype="multipart/form-data">
         {% if p.Error != nil %}
         <div class="card-panel red white-text" id="error">
             {%s p.Error.Error() %}
@@ -170,6 +135,24 @@ type selectConfig struct {
                         data: p.Album.SourceURL(),
                     })
                 %}
+
+                {%=
+                    makeStrInput(strInputConfig{
+                        wraperClass: "col s6",
+                        label: "Barcode",
+
+                        data: p.Album.Barcode(),
+                    })
+                %}
+
+                {%=
+                    makeStrInput(strInputConfig{
+                        wraperClass: "col s6",
+                        label: "Comment",
+
+                        data: p.Album.Comment(),
+                    })
+                %}
             </div>
         </div>
 
@@ -225,7 +208,7 @@ type selectConfig struct {
                                     label: "Disc number",
                                     required: true,
 
-                                    min: takeIntPtr(0),
+                                    min: takeIntPtr(1),
                                     data: t.Disc(),
                                 })
                             %}
@@ -278,6 +261,7 @@ type selectConfig struct {
                                         makeIntInput(intInputConfig{
                                             label: "Sort",
                                             required: true,
+                                            min: takeIntPtr(1),
 
                                             data: c.Sort(),
                                         })
@@ -329,6 +313,7 @@ type selectConfig struct {
                     class="btn waves-effect waves-light red"
                     type="submit"
                     name="delete"
+                    formnovalidate
                 >
                     Delete
                     <i class="material-delete right"></i>
@@ -354,114 +339,4 @@ type selectConfig struct {
             </div>
         </footer>
     </form>
-{% endfunc %}
-
-{% func makeIntInput(c intInputConfig) %}
-{% code id := makeInputID(c.data.Name) %}
-<div class="input-field {%s c.wraperClass %}">
-    <input
-        id="{%s id %}"
-
-        {% if c.disabled %}
-            disabled
-        {% endif %}
-
-        {% if c.required %}
-        required
-        {% endif %}
-
-        type="number"
-        class="validate"
-        {% if c.data.Name != "" %}
-        name="{%s c.data.Name %}"
-        {% endif %}
-        {% if c.data.Value != nil %}
-            value="{%dl *c.data.Value %}"
-        {% endif %}
-        {% if c.min != nil %}
-            min="{%dl *c.min %}"
-        {% endif %}
-    >
-    <label for="{%s id %}">{%s c.label %}</label>
-</div>
-{% endfunc %}
-
-{% func makeStrInput(c strInputConfig) %}
-{% code id := makeInputID(c.data.Name) %}
-<div class="input-field {%s c.wraperClass %}">
-    <input
-        id="{%s id %}"
-
-        {% if c.disabled %}
-        disabled
-        {% endif %}
-
-        {% if c.required %}
-        required
-        {% endif %}
-
-        type="text"
-        class="validate"
-        {% if c.data.Name != "" %}
-        name="{%s c.data.Name %}"
-        {% endif %}
-        value="{%s c.data.Value %}"
-    >
-    <label for="{%s id %}">{%s c.label %}</label>
-</div>
-{% endfunc %}
-
-{% func makeSelect(c selectConfig) %}
-{% code id := makeInputID(c.data.Name) %}
-<div class="input-field {%s c.wraperClass %}">
-    <select
-        {% if c.data.Name != "" %}
-        name="{%s c.data.Name %}"
-        {% endif %}
-        id="{%s id %}"
-    >
-        {% for _, option := range c.data.Options %}
-        <option
-            {% if option.Selected %}
-            selected
-            {% endif %}
-            value="{%s option.Value %}"
-            >{%s option.Label %}</option>
-        {% endfor %}
-    </select>
-    <label for="{%s id %}">{%s c.label %}</label>
-</div>
-{% endfunc %}
-
-{% func makeStrDatalistInput(c strDatalistInputConfig) %}
-{% code id := makeInputID(c.data.Name) %}
-{% code datalistID := id + "-datalist" %}
-<div class="input-field {%s c.wraperClass %}">
-    <input
-        id="{%s id %}"
-        list="{%s datalistID %}"
-
-        {% if c.disabled %}
-        disabled
-        {% endif %}
-
-        {% if c.required %}
-        required
-        {% endif %}
-
-        type="text"
-        class="validate"
-        {% if c.data.Name != "" %}
-        name="{%s c.data.Name %}"
-        {% endif %}
-        value="{%s c.data.Value %}"
-    >
-    <label for="{%s id %}">{%s c.label %}</label>
-
-    <datalist id="{%s datalistID %}">
-        {% for _, option := range c.data.Options %}
-        <option value="{%s option %}"></option>
-        {% endfor %}
-    </datalist>	
-</div>
 {% endfunc %}

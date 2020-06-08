@@ -13,6 +13,17 @@ import (
 
 var DraftAlbumNotFound = errors.New("Draft album not found")
 
+var AlbumNotFound = errors.New("Album not found")
+
+func (p *Queries) ListAlbums(ctx context.Context) ([]models.Album, error) {
+	albums := []models.Album{}
+	err := p.db.SelectContext(ctx, &albums, `
+        SELECT * FROM album
+        ORDER BY state ASC, path ASC
+    `)
+	return albums, err
+}
+
 func (p *Queries) ListDraftAlbums(ctx context.Context) ([]models.DraftAlbum, error) {
 	draftAlbums := []models.DraftAlbum{}
 	err := p.db.SelectContext(ctx, &draftAlbums, `
@@ -20,6 +31,18 @@ func (p *Queries) ListDraftAlbums(ctx context.Context) ([]models.DraftAlbum, err
         ORDER BY path ASC
     `)
 	return draftAlbums, err
+}
+
+func (p *Queries) GetAlbumByID(ctx context.Context, id uuid.UUID) (models.Album, error) {
+	album := models.Album{}
+	err := p.db.GetContext(ctx, &album, `
+        SELECT * FROM album
+        WHERE id = $1
+    `, id)
+	if err == sql.ErrNoRows {
+		return album, AlbumNotFound
+	}
+	return album, err
 }
 
 func (p *Queries) GetDraftAlbumByID(ctx context.Context, id uuid.UUID) (models.DraftAlbum, error) {

@@ -1,32 +1,32 @@
-// Table page template. Implements BasePage methods.
-
 {% code
-type DraftAlbumsRow interface {
+type AlbumsRow interface {
     URL()    string
     Path()   string
     Artist() string
     Title()  string
+    State()  string
 }
 
-type DraftAlbumsPage struct {
-    Rows []DraftAlbumsRow
+type AlbumsPage struct {
+    Rows []AlbumsRow
 }
 %}
 
 
-{% func (p *DraftAlbumsPage) Title() %}
-    Draft albums
+{% func (p *AlbumsPage) Title() %}
+    Album list
 {% endfunc %}
 
 
-{% func (p *DraftAlbumsPage) Body() %}
+{% func (p *AlbumsPage) Body() %}
     <div class="container">
         <table>
             <thead>
                 <tr>
+                    <th>State</th>
                     <th>Path</th>
-                    <th>Draft Artist</th>
-                    <th>Album Title</th>
+                    <th>Artist</th>
+                    <th>Title</th>
                 </tr>
             </thead>
 
@@ -34,6 +34,7 @@ type DraftAlbumsPage struct {
                 {%- for _, r := range p.Rows -%}
                 <tr>
                     <th><a href="{%s r.URL() %}">{%s r.Path() %}</a></th>
+                    <td>{%s r.State() %}</td>
                     <td>{%s r.Artist() %}</td>
                     <td>{%s r.Title() %}</td>
                 </tr>

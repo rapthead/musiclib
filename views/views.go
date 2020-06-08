@@ -22,6 +22,12 @@ type StrDatalistInputData struct {
 	Value   string
 }
 
+type ChipsInputData struct {
+	Name         string
+	Autocomplete []string
+	Values       []string
+}
+
 type StrInputData struct {
 	Name  string
 	Value string

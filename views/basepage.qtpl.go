@@ -65,6 +65,7 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
             <div class="nav-wrapper">
                 <a href="#" class="brand-logo right">Musiclib</a>
                 <ul id="nav-mobile" class="left hide-on-med-and-down">
+                    <li><a href="/album">Albums</a></li>
                     <li><a href="/draft">Draft albums</a></li>
                     <li><a href="/sync">Sync</a></li>
                     <li><a href="/rescan">Rescan new drafts</a></li>
@@ -74,9 +75,9 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
 
         <div id="page-content">
             `)
-//line basepage.qtpl:39
+//line basepage.qtpl:40
 	p.StreamBody(qw422016)
-//line basepage.qtpl:39
+//line basepage.qtpl:40
 	qw422016.N().S(`
         </div>
 
@@ -94,31 +95,31 @@ func StreamPageTemplate(qw422016 *qt422016.Writer, p Page) {
     </body>
 </html>
 `)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 }
 
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 func WritePageTemplate(qq422016 qtio422016.Writer, p Page) {
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	StreamPageTemplate(qw422016, p)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	qt422016.ReleaseWriter(qw422016)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 }
 
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 func PageTemplate(p Page) string {
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	qb422016 := qt422016.AcquireByteBuffer()
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	WritePageTemplate(qb422016, p)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	qs422016 := string(qb422016.B)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	qt422016.ReleaseByteBuffer(qb422016)
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 	return qs422016
-//line basepage.qtpl:55
+//line basepage.qtpl:56
 }

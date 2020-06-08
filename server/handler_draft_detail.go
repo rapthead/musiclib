@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
 
 	"github.com/gofrs/uuid"
 	"github.com/guregu/null/zero"
@@ -52,6 +50,20 @@ func (r DraftAlbumForm) SourceURL() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("source_url"),
 		Value: r.Model.SourceURL.String,
+	}
+}
+
+func (r DraftAlbumForm) Barcode() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("barcode"),
+		Value: r.Model.Barcode.String,
+	}
+}
+
+func (r DraftAlbumForm) Comment() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("comment"),
+		Value: r.Model.Comment.String,
 	}
 }
 
@@ -119,6 +131,8 @@ func (r DraftAlbumForm) Merge(v values) error {
 	r.Model.Title = zero.StringFrom(v.Get(r.fieldName("title")))
 	r.Model.Artist = zero.StringFrom(v.Get(r.fieldName("artist")))
 	r.Model.SourceURL = zero.StringFrom(v.Get(r.fieldName("source_url")))
+	r.Model.Barcode = zero.StringFrom(v.Get(r.fieldName("barcode")))
+	r.Model.Comment = zero.StringFrom(v.Get(r.fieldName("comment")))
 	r.Model.Year = zero.IntFrom(v.GetInt(r.fieldName("year")))
 	r.Model.ReleaseYear = zero.IntFrom(v.GetInt(r.fieldName("release_year")))
 	r.Model.Type = albumType
@@ -135,7 +149,7 @@ type DraftTrackForm struct {
 	Model *models.DraftTrack
 }
 
-func newTracksData(tracks []models.DraftTrack) []views.TrackData {
+func newDraftTracksData(tracks []models.DraftTrack) []views.TrackData {
 	trackForms := make(
 		[]views.TrackData,
 		len(tracks),
@@ -255,7 +269,7 @@ func (r DraftCoverForm) Merge(v values) error {
 	return nil
 }
 
-func newCoversData(covers []models.DraftCover) []views.CoverData {
+func newDraftCoversData(covers []models.DraftCover) []views.CoverData {
 	coverForms := make(
 		[]views.CoverData,
 		len(covers),
@@ -265,17 +279,6 @@ func newCoversData(covers []models.DraftCover) []views.CoverData {
 		coverForms[i] = DraftCoverForm{&covers[i]}
 	}
 	return coverForms
-}
-
-type values struct{ url.Values }
-
-func (v values) GetInt(key string) int64 {
-	strInt := v.Get(key)
-	if strInt == "" {
-		return 0
-	}
-	val, _ := strconv.ParseInt(strInt, 10, 64)
-	return val
 }
 
 func makeDraftDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *http.Request) {
@@ -294,8 +297,8 @@ func makeDraftDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *htt
 
 		p := &views.DraftAlbumDetailsPage{
 			Album:  newDraftAlbumData(&draftAlbumDetails.DraftAlbum, draftAlbumDetails.AllArtists),
-			Tracks: newTracksData(draftAlbumDetails.DraftTracks),
-			Covers: newCoversData(draftAlbumDetails.DraftCovers),
+			Tracks: newDraftTracksData(draftAlbumDetails.DraftTracks),
+			Covers: newDraftCoversData(draftAlbumDetails.DraftCovers),
 		}
 		views.WritePageTemplate(w, p)
 	}
@@ -347,8 +350,8 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 				p := &views.DraftAlbumDetailsPage{
 					Error:  err,
 					Album:  draftAlbumData,
-					Tracks: newTracksData(draftAlbumDetails.DraftTracks),
-					Covers: newCoversData(draftAlbumDetails.DraftCovers),
+					Tracks: newDraftTracksData(draftAlbumDetails.DraftTracks),
+					Covers: newDraftCoversData(draftAlbumDetails.DraftCovers),
 				}
 				w.WriteHeader(code)
 				views.WritePageTemplate(w, p)
@@ -398,7 +401,7 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 					ID:               uuid.Must(uuid.NewV4()),
 					OriginalFilename: fh.Filename,
 					AlbumID:          draftAlbumID,
-					Sort:             zero.Int{},
+					Sort:             zero.IntFrom(1),
 					Type:             models.CoverTypeEnumFrontOut,
 				}
 
@@ -444,12 +447,4 @@ func makeDraftUpdateHandler(d deps.Deps) func(p draftUpdateParams, w http.Respon
 			http.Redirect(w, r, p.onSuccessRedirectTo+"#footer", http.StatusSeeOther)
 		}
 	}
-}
-
-func showError(w http.ResponseWriter, err error, code int) {
-	p := &views.ErrorPage{
-		Error: err,
-	}
-	w.WriteHeader(code)
-	views.WritePageTemplate(w, p)
 }

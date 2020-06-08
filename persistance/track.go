@@ -11,6 +11,16 @@ import (
 
 var DraftTrackNotFound = errors.New("Draft track not found")
 
+func (p *Queries) GetTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]models.Track, error) {
+	tracks := []models.Track{}
+	err := p.db.SelectContext(ctx, &tracks, `
+        SELECT * FROM track
+        WHERE album_id = $1
+        ORDER BY path ASC
+    `, id)
+	return tracks, err
+}
+
 func (p *Queries) GetDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]models.DraftTrack, error) {
 	draftTracks := []models.DraftTrack{}
 	err := p.db.SelectContext(ctx, &draftTracks, `

@@ -9,65 +9,9 @@ import (
 	"github.com/go-chi/chi/middleware"
 
 	"github.com/rapthead/musiclib/deps"
-	"github.com/rapthead/musiclib/models"
 	"github.com/rapthead/musiclib/usecases"
 	"github.com/rapthead/musiclib/views"
 )
-
-// draft album to view data mapper
-type draftAlbumViewData struct {
-	model *models.DraftAlbum
-}
-
-func (r draftAlbumViewData) ID() string {
-	return r.model.ID.String()
-}
-
-func (r draftAlbumViewData) Path() string {
-	return r.model.Path
-}
-
-func (r draftAlbumViewData) Title() string {
-	return r.model.Title.String
-}
-
-func (r draftAlbumViewData) Artist() string {
-	return r.model.Artist.String
-}
-
-func (r draftAlbumViewData) Type() string {
-	return string(r.model.Type)
-}
-
-func (r draftAlbumViewData) DownloadSource() string {
-	return string(r.model.DownloadSource)
-}
-
-func (r draftAlbumViewData) SourceURL() string {
-	return r.model.SourceURL.String
-}
-
-func (r draftAlbumViewData) Year() *int {
-	if r.model.Year.IsZero() {
-		return nil
-	} else {
-		year := int(r.model.Year.Int64)
-		return &year
-	}
-}
-
-func (r draftAlbumViewData) ReleaseYear() *int {
-	if r.model.ReleaseYear.IsZero() {
-		return nil
-	} else {
-		year := int(r.model.ReleaseYear.Int64)
-		return &year
-	}
-}
-
-func (r draftAlbumViewData) URL() string {
-	return "/draft/" + r.model.ID.String()
-}
 
 func MakeRoutes(d deps.Deps) http.Handler {
 	r := chi.NewRouter()
@@ -75,11 +19,19 @@ func MakeRoutes(d deps.Deps) http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.RedirectSlashes)
 
-	draftListHandler := makeDraftListHandler(d)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/draft", http.StatusSeeOther)
 	})
 
+	albumListHandler := makeAlbumListHandler(d)
+	r.Get("/album", albumListHandler)
+
+	albumDetailsHandler := makeAlbumDetailsHandler(d)
+	r.Get("/album/{albumID}", func(w http.ResponseWriter, r *http.Request) {
+		albumDetailsHandler(chi.URLParam(r, "albumID"), w, r)
+	})
+
+	draftListHandler := makeDraftListHandler(d)
 	r.Get("/draft", draftListHandler)
 
 	draftDetailsHandler := makeDraftDetailsHandler(d)
@@ -164,4 +116,12 @@ func EventStreamHandler(
 
 	fmt.Fprint(w, "retry: 15000\nevent: end\ndata:\n\n")
 	doFlush()
+}
+
+func showError(w http.ResponseWriter, err error, code int) {
+	p := &views.ErrorPage{
+		Error: err,
+	}
+	w.WriteHeader(code)
+	views.WritePageTemplate(w, p)
 }

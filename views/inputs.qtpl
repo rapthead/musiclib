@@ -1,0 +1,203 @@
+{% code
+type strDatalistInputConfig struct {
+    wraperClass string
+    disabled    bool
+    label       string
+    required    bool
+
+    data        StrDatalistInputData
+}
+
+type strInputConfig struct {
+    wraperClass string
+    disabled    bool
+    label       string
+    required    bool
+
+    data        StrInputData
+}
+
+type intInputConfig struct {
+    wraperClass string
+    disabled    bool
+    label       string
+    required    bool
+
+    min         *int64
+    data        IntInputData
+}
+
+type selectConfig struct {
+    wraperClass string
+    disabled    bool
+    label       string
+    required    bool
+
+    data        SelectInputData
+}
+
+type chipsInputConfig struct {
+    wraperClass string
+    label       string
+    data        ChipsInputData
+}
+%}
+
+
+{% func makeIntInput(c intInputConfig) %}
+{% code id := makeInputID(c.data.Name) %}
+<div class="input-field {%s c.wraperClass %}">
+    <input
+        id="{%s id %}"
+
+        {% if c.disabled %}
+            disabled
+        {% endif %}
+
+        {% if c.required %}
+        required
+        {% endif %}
+
+        type="number"
+        class="validate"
+        {% if c.data.Name != "" %}
+        name="{%s c.data.Name %}"
+        {% endif %}
+        {% if c.data.Value != nil %}
+            value="{%dl *c.data.Value %}"
+        {% endif %}
+        {% if c.min != nil %}
+            min="{%dl *c.min %}"
+        {% endif %}
+    >
+    <label for="{%s id %}">{%s c.label %}</label>
+</div>
+{% endfunc %}
+
+{% func makeStrInput(c strInputConfig) %}
+{% code id := makeInputID(c.data.Name) %}
+<div class="input-field {%s c.wraperClass %}">
+    <input
+        id="{%s id %}"
+
+        {% if c.disabled %}
+        disabled
+        {% endif %}
+
+        {% if c.required %}
+        required
+        {% endif %}
+
+        type="text"
+        class="validate"
+        {% if c.data.Name != "" %}
+        name="{%s c.data.Name %}"
+        {% endif %}
+        value="{%s c.data.Value %}"
+    >
+    <label for="{%s id %}">{%s c.label %}</label>
+</div>
+{% endfunc %}
+
+{% func makeSelect(c selectConfig) %}
+{% code id := makeInputID(c.data.Name) %}
+<div class="input-field {%s c.wraperClass %}">
+    <select
+        {% if c.data.Name != "" %}
+        name="{%s c.data.Name %}"
+        {% endif %}
+        id="{%s id %}"
+    >
+        {% for _, option := range c.data.Options %}
+        <option
+            {% if option.Selected %}
+            selected
+            {% endif %}
+            value="{%s option.Value %}"
+            >{%s option.Label %}</option>
+        {% endfor %}
+    </select>
+    <label for="{%s id %}">{%s c.label %}</label>
+</div>
+{% endfunc %}
+
+{% func makeStrDatalistInput(c strDatalistInputConfig) %}
+{% code id := makeInputID(c.data.Name) %}
+{% code datalistID := id + "-datalist" %}
+<div class="input-field {%s c.wraperClass %}">
+    <input
+        id="{%s id %}"
+        list="{%s datalistID %}"
+
+        {% if c.disabled %}
+        disabled
+        {% endif %}
+
+        {% if c.required %}
+        required
+        {% endif %}
+
+        type="text"
+        class="validate"
+        {% if c.data.Name != "" %}
+        name="{%s c.data.Name %}"
+        {% endif %}
+        value="{%s c.data.Value %}"
+    >
+    <label for="{%s id %}">{%s c.label %}</label>
+
+    <datalist id="{%s datalistID %}">
+        {% for _, option := range c.data.Options %}
+        <option value="{%s option %}"></option>
+        {% endfor %}
+    </datalist>	
+</div>
+{% endfunc %}
+
+{% func makeChipsInput(c chipsInputConfig) %}
+{% code chipsId := makeInputID(c.data.Name) %}
+{% code inputId := makeInputID(c.data.Name) + "-input" %}
+<div class="{%s c.wraperClass %}">
+    <div id="{%s chipsId %}" class="chips"></div>
+    <input id="{%s inputId %}" type="hidden" name="tags" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var input = document.getElementById('{%j inputId %}');
+            var elem = document.getElementById('{%j chipsId %}');
+
+            var selectedValues = [
+                {%- for i, value := range c.data.Values -%}
+                    '{%j value %}'{%- if i < len(c.data.Values) - 1 -%},{%- endif %}
+                {%- endfor -%}
+            ];
+            var allValues = [
+                {%- for i, value := range c.data.Autocomplete -%}
+                    '{%j value %}'{%- if i < len(c.data.Autocomplete) - 1 -%},{%- endif %}
+                {%- endfor -%}
+            ];
+
+            function updateTagsInput() {
+                input.value = instance.chipsData.map(function(data) {
+                    return data.tag
+                }).join(',')
+            }
+            var instance = M.Chips.init(elem, {
+                data: selectedValues.map((tag) => ({
+                    tag,
+                })),
+                autocompleteOptions: {
+                    data: allValues.reduce((acc, val) => {
+                        acc[val] = null
+                        return acc
+                    }, {}),
+                    limit: Infinity,
+                    minLength: 1
+                },
+                onChipAdd: updateTagsInput,
+                onChipDelete: updateTagsInput,
+            });
+            updateTagsInput()
+        });
+    </script>
+</div>
+{% endfunc %}

@@ -105,6 +105,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 			AlbumID: draftAlbum.ID,
 			Path:    trackNormalPath,
 			Length:  uint(trackInfo.Seconds),
+			Disc:    zero.IntFrom(1),
 		}
 		for _, tag := range trackInfo.Tags {
 			tagName := tag[0]

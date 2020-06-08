@@ -11,6 +11,16 @@ import (
 
 var DraftCoverNotFound = errors.New("Draft cover not found")
 
+func (p *Queries) GetCoversByAlbumID(ctx context.Context, id uuid.UUID) ([]models.Cover, error) {
+	covers := []models.Cover{}
+	err := p.db.SelectContext(ctx, &covers, `
+        SELECT * FROM cover
+        WHERE album_id = $1
+        ORDER BY type ASC, sort ASC
+    `, id)
+	return covers, err
+}
+
 func (p *Queries) GetDraftCoversByAlbumID(ctx context.Context, id uuid.UUID) ([]models.DraftCover, error) {
 	draftCovers := []models.DraftCover{}
 	err := p.db.SelectContext(ctx, &draftCovers, `
