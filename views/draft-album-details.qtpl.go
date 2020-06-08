@@ -120,63 +120,6 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
             <div class="row">
                 `)
 //line draft-album-details.qtpl:58
-	streammakeChipsInput(qw422016, chipsInputConfig{
-		wraperClass: "col s6",
-		label:       "Tags",
-
-		data: ChipsInputData{
-			Name: "tags",
-			Values: []string{
-				"Apple",
-			},
-			Autocomplete: []string{
-				"Apple",
-				"Microsoft",
-				"Google",
-			},
-		},
-	})
-//line draft-album-details.qtpl:74
-	qw422016.N().S(`
-
-                <div class="col s6">
-                    <div id="tags-chips" class="chips"></div>
-                    <input id="tags-input" type="hidden" name="tags" />
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            var input = document.getElementById('tags-input');
-                            var elem = document.getElementById('tags-chips');
-
-                            var selectedTags = ['Apple']
-                            var allTags = ['Apple', 'Microsoft', 'Google']
-
-                            function updateTagsInput() {
-                                input.value = instance.chipsData.map(function(data) {
-                                    return data.tag
-                                }).join(',')
-                            }
-                            var instance = M.Chips.init(elem, {
-                                data: selectedTags.map((tag) => ({
-                                    tag,
-                                })),
-                                autocompleteOptions: {
-                                    data: allTags.reduce((acc, val) => {
-                                        acc[val] = null
-                                        return acc
-                                    }, {}),
-                                    limit: Infinity,
-                                    minLength: 1
-                                },
-                                onChipAdd: updateTagsInput,
-                                onChipDelete: updateTagsInput,
-                            });
-                            updateTagsInput()
-                        });
-                    </script>
-                </div>
-
-                `)
-//line draft-album-details.qtpl:113
 	streammakeStrDatalistInput(qw422016, strDatalistInputConfig{
 		wraperClass: "col s6",
 		label:       "Artist",
@@ -184,11 +127,11 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.Artist(),
 	})
-//line draft-album-details.qtpl:120
+//line draft-album-details.qtpl:65
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:123
+//line draft-album-details.qtpl:68
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Title",
@@ -196,11 +139,11 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.Title(),
 	})
-//line draft-album-details.qtpl:130
+//line draft-album-details.qtpl:75
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:133
+//line draft-album-details.qtpl:78
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		disabled:    true,
@@ -210,11 +153,11 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			Value: p.Album.Path(),
 		},
 	})
-//line draft-album-details.qtpl:142
+//line draft-album-details.qtpl:87
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:145
+//line draft-album-details.qtpl:90
 	streammakeIntInput(qw422016, intInputConfig{
 		wraperClass: "col s6",
 		label:       "Year",
@@ -223,11 +166,11 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		data: p.Album.Year(),
 		min:  takeIntPtr(1990),
 	})
-//line draft-album-details.qtpl:153
+//line draft-album-details.qtpl:98
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:156
+//line draft-album-details.qtpl:101
 	streammakeIntInput(qw422016, intInputConfig{
 		wraperClass: "col s6",
 		label:       "Release year",
@@ -235,11 +178,11 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		data: p.Album.ReleaseYear(),
 		min:  takeIntPtr(1990),
 	})
-//line draft-album-details.qtpl:163
+//line draft-album-details.qtpl:108
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:166
+//line draft-album-details.qtpl:111
 	streammakeSelect(qw422016, selectConfig{
 		wraperClass: "col s6",
 		label:       "Type",
@@ -247,11 +190,11 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.Type(),
 	})
-//line draft-album-details.qtpl:173
+//line draft-album-details.qtpl:118
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:176
+//line draft-album-details.qtpl:121
 	streammakeSelect(qw422016, selectConfig{
 		wraperClass: "col s6",
 		label:       "Download source",
@@ -259,40 +202,40 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.DownloadSource(),
 	})
-//line draft-album-details.qtpl:183
+//line draft-album-details.qtpl:128
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:186
+//line draft-album-details.qtpl:131
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Source url",
 
 		data: p.Album.SourceURL(),
 	})
-//line draft-album-details.qtpl:192
+//line draft-album-details.qtpl:137
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:195
+//line draft-album-details.qtpl:140
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Barcode",
 
 		data: p.Album.Barcode(),
 	})
-//line draft-album-details.qtpl:201
+//line draft-album-details.qtpl:146
 	qw422016.N().S(`
 
                 `)
-//line draft-album-details.qtpl:204
+//line draft-album-details.qtpl:149
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Comment",
 
 		data: p.Album.Comment(),
 	})
-//line draft-album-details.qtpl:210
+//line draft-album-details.qtpl:155
 	qw422016.N().S(`
             </div>
         </div>
@@ -309,14 +252,14 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
                 <tbody>
                     `)
-//line draft-album-details.qtpl:225
+//line draft-album-details.qtpl:170
 	for _, t := range p.Tracks {
-//line draft-album-details.qtpl:225
+//line draft-album-details.qtpl:170
 		qw422016.N().S(`
                     <tr>
                         <th>
                             `)
-//line draft-album-details.qtpl:229
+//line draft-album-details.qtpl:174
 		streammakeStrInput(qw422016, strInputConfig{
 			label:    "Path",
 			disabled: true,
@@ -325,24 +268,24 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 				Value: t.Path(),
 			},
 		})
-//line draft-album-details.qtpl:237
+//line draft-album-details.qtpl:182
 		qw422016.N().S(`
                         </th>
                         <td>
                             `)
-//line draft-album-details.qtpl:241
+//line draft-album-details.qtpl:186
 		streammakeStrInput(qw422016, strInputConfig{
 			label:    "Title",
 			required: true,
 
 			data: t.Title(),
 		})
-//line draft-album-details.qtpl:247
+//line draft-album-details.qtpl:192
 		qw422016.N().S(`
                         </td>
                         <td>
                             `)
-//line draft-album-details.qtpl:251
+//line draft-album-details.qtpl:196
 		streammakeIntInput(qw422016, intInputConfig{
 			label:    "Track number",
 			required: true,
@@ -350,12 +293,12 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			min:  takeIntPtr(0),
 			data: t.TrackNum(),
 		})
-//line draft-album-details.qtpl:258
+//line draft-album-details.qtpl:203
 		qw422016.N().S(`
                         </td>
                         <td>
                             `)
-//line draft-album-details.qtpl:262
+//line draft-album-details.qtpl:207
 		streammakeIntInput(qw422016, intInputConfig{
 			label:    "Disc number",
 			required: true,
@@ -363,25 +306,25 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			min:  takeIntPtr(1),
 			data: t.Disc(),
 		})
-//line draft-album-details.qtpl:269
+//line draft-album-details.qtpl:214
 		qw422016.N().S(`
                         </td>
                         <td>
                             `)
-//line draft-album-details.qtpl:273
+//line draft-album-details.qtpl:218
 		streammakeStrInput(qw422016, strInputConfig{
 			label: "TrackArtist",
 
 			data: t.TrackArtist(),
 		})
-//line draft-album-details.qtpl:278
+//line draft-album-details.qtpl:223
 		qw422016.N().S(`
                         </td>
                     </tr>
                     `)
-//line draft-album-details.qtpl:281
+//line draft-album-details.qtpl:226
 	}
-//line draft-album-details.qtpl:281
+//line draft-album-details.qtpl:226
 	qw422016.N().S(`
                 </tbody>
             </table>
@@ -390,28 +333,28 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
         <div class="card">
             <div class="row">
             `)
-//line draft-album-details.qtpl:288
+//line draft-album-details.qtpl:233
 	for i, c := range p.Covers {
-//line draft-album-details.qtpl:288
+//line draft-album-details.qtpl:233
 		qw422016.N().S(`
                 `)
-//line draft-album-details.qtpl:289
+//line draft-album-details.qtpl:234
 		if i%2 == 0 {
-//line draft-album-details.qtpl:289
+//line draft-album-details.qtpl:234
 			qw422016.N().S(`
                 <div class="clearfix"></div>
                 `)
-//line draft-album-details.qtpl:291
+//line draft-album-details.qtpl:236
 		}
-//line draft-album-details.qtpl:291
+//line draft-album-details.qtpl:236
 		qw422016.N().S(`
                 <div class ="col s6">
                     <div class="row">
                         <div class="col s6">
                             <img class="materialboxed responsive-img" src="`)
-//line draft-album-details.qtpl:295
+//line draft-album-details.qtpl:240
 		qw422016.E().S(c.URL())
-//line draft-album-details.qtpl:295
+//line draft-album-details.qtpl:240
 		qw422016.N().S(`" />
                         </div>
 
@@ -419,27 +362,27 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                             <div class="row">
                                 <div class="col s12">
                                     <h4 class="cover-filename">`)
-//line draft-album-details.qtpl:301
+//line draft-album-details.qtpl:246
 		qw422016.E().S(c.Filename())
-//line draft-album-details.qtpl:301
+//line draft-album-details.qtpl:246
 		qw422016.N().S(`</h4>
                                 </div>
 
                                 <div class="col s6">
                                     `)
-//line draft-album-details.qtpl:306
+//line draft-album-details.qtpl:251
 		streammakeSelect(qw422016, selectConfig{
 			label: "Cover type",
 
 			data: c.Type(),
 		})
-//line draft-album-details.qtpl:311
+//line draft-album-details.qtpl:256
 		qw422016.N().S(`
                                 </div>
 
                                 <div class="col s6">
                                     `)
-//line draft-album-details.qtpl:316
+//line draft-album-details.qtpl:261
 		streammakeIntInput(qw422016, intInputConfig{
 			label:    "Sort",
 			required: true,
@@ -447,7 +390,7 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 			data: c.Sort(),
 		})
-//line draft-album-details.qtpl:323
+//line draft-album-details.qtpl:268
 		qw422016.N().S(`
                                 </div>
 
@@ -456,14 +399,14 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                                         <input
                                             type="checkbox"
                                             name="`)
-//line draft-album-details.qtpl:330
+//line draft-album-details.qtpl:275
 		qw422016.E().S(c.Delete().Name)
-//line draft-album-details.qtpl:330
+//line draft-album-details.qtpl:275
 		qw422016.N().S(`"
                                             value="`)
-//line draft-album-details.qtpl:331
+//line draft-album-details.qtpl:276
 		qw422016.E().S(c.Delete().Value)
-//line draft-album-details.qtpl:331
+//line draft-album-details.qtpl:276
 		qw422016.N().S(`"
                                         />
                                         <span>Delete</span>
@@ -474,9 +417,9 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                     </div>
                 </div>
             `)
-//line draft-album-details.qtpl:340
+//line draft-album-details.qtpl:285
 	}
-//line draft-album-details.qtpl:340
+//line draft-album-details.qtpl:285
 	qw422016.N().S(`
             </div>
         </div>
@@ -535,31 +478,31 @@ func (p *DraftAlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
         </footer>
     </form>
 `)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 }
 
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 func (p *DraftAlbumDetailsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	p.StreamBody(qw422016)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	qt422016.ReleaseWriter(qw422016)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 }
 
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 func (p *DraftAlbumDetailsPage) Body() string {
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	qb422016 := qt422016.AcquireByteBuffer()
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	p.WriteBody(qb422016)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	qs422016 := string(qb422016.B)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	qt422016.ReleaseByteBuffer(qb422016)
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 	return qs422016
-//line draft-album-details.qtpl:397
+//line draft-album-details.qtpl:342
 }
