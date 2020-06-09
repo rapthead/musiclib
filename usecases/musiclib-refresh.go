@@ -61,8 +61,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				meta.AlbumTitle,
 			)
 			fusePathBaseName := fmt.Sprintf(
-				"%d-%02d-%s.flac",
-				meta.TrackDisc,
+				"%02d-%s.flac",
 				meta.TrackNumber,
 				meta.TrackTitle,
 			)
@@ -79,7 +78,14 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				"*", "_",
 				",", "_",
 			)
-			fusePath := replacer.Replace(fusePathDirname) + "/" + replacer.Replace(fusePathBaseName)
+			fusePath := replacer.Replace(fusePathDirname) + "/"
+			if meta.DiscTotal != 1 {
+				fusePath = fusePath + fmt.Sprintf(
+					"cd%d/",
+					meta.DiscTotal,
+				)
+			}
+			fusePath = fusePath + replacer.Replace(fusePathBaseName)
 
 			artistTag := meta.AlbumArtistName
 			if meta.TrackArtistName.Valid {

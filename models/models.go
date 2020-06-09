@@ -104,14 +104,16 @@ type Metadata struct {
 	AlbumArtistName string      `json:"album_artist_name"    db:"album_artist_name"`
 	AlbumTitle      string      `json:"album_title"          db:"album_title"`
 	Year            int32       `json:"year"                 db:"year"`
+	DiscTotal       int32       `json:"disc_total"           db:"disc_total"`
 	TrackDisc       int32       `json:"track_disc"           db:"track_disc"`
 	TrackArtistName null.String `json:"track_artist_name"    db:"track_artist_name"`
 	TrackTitle      string      `json:"track_title"          db:"track_title"`
 	TrackNumber     int32       `json:"track_number"         db:"track_number"`
-	AlbumRgGain     float32     `json:"album_rg_gain"        db:"album_rg_gain"`
-	AlbumRgPeak     float32     `json:"album_rg_peak"        db:"album_rg_peak"`
-	TrackRgGain     float32     `json:"track_rg_gain"        db:"track_rg_gain"`
-	TrackRgPeak     float32     `json:"track_rg_peak"        db:"track_rg_peak"`
+
+	AlbumRgGain float32 `json:"album_rg_gain"        db:"album_rg_gain"`
+	AlbumRgPeak float32 `json:"album_rg_peak"        db:"album_rg_peak"`
+	TrackRgGain float32 `json:"track_rg_gain"        db:"track_rg_gain"`
+	TrackRgPeak float32 `json:"track_rg_peak"        db:"track_rg_peak"`
 }
 
 type AlbumStateEnum string
