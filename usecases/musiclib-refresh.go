@@ -100,6 +100,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				{"TITLE", meta.TrackTitle},
 				{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TrackNumber)},
 				{"DISCNUMBER", fmt.Sprintf("%02d", meta.TrackDisc)},
+				{"DISCTOTAL", fmt.Sprintf("%d", meta.DiscTotal)},
 
 				{"REPLAYGAIN_REFERENCE_LOUDNESS", "89.0 dB"},
 				{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.AlbumRgGain)},
@@ -114,7 +115,6 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				// GENRE=Punk
 				// LABEL=Rebel Alliance Recordings
 				// MEDIA=CD
-				// DISCTOTAL=1
 				// TRACKTOTAL=8
 			}
 			fuseEntities[i] = sync.FuseEntity{

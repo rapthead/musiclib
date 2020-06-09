@@ -1,5 +1,7 @@
 {% code
-type DraftAlbumData interface {
+type AlbumData interface {
+    State()             SelectInputData
+
     Title()             StrInputData
     TitleSuggestion()   string
 
@@ -14,7 +16,7 @@ type DraftAlbumData interface {
     ReleaseYear()       IntInputData
 }
 
-type DraftTrackData interface {
+type TrackData interface {
     Title()             StrInputData
     TitleSuggestion()   string
 
@@ -24,7 +26,7 @@ type DraftTrackData interface {
     TrackNum()          IntInputData
 }
 
-type DraftCoverData interface {
+type CoverData interface {
     Filename()    string
     URL()         string
     Sort()        IntInputData
@@ -32,19 +34,19 @@ type DraftCoverData interface {
     Delete()      CheckboxInputData
 }
 
-type DraftAlbumDetailsPage struct {
+type AlbumDetailsPage struct {
     Error               error
-    Album               DraftAlbumData
-    Tracks              []DraftTrackData
-    Covers              []DraftCoverData
+    Album               AlbumData
+    Tracks              []TrackData
+    Covers              []CoverData
 }
 %}
 
-{% func (p *DraftAlbumDetailsPage) Title() %}
-    Draft album details
+{% func (p *AlbumDetailsPage) Title() %}
+    Album details
 {% endfunc %}
 
-{% func (p *DraftAlbumDetailsPage) Body() %}
+{% func (p *AlbumDetailsPage) Body() %}
     <style>
         .cover-filename {
             word-break: break-all;
@@ -58,6 +60,16 @@ type DraftAlbumDetailsPage struct {
         {% endif %}
         <div class="card">
             <div class="row">
+                {%=
+                    makeSelect(selectConfig{
+                        wraperClass: "col s6",
+                        label: "State",
+                        required: true,
+
+                        data: p.Album.State(),
+                    })
+                %}
+
                 {%=
                     makeStrDatalistInput(strDatalistInputConfig{
                         wraperClass: "col s6",
@@ -321,31 +333,8 @@ type DraftAlbumDetailsPage struct {
         </div>
 
         <footer class="row" id="footer">
-            <div class="col s6">
-                <button
-                    class="btn waves-effect waves-light red"
-                    type="submit"
-                    name="delete"
-                    formnovalidate
-                >
-                    Delete
-                    <i class="material-delete right"></i>
-                </button>
-            </div>
-
-            <div class="col s3 right-align">
-                <button
-                    class="btn waves-effect waves-light"
-                    type="submit"
-                    name="commit"
-                >
-                    Commit
-                    <i class="material-icons right"></i>
-                </button>
-            </div>
-
-            <div class="col s3 right-align">
-                <button class="btn waves-effect waves-light" type="submit" formnovalidate>
+            <div class="col s12 right-align">
+                <button class="btn waves-effect waves-light" type="submit">
                     Save
                     <i class="material-icons right"></i>
                 </button>

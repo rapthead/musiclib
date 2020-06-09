@@ -509,158 +509,159 @@ func streammakeStrDatalistInput(qw422016 *qt422016.Writer, c strDatalistInputCon
 	qw422016.E().S(c.data.Value)
 //line inputs.qtpl:149
 	qw422016.N().S(`"
+        autocomplete="off"
     >
     <label for="`)
-//line inputs.qtpl:151
+//line inputs.qtpl:152
 	qw422016.E().S(id)
-//line inputs.qtpl:151
+//line inputs.qtpl:152
 	qw422016.N().S(`">`)
-//line inputs.qtpl:151
+//line inputs.qtpl:152
 	qw422016.E().S(c.label)
-//line inputs.qtpl:151
+//line inputs.qtpl:152
 	qw422016.N().S(`</label>
 
     <datalist id="`)
-//line inputs.qtpl:153
+//line inputs.qtpl:154
 	qw422016.E().S(datalistID)
-//line inputs.qtpl:153
+//line inputs.qtpl:154
 	qw422016.N().S(`">
         `)
-//line inputs.qtpl:154
+//line inputs.qtpl:155
 	for _, option := range c.data.Options {
-//line inputs.qtpl:154
+//line inputs.qtpl:155
 		qw422016.N().S(`
         <option value="`)
-//line inputs.qtpl:155
+//line inputs.qtpl:156
 		qw422016.E().S(option)
-//line inputs.qtpl:155
+//line inputs.qtpl:156
 		qw422016.N().S(`"></option>
         `)
-//line inputs.qtpl:156
+//line inputs.qtpl:157
 	}
-//line inputs.qtpl:156
+//line inputs.qtpl:157
 	qw422016.N().S(`
     </datalist>	
 </div>
 `)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 }
 
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 func writemakeStrDatalistInput(qq422016 qtio422016.Writer, c strDatalistInputConfig) {
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	streammakeStrDatalistInput(qw422016, c)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	qt422016.ReleaseWriter(qw422016)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 }
 
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 func makeStrDatalistInput(c strDatalistInputConfig) string {
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	qb422016 := qt422016.AcquireByteBuffer()
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	writemakeStrDatalistInput(qb422016, c)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	qs422016 := string(qb422016.B)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	qt422016.ReleaseByteBuffer(qb422016)
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 	return qs422016
-//line inputs.qtpl:159
+//line inputs.qtpl:160
 }
 
-//line inputs.qtpl:161
+//line inputs.qtpl:162
 func streammakeChipsInput(qw422016 *qt422016.Writer, c chipsInputConfig) {
-//line inputs.qtpl:161
+//line inputs.qtpl:162
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:162
+//line inputs.qtpl:163
 	chipsId := makeInputID(c.data.Name)
 
-//line inputs.qtpl:162
+//line inputs.qtpl:163
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:163
+//line inputs.qtpl:164
 	inputId := makeInputID(c.data.Name) + "-input"
 
-//line inputs.qtpl:163
+//line inputs.qtpl:164
 	qw422016.N().S(`
 <div class="`)
-//line inputs.qtpl:164
+//line inputs.qtpl:165
 	qw422016.E().S(c.wraperClass)
-//line inputs.qtpl:164
+//line inputs.qtpl:165
 	qw422016.N().S(`">
     <div id="`)
-//line inputs.qtpl:165
+//line inputs.qtpl:166
 	qw422016.E().S(chipsId)
-//line inputs.qtpl:165
+//line inputs.qtpl:166
 	qw422016.N().S(`" class="chips"></div>
     <input id="`)
-//line inputs.qtpl:166
+//line inputs.qtpl:167
 	qw422016.E().S(inputId)
-//line inputs.qtpl:166
+//line inputs.qtpl:167
 	qw422016.N().S(`" type="hidden" name="tags" />
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var input = document.getElementById('`)
-//line inputs.qtpl:169
+//line inputs.qtpl:170
 	qw422016.E().J(inputId)
-//line inputs.qtpl:169
+//line inputs.qtpl:170
 	qw422016.N().S(`');
             var elem = document.getElementById('`)
-//line inputs.qtpl:170
+//line inputs.qtpl:171
 	qw422016.E().J(chipsId)
-//line inputs.qtpl:170
+//line inputs.qtpl:171
 	qw422016.N().S(`');
 
             var selectedValues = [
 `)
-//line inputs.qtpl:173
+//line inputs.qtpl:174
 	for i, value := range c.data.Values {
-//line inputs.qtpl:173
+//line inputs.qtpl:174
 		qw422016.N().S(`                    '`)
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 		qw422016.E().J(value)
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 		qw422016.N().S(`'`)
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 		if i < len(c.data.Values)-1 {
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 			qw422016.N().S(`,`)
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 		}
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 		qw422016.N().S(`
 `)
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 	}
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 	qw422016.N().S(`            ];
             var allValues = [
 `)
-//line inputs.qtpl:178
+//line inputs.qtpl:179
 	for i, value := range c.data.Autocomplete {
-//line inputs.qtpl:178
+//line inputs.qtpl:179
 		qw422016.N().S(`                    '`)
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 		qw422016.E().J(value)
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 		qw422016.N().S(`'`)
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 		if i < len(c.data.Autocomplete)-1 {
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 			qw422016.N().S(`,`)
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 		}
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 		qw422016.N().S(`
 `)
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 	}
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 	qw422016.N().S(`            ];
 
             function updateTagsInput() {
@@ -688,31 +689,31 @@ func streammakeChipsInput(qw422016 *qt422016.Writer, c chipsInputConfig) {
     </script>
 </div>
 `)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 }
 
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 func writemakeChipsInput(qq422016 qtio422016.Writer, c chipsInputConfig) {
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	streammakeChipsInput(qw422016, c)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	qt422016.ReleaseWriter(qw422016)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 }
 
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 func makeChipsInput(c chipsInputConfig) string {
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	qb422016 := qt422016.AcquireByteBuffer()
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	writemakeChipsInput(qb422016, c)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	qs422016 := string(qb422016.B)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	qt422016.ReleaseByteBuffer(qb422016)
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 	return qs422016
-//line inputs.qtpl:207
+//line inputs.qtpl:208
 }

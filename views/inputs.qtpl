@@ -147,6 +147,7 @@ type chipsInputConfig struct {
         name="{%s c.data.Name %}"
         {% endif %}
         value="{%s c.data.Value %}"
+        autocomplete="off"
     >
     <label for="{%s id %}">{%s c.label %}</label>
 

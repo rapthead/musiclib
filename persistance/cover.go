@@ -31,6 +31,17 @@ func (p *Queries) GetDraftCoversByAlbumID(ctx context.Context, id uuid.UUID) ([]
 	return draftCovers, err
 }
 
+func (p *Queries) DeleteCover(ctx context.Context, coverID uuid.UUID) error {
+	_, err := p.db.ExecContext(ctx, `
+        DELETE FROM cover
+        WHERE id = $1
+    `, coverID)
+	if err != nil {
+		return fmt.Errorf("cover deletion error: %w", err)
+	}
+	return nil
+}
+
 func (p *Queries) DeleteDraftCover(ctx context.Context, coverID uuid.UUID) error {
 	_, err := p.db.ExecContext(ctx, `
         DELETE FROM draft_cover
@@ -38,6 +49,19 @@ func (p *Queries) DeleteDraftCover(ctx context.Context, coverID uuid.UUID) error
     `, coverID)
 	if err != nil {
 		return fmt.Errorf("draft cover deletion error: %w", err)
+	}
+	return nil
+}
+
+func (p *Queries) UpdateCover(ctx context.Context, draftCover models.Cover) error {
+	_, err := p.db.NamedExecContext(ctx, `
+        UPDATE cover SET
+            sort              = :sort,
+            type              = :type
+        WHERE id = :id
+    `, draftCover)
+	if err != nil {
+		return fmt.Errorf("draft cover updation error: %w", err)
 	}
 	return nil
 }
@@ -51,6 +75,26 @@ func (p *Queries) UpdateDraftCover(ctx context.Context, draftCover models.DraftC
     `, draftCover)
 	if err != nil {
 		return fmt.Errorf("draft cover updation error: %w", err)
+	}
+	return nil
+}
+
+func (p *Queries) InsertCover(ctx context.Context, cover models.Cover) error {
+	_, err := p.db.NamedExecContext(ctx, `
+        INSERT INTO cover (
+            id,
+            album_id,
+            sort,
+            type
+        ) VALUES (
+            :id,
+            :album_id,
+            :sort,
+            :type
+        )
+    `, cover)
+	if err != nil {
+		return fmt.Errorf("draft cover insertion error: %w", err)
 	}
 	return nil
 }

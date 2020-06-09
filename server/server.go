@@ -31,6 +31,19 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		albumDetailsHandler(chi.URLParam(r, "albumID"), w, r)
 	})
 
+	albumUpdateHandler := makeAlbumUpdateHandler(d)
+	r.Post("/album/{albumID}", func(w http.ResponseWriter, r *http.Request) {
+		albumID := chi.URLParam(r, "albumID")
+		albumUpdateHandler(
+			AlbumUpdateParams{
+				albumIDStr:          albumID,
+				onDeleteRedirectTo:  "/album/",
+				onSuccessRedirectTo: "/album/" + albumID,
+			},
+			w, r,
+		)
+	})
+
 	draftListHandler := makeDraftListHandler(d)
 	r.Get("/draft", draftListHandler)
 

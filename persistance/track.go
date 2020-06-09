@@ -31,6 +31,26 @@ func (p *Queries) GetDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]
 	return draftTracks, err
 }
 
+func (p *Queries) UpdateTrack(ctx context.Context, track models.Track) error {
+	result, err := p.db.NamedExecContext(ctx, `
+        UPDATE track SET
+            disc         = :disc,
+            track_artist = :track_artist,
+            title        = :title,
+            track_num    = :track_num
+        WHERE id = :id;
+    `, track)
+	if err != nil {
+		return fmt.Errorf("track updation error: %w", err)
+	}
+	if affectedCount, err := result.RowsAffected(); err != nil {
+		return fmt.Errorf("track updation error, can't get affected rows count: %w", err)
+	} else if affectedCount == 0 {
+		return errors.New("track was not found")
+	}
+	return nil
+}
+
 func (p *Queries) UpdateDraftTrack(ctx context.Context, draftTrack models.DraftTrack) error {
 	result, err := p.db.NamedExecContext(ctx, `
         UPDATE draft_track SET

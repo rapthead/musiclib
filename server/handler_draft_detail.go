@@ -86,31 +86,39 @@ func (r DraftAlbumForm) ReleaseYear() views.IntInputData {
 }
 
 func (r DraftAlbumForm) Type() views.SelectInputData {
-	options := make([]views.SelectOption, len(models.AllAlbumTypeEnum), len(models.AllAlbumTypeEnum))
-	for i, albumType := range models.AllAlbumTypeEnum {
+	currentEnumValue := r.Model.Type
+	allEnumValues := models.AllAlbumTypeEnum
+	fieldName := r.fieldName("type")
+
+	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
+	for i, enumValue := range allEnumValues {
 		options[i] = views.SelectOption{
-			Label:    string(albumType),
-			Value:    string(albumType),
-			Selected: albumType == r.Model.Type,
+			Label:    string(enumValue),
+			Value:    string(enumValue),
+			Selected: enumValue == currentEnumValue,
 		}
 	}
 	return views.SelectInputData{
-		Name:    r.fieldName("type"),
+		Name:    fieldName,
 		Options: options,
 	}
 }
 
 func (r DraftAlbumForm) DownloadSource() views.SelectInputData {
-	options := make([]views.SelectOption, len(models.AllDownloadSourceEnum), len(models.AllDownloadSourceEnum))
-	for i, downloadSource := range models.AllDownloadSourceEnum {
+	currentEnumValue := r.Model.DownloadSource
+	allEnumValues := models.AllDownloadSourceEnum
+	fieldName := r.fieldName("download_source")
+
+	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
+	for i, enumValue := range allEnumValues {
 		options[i] = views.SelectOption{
-			Label:    string(downloadSource),
-			Value:    string(downloadSource),
-			Selected: downloadSource == r.Model.DownloadSource,
+			Label:    string(enumValue),
+			Value:    string(enumValue),
+			Selected: enumValue == currentEnumValue,
 		}
 	}
 	return views.SelectInputData{
-		Name:    r.fieldName("download_source"),
+		Name:    fieldName,
 		Options: options,
 	}
 }
@@ -137,8 +145,8 @@ func (r DraftAlbumForm) Merge(v values) error {
 	r.Model.SourceURL = zero.StringFrom(v.Get(r.fieldName("source_url")))
 	r.Model.Barcode = zero.StringFrom(v.Get(r.fieldName("barcode")))
 	r.Model.Comment = zero.StringFrom(v.Get(r.fieldName("comment")))
-	r.Model.Year = zero.IntFrom(v.GetInt(r.fieldName("year")))
-	r.Model.ReleaseYear = zero.IntFrom(v.GetInt(r.fieldName("release_year")))
+	r.Model.Year = zero.IntFrom(v.GetInt64(r.fieldName("year")))
+	r.Model.ReleaseYear = zero.IntFrom(v.GetInt64(r.fieldName("release_year")))
 	r.Model.Type = albumType
 	r.Model.DownloadSource = downloadSource
 	return nil
@@ -153,9 +161,9 @@ type DraftTrackForm struct {
 	Model *models.DraftTrack
 }
 
-func newDraftTracksData(tracks []models.DraftTrack) []views.TrackData {
+func newDraftTracksData(tracks []models.DraftTrack) []views.DraftTrackData {
 	trackForms := make(
-		[]views.TrackData,
+		[]views.DraftTrackData,
 		len(tracks),
 		len(tracks),
 	)
@@ -208,8 +216,8 @@ func (r DraftTrackForm) TrackNum() views.IntInputData {
 func (r DraftTrackForm) Merge(v values) error {
 	r.Model.Title = zero.StringFrom(v.Get(r.fieldName("title")))
 	r.Model.TrackArtist = zero.StringFrom(v.Get(r.fieldName("artist")))
-	r.Model.Disc = zero.IntFrom(v.GetInt(r.fieldName("disc")))
-	r.Model.TrackNum = zero.IntFrom(v.GetInt(r.fieldName("track_num")))
+	r.Model.Disc = zero.IntFrom(v.GetInt64(r.fieldName("disc")))
+	r.Model.TrackNum = zero.IntFrom(v.GetInt64(r.fieldName("track_num")))
 	return nil
 }
 
@@ -231,16 +239,20 @@ func (r DraftCoverForm) URL() string {
 }
 
 func (r DraftCoverForm) Type() views.SelectInputData {
-	options := make([]views.SelectOption, len(models.AllCoverTypeEnum), len(models.AllCoverTypeEnum))
-	for i, coverType := range models.AllCoverTypeEnum {
+	currentEnumValue := r.Model.Type
+	allEnumValues := models.AllCoverTypeEnum
+	fieldName := r.fieldName("type")
+
+	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
+	for i, enumValue := range allEnumValues {
 		options[i] = views.SelectOption{
-			Label:    string(coverType),
-			Value:    string(coverType),
-			Selected: coverType == r.Model.Type,
+			Label:    string(enumValue),
+			Value:    string(enumValue),
+			Selected: enumValue == currentEnumValue,
 		}
 	}
 	return views.SelectInputData{
-		Name:    r.fieldName("type"),
+		Name:    fieldName,
 		Options: options,
 	}
 }
@@ -273,13 +285,13 @@ func (r DraftCoverForm) Merge(v values) error {
 		)
 	}
 	r.Model.Type = coverType
-	r.Model.Sort = zero.IntFrom(v.GetInt(r.fieldName("sort")))
+	r.Model.Sort = zero.IntFrom(v.GetInt64(r.fieldName("sort")))
 	return nil
 }
 
-func newDraftCoversData(covers []models.DraftCover) []views.CoverData {
+func newDraftCoversData(covers []models.DraftCover) []views.DraftCoverData {
 	coverForms := make(
-		[]views.CoverData,
+		[]views.DraftCoverData,
 		len(covers),
 		len(covers),
 	)

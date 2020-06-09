@@ -75,6 +75,54 @@ func (p *Queries) GetExistenPaths(ctx context.Context) ([]string, error) {
 	return paths, err
 }
 
+func (p *Queries) UpdateAlbum(
+	ctx context.Context,
+	album models.Album, artist string,
+) error {
+	type args struct {
+		models.Album
+		Artist string `db:"artist"`
+	}
+	result, err := p.db.NamedExecContext(ctx, `
+        WITH existen_artist AS (
+            SELECT id FROM artist WHERE name = :artist
+        ), inserted_artist AS (
+            INSERT INTO artist (id, name)
+            SELECT uuid_generate_v4(), :artist
+            WHERE NOT EXISTS (SELECT * FROM existen_artist)
+            RETURNING id
+        )
+        UPDATE album SET
+            artist_id = COALESCE(
+                (SELECT id FROM existen_artist),
+                (SELECT id FROM inserted_artist)
+            ),
+            state			= :state,
+            title			= :title,
+            year			= :year,
+            release_year	= :release_year,
+            mbid			= :mbid,
+            type			= :type,
+            edition_title	= :edition_title,
+            barcode			= :barcode,
+            download_source	= :download_source,
+            source_url		= :source_url,
+            comment			= :comment,
+
+            updated_at = NOW()
+        WHERE id = :id;
+    `, args{album, artist})
+	if err != nil {
+		return fmt.Errorf("album updation error: %w", err)
+	}
+	if affectedCount, err := result.RowsAffected(); err != nil {
+		return fmt.Errorf("album updation error, can't get affected rows count: %w", err)
+	} else if affectedCount == 0 {
+		return AlbumNotFound
+	}
+	return nil
+}
+
 func (p *Queries) UpdateDraftAlbum(ctx context.Context, draftAlbum models.DraftAlbum) error {
 	result, err := p.db.NamedExecContext(ctx, `
         UPDATE draft_album SET
