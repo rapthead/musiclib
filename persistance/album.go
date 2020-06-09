@@ -19,7 +19,7 @@ func (p *Queries) ListAlbums(ctx context.Context) ([]models.Album, error) {
 	albums := []models.Album{}
 	err := p.db.SelectContext(ctx, &albums, `
         SELECT * FROM album
-        ORDER BY state ASC, path ASC
+        ORDER BY state ASC, created_at DESC, path ASC
     `)
 	return albums, err
 }
