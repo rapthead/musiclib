@@ -210,7 +210,7 @@ func (p *Queries) CommitDraftAlbumByID(ctx context.Context, id uuid.UUID) error 
                 (SELECT id FROM inserted_artist)
             ),
             title,
-            'enabled',
+            'disabled',
             type,
 
             edition_title,

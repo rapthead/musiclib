@@ -61,7 +61,8 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				meta.AlbumTitle,
 			)
 			fusePathBaseName := fmt.Sprintf(
-				"%02d-%s.flac",
+				"%d-%02d-%s.flac",
+				meta.TrackDisc,
 				meta.TrackNumber,
 				meta.TrackTitle,
 			)
