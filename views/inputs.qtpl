@@ -12,6 +12,7 @@ type strInputConfig struct {
     wraperClass string
     disabled    bool
     label       string
+    helperText  string
     required    bool
 
     data        StrInputData
@@ -96,6 +97,9 @@ type chipsInputConfig struct {
         value="{%s c.data.Value %}"
     >
     <label for="{%s id %}">{%s c.label %}</label>
+    {% if c.helperText != "" %}
+        <span class="blue-text text-darken-2 helper-text">{%s c.helperText %}</span>
+    {% endif %}
 </div>
 {% endfunc %}
 

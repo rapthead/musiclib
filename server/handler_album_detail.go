@@ -32,6 +32,10 @@ func (r AlbumForm) Title() views.StrInputData {
 	}
 }
 
+func (r AlbumForm) TitleSuggestion() string {
+	return models.TitleSuggestion(r.Model.Title)
+}
+
 func (r AlbumForm) Artist() views.StrDatalistInputData {
 	options := make([]string, len(r.AllArtists)+1, len(r.AllArtists)+1)
 	var value string
@@ -141,6 +145,10 @@ func (r TrackForm) fieldName(fieldName string) string {
 
 func (r TrackForm) Path() string {
 	return r.Model.Path
+}
+
+func (r TrackForm) TitleSuggestion() string {
+	return models.TitleSuggestion(r.Model.Title)
 }
 
 func (r TrackForm) Title() views.StrInputData {

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -21,6 +22,12 @@ import (
 )
 
 type relPath string
+
+type orderedRelPaths []relPath
+
+func (s orderedRelPaths) Len() int           { return len(s) }
+func (s orderedRelPaths) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s orderedRelPaths) Less(i, j int) bool { return s[i] < s[j] }
 
 type DraftData struct {
 	Album  models.DraftAlbum
@@ -92,7 +99,18 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 
 	tracksInfo := albumTagsInfo.TracksInfo
 	draftTracks := make(map[relPath]models.DraftTrack, len(tracksInfo))
-	for path, trackInfo := range tracksInfo {
+
+	op := make(orderedRelPaths, 0, len(tracksInfo))
+	for path := range tracksInfo {
+		op = append(op, path)
+	}
+	sort.Sort(op)
+
+	var disc int64
+	prevDir := ""
+
+	for _, path := range op {
+		trackInfo := tracksInfo[path]
 		trackNormalPath, err := filepath.Rel(
 			string(albumTagsInfo.RelPath),
 			string(path),
@@ -100,12 +118,16 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 		if err != nil {
 			return DraftData{}, fmt.Errorf("Error on normalizing track path: %w", err)
 		}
+		if dir := filepath.Dir(string(path)); dir != prevDir {
+			disc++
+			prevDir = dir
+		}
 		draftTrack := models.DraftTrack{
 			ID:      uuid.Must(uuid.NewV4()),
 			AlbumID: draftAlbum.ID,
 			Path:    trackNormalPath,
 			Length:  uint(trackInfo.Seconds),
-			Disc:    zero.IntFrom(1),
+			Disc:    zero.IntFrom(disc),
 		}
 		for _, tag := range trackInfo.Tags {
 			tagName := tag[0]
@@ -272,7 +294,7 @@ func (r rescanCase) Do() {
 		logStr := "new album dirs: "
 		for i, newAlbumDir := range newAlbumDirs {
 			if i != 0 {
-				logStr += ", "
+				logStr += "\n"
 			}
 			logStr += string(newAlbumDir)
 		}

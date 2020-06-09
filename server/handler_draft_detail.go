@@ -34,6 +34,10 @@ func (r DraftAlbumForm) Title() views.StrInputData {
 	}
 }
 
+func (r DraftAlbumForm) TitleSuggestion() string {
+	return models.TitleSuggestion(r.Model.Title.String)
+}
+
 func (r DraftAlbumForm) Artist() views.StrDatalistInputData {
 	options := make([]string, len(r.AllArtists)+1, len(r.AllArtists)+1)
 	for i, artist := range r.AllArtists {
@@ -174,6 +178,10 @@ func (r DraftTrackForm) Title() views.StrInputData {
 		Name:  r.fieldName("title"),
 		Value: r.Model.Title.String,
 	}
+}
+
+func (r DraftTrackForm) TitleSuggestion() string {
+	return models.TitleSuggestion(r.Model.Title.String)
 }
 
 func (r DraftTrackForm) TrackArtist() views.StrInputData {

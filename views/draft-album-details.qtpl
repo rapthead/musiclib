@@ -1,23 +1,27 @@
 {% code
 type AlbumData interface {
-    Path()           string
-    Artist()         StrDatalistInputData
-    Title()          StrInputData
-    Type()           SelectInputData
-    DownloadSource() SelectInputData
-    SourceURL()      StrInputData
-    Barcode()        StrInputData
-    Comment()        StrInputData
-    Year()           IntInputData
-    ReleaseYear()    IntInputData
+    Title()             StrInputData
+    TitleSuggestion()   string
+
+    Path()              string
+    Artist()            StrDatalistInputData
+    Type()              SelectInputData
+    DownloadSource()    SelectInputData
+    SourceURL()         StrInputData
+    Barcode()           StrInputData
+    Comment()           StrInputData
+    Year()              IntInputData
+    ReleaseYear()       IntInputData
 }
 
 type TrackData interface {
-    Path()        string
-    TrackArtist() StrInputData
-    Title()       StrInputData
-    Disc()        IntInputData
-    TrackNum()    IntInputData
+    Title()             StrInputData
+    TitleSuggestion()   string
+
+    Path()              string
+    TrackArtist()       StrInputData
+    Disc()              IntInputData
+    TrackNum()          IntInputData
 }
 
 type CoverData interface {
@@ -71,6 +75,7 @@ type DraftAlbumDetailsPage struct {
                         required: true,
 
                         data: p.Album.Title(),
+                        helperText: p.Album.TitleSuggestion(),
                     })
                 %}
 
@@ -156,8 +161,15 @@ type DraftAlbumDetailsPage struct {
             </div>
         </div>
 
+        <style>
+            .tracks-table td,
+            .tracks-table th {
+                vertical-align: top;
+            }
+        </style>
+
         <div class="card">
-            <table>
+            <table class="tracks-table">
                 <!--thead>
                     <tr>
                         <th>Path</th>
@@ -188,6 +200,7 @@ type DraftAlbumDetailsPage struct {
                                     required: true,
 
                                     data: t.Title(),
+                                    helperText: t.TitleSuggestion(),
                                 })
                             %}
                         </td>
