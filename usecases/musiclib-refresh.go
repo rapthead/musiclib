@@ -82,7 +82,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 			if meta.DiscTotal != 1 {
 				fusePath = fusePath + fmt.Sprintf(
 					"cd%d/",
-					meta.DiscTotal,
+					meta.TrackDisc,
 				)
 			}
 			fusePath = fusePath + replacer.Replace(fusePathBaseName)
