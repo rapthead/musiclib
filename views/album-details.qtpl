@@ -34,8 +34,15 @@ type CoverData interface {
     Delete()      CheckboxInputData
 }
 
+type ReleaseData interface {
+    Label()         StrInputData
+    CatalogNum()    StrInputData
+    Delete()        *CheckboxInputData
+}
+
 type AlbumDetailsPage struct {
     Error               error
+    ReleaseInfo         []ReleaseData
     Album               AlbumData
     Tracks              []TrackData
     Covers              []CoverData
@@ -171,6 +178,57 @@ type AlbumDetailsPage struct {
                     })
                 %}
             </div>
+        </div>
+
+        <div class="card" id="release">
+            {% for _, r := range p.ReleaseInfo %}
+            <div class="label-row row">
+                {%=
+                    makeStrInput(strInputConfig{
+                        wraperClass: "col s5",
+                        label: "Label",
+
+                        data: r.Label(),
+                    })
+                %}
+
+                {%=
+                    makeStrInput(strInputConfig{
+                        wraperClass: "col s5",
+                        label: "Catalog number",
+
+                        data: r.CatalogNum(),
+                    })
+                %}
+
+                {% code deleteCtl := r.Delete() %}
+                {% if deleteCtl != nil %}
+                <div class="col s2">
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="{%s (*deleteCtl).Name %}"
+                            value="{%s (*deleteCtl).Value %}"
+                        />
+                        <span>Delete</span>
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <script>
+                function deleteLabel(e) {
+                    e.target.closest('.label-row').remove()
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    const deleteButtons = document.querySelectorAll('#release .delete-button')
+                    for (const button of deleteButtons) {
+                        button.onclick = deleteLabel
+                    }
+                });
+            </script>
         </div>
 
         <style>

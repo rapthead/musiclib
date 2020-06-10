@@ -255,7 +255,7 @@ func (r TrackForm) Merge(v values) error {
 	return nil
 }
 
-//  cover to view data mapper
+// cover to view data mapper
 type CoverForm struct {
 	Model *models.Cover
 }
@@ -336,6 +336,99 @@ func newCoversData(covers []models.Cover) []views.CoverData {
 	return coverForms
 }
 
+// release to view data mapper
+type ReleaseForm struct {
+	Model *models.Release
+}
+
+func (r ReleaseForm) fieldName(fieldName string) string {
+	return "release." + r.Model.ID.String() + "." + fieldName
+}
+
+func (r ReleaseForm) Label() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("label"),
+		Value: r.Model.Label,
+	}
+}
+
+func (r ReleaseForm) CatalogNum() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("catalog_num"),
+		Value: r.Model.CatalogNumber.String,
+	}
+}
+
+func (r ReleaseForm) Delete() *views.CheckboxInputData {
+	return &views.CheckboxInputData{
+		Name:  r.fieldName("delete"),
+		Value: r.Model.ID.String(),
+	}
+}
+
+func (r ReleaseForm) IsDeleted(v values) bool {
+	_, ok := v.Values[r.fieldName("delete")]
+	return ok
+}
+
+func (r ReleaseForm) Merge(v values) error {
+	r.Model.Label = v.Get(r.fieldName("label"))
+	r.Model.CatalogNumber = zero.StringFrom(v.Get(r.fieldName("catalog_num")))
+	return nil
+}
+
+// form to construct new release
+type NewReleaseForm struct{}
+
+func (r NewReleaseForm) fieldName(fieldName string) string {
+	return "new_release." + fieldName
+}
+
+func (r NewReleaseForm) Label() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("label"),
+		Value: "",
+	}
+}
+
+func (r NewReleaseForm) CatalogNum() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("catalog_num"),
+		Value: "",
+	}
+}
+
+func (r NewReleaseForm) Delete() *views.CheckboxInputData {
+	return nil
+}
+
+func (r NewReleaseForm) Construct(albumId uuid.UUID, v values) *models.Release {
+	m := models.Release{
+		ID:            uuid.Must(uuid.NewV4()),
+		AlbumID:       albumId,
+		Label:         v.Get(r.fieldName("label")),
+		CatalogNumber: zero.StringFrom(v.Get(r.fieldName("catalog_num"))),
+	}
+	if m.Label != "" {
+		return &m
+	}
+	return nil
+}
+
+func newReleaseData(releaseInfo []models.Release) []views.ReleaseData {
+	releaseForms := make(
+		[]views.ReleaseData,
+		len(releaseInfo)+1,
+		len(releaseInfo)+1,
+	)
+	for i := range releaseInfo {
+		releaseForms[i] = ReleaseForm{&releaseInfo[i]}
+	}
+	releaseForms[len(releaseInfo)] = NewReleaseForm{}
+	return releaseForms
+}
+
+// detail album handler factory
 func makeAlbumDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *http.Request) {
 	return func(albumIDStr string, w http.ResponseWriter, r *http.Request) {
 		albumID, err := uuid.FromString(albumIDStr)
@@ -351,9 +444,10 @@ func makeAlbumDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *htt
 		}
 
 		p := &views.AlbumDetailsPage{
-			Album:  newAlbumData(&albumDetails.Album, albumDetails.AllArtists),
-			Tracks: newTracksData(albumDetails.Tracks),
-			Covers: newCoversData(albumDetails.Covers),
+			Album:       newAlbumData(&albumDetails.Album, albumDetails.AllArtists),
+			Tracks:      newTracksData(albumDetails.Tracks),
+			Covers:      newCoversData(albumDetails.Covers),
+			ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo),
 		}
 		views.WritePageTemplate(w, p)
 	}
@@ -365,16 +459,17 @@ type AlbumUpdateParams struct {
 	onDeleteRedirectTo  string
 }
 
+// album updation handler factory
 func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.ResponseWriter, r *http.Request) {
 	coversStorage := d.CoversStorage()
 	return func(p AlbumUpdateParams, w http.ResponseWriter, r *http.Request) {
-		AlbumID, err := uuid.FromString(p.albumIDStr)
+		albumID, err := uuid.FromString(p.albumIDStr)
 		if err != nil {
 			showError(w, errors.New("unable to parse  album id param"), http.StatusBadRequest)
 			return
 		}
 
-		AlbumDetails, err := usecases.GetAlbumDetails(d, r.Context(), AlbumID)
+		albumDetails, err := usecases.GetAlbumDetails(d, r.Context(), albumID)
 		if err != nil {
 			showError(w, err, http.StatusBadRequest)
 			return
@@ -387,16 +482,17 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 		}
 		vals := values{r.PostForm}
 
-		Album := AlbumDetails.Album
+		Album := albumDetails.Album
 		AlbumData := newAlbumData(
-			&Album, AlbumDetails.AllArtists,
+			&Album, albumDetails.AllArtists,
 		)
 		showError := func(w http.ResponseWriter, err error, code int) {
 			p := &views.AlbumDetailsPage{
-				Error:  err,
-				Album:  AlbumData,
-				Tracks: newTracksData(AlbumDetails.Tracks),
-				Covers: newCoversData(AlbumDetails.Covers),
+				Error:       err,
+				Album:       AlbumData,
+				Tracks:      newTracksData(albumDetails.Tracks),
+				Covers:      newCoversData(albumDetails.Covers),
+				ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo),
 			}
 			w.WriteHeader(code)
 			views.WritePageTemplate(w, p)
@@ -409,7 +505,7 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 		}
 		fmt.Println(AlbumData.Model.State)
 
-		Tracks := AlbumDetails.Tracks
+		Tracks := albumDetails.Tracks
 		for i := range Tracks {
 			TrackPtr := &Tracks[i]
 			err = TrackForm{TrackPtr}.Merge(vals)
@@ -420,7 +516,7 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 		}
 
 		var deleteCovers []uuid.UUID
-		Covers := AlbumDetails.Covers
+		Covers := albumDetails.Covers
 		for i := range Covers {
 			CoverPtr := &Covers[i]
 			f := CoverForm{CoverPtr}
@@ -445,7 +541,7 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 			}
 			cover := models.Cover{
 				ID:      uuid.Must(uuid.NewV4()),
-				AlbumID: AlbumID,
+				AlbumID: albumID,
 				Sort:    1,
 				Type:    models.CoverTypeEnumFrontOut,
 			}
@@ -465,6 +561,22 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 			newCovers[i] = cover
 		}
 
+		var deleteReleases []uuid.UUID
+		releaseInfo := albumDetails.ReleaseInfo
+		for i := range releaseInfo {
+			releasePtr := &releaseInfo[i]
+			f := ReleaseForm{releasePtr}
+			if f.IsDeleted(vals) {
+				deleteReleases = append(deleteReleases, releasePtr.ID)
+			} else {
+				err = f.Merge(vals)
+				if err != nil {
+					showError(w, fmt.Errorf("unable to merge cover data: %w", err), http.StatusBadRequest)
+					return
+				}
+			}
+		}
+
 		err = usecases.UpdateAlbum(
 			d, r.Context(), usecases.UpdateAlbumParams{
 				Artist:       vals.Get("artist"),
@@ -473,6 +585,10 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 				Covers:       Covers,
 				DeleteCovers: deleteCovers,
 				NewCovers:    newCovers,
+
+				Releases:       releaseInfo,
+				DeleteReleases: deleteReleases,
+				NewRelease:     NewReleaseForm{}.Construct(albumID, vals),
 			},
 		)
 		if err != nil {

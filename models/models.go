@@ -10,110 +10,117 @@ import (
 )
 
 type Artist struct {
-	ID   uuid.UUID `json:"id"   db:"id"`
-	Name string    `json:"name" db:"name"`
+	ID   uuid.UUID `db:"id"`
+	Name string    `db:"name"`
+}
+
+type Release struct {
+	ID            uuid.UUID   `db:"id"`
+	AlbumID       uuid.UUID   `db:"album_id"`
+	Label         string      `db:"label"`
+	CatalogNumber zero.String `db:"catalog_num"`
 }
 
 type Album struct {
-	ID             uuid.UUID          `schema:"id"                  json:"id"                db:"id"`
-	ArtistID       uuid.UUID          `schema:"artist_id"           json:"artist_id"         db:"artist_id"`
-	State          AlbumStateEnum     `schema:"state"               json:"state"             db:"state"`
-	Path           string             `schema:"-"                   json:"path"              db:"path"`
-	Title          string             `schema:"title"               json:"title"             db:"title"`
-	Year           int                `schema:"year"                json:"year"              db:"year"`
-	ReleaseYear    zero.Int           `schema:"release_year"        json:"release_year"      db:"release_year"`
-	Barcode        zero.String        `schema:"barcode"             json:"barcode"           db:"barcode"`
-	Comment        zero.String        `schema:"comment"             json:"comment"           db:"comment"`
-	EditionTitle   zero.String        `schema:"edition_title"       json:"edition_title"     db:"edition_title"`
-	Mbid           zero.String        `schema:"mbid"                json:"mbid"              db:"mbid"`
-	RgPeak         float64            `schema:"-"                   json:"rg_peak"           db:"rg_peak"`
-	RgGain         float64            `schema:"-"                   json:"rg_gain"           db:"rg_gain"`
-	Type           AlbumTypeEnum      `schema:"type"                json:"type"              db:"type"`
-	DownloadSource DownloadSourceEnum `schema:"download_source"     json:"download_source"   db:"download_source"`
-	SourceURL      zero.String        `schema:"source_url"          json:"source_url"        db:"source_url"`
-	CreatedAt      time.Time          `schema:"-"                   json:"created_at"        db:"created_at"`
-	UpdatedAt      time.Time          `schema:"-"                   json:"updated_at"        db:"updated_at"`
+	ID             uuid.UUID          `db:"id"`
+	ArtistID       uuid.UUID          `db:"artist_id"`
+	State          AlbumStateEnum     `db:"state"`
+	Path           string             `db:"path"`
+	Title          string             `db:"title"`
+	Year           int                `db:"year"`
+	ReleaseYear    zero.Int           `db:"release_year"`
+	Barcode        zero.String        `db:"barcode"`
+	Comment        zero.String        `db:"comment"`
+	EditionTitle   zero.String        `db:"edition_title"`
+	Mbid           zero.String        `db:"mbid"`
+	RgPeak         float64            `db:"rg_peak"`
+	RgGain         float64            `db:"rg_gain"`
+	Type           AlbumTypeEnum      `db:"type"`
+	DownloadSource DownloadSourceEnum `db:"download_source"`
+	SourceURL      zero.String        `db:"source_url"`
+	CreatedAt      time.Time          `db:"created_at"`
+	UpdatedAt      time.Time          `db:"updated_at"`
 }
 
 type DraftAlbum struct {
-	ID             uuid.UUID          `schema:"id"                  json:"id"                db:"id"`
-	Path           string             `schema:"-"                   json:"path"              db:"path"`
-	Artist         zero.String        `schema:"artist"              json:"artist"            db:"artist"`
-	Title          zero.String        `schema:"title"               json:"title"             db:"title"`
-	Year           zero.Int           `schema:"year"                json:"year"              db:"year"`
-	ReleaseYear    zero.Int           `schema:"release_year"        json:"release_year"      db:"release_year"`
-	Barcode        zero.String        `schema:"barcode"             json:"barcode"           db:"barcode"`
-	Comment        zero.String        `schema:"comment"             json:"comment"           db:"comment"`
-	EditionTitle   zero.String        `schema:"edition_title"       json:"edition_title"     db:"edition_title"`
-	Mbid           zero.String        `schema:"mbid"                json:"mbid"              db:"mbid"`
-	RgPeak         float64            `schema:"-"                   json:"rg_peak"           db:"rg_peak"`
-	RgGain         float64            `schema:"-"                   json:"rg_gain"           db:"rg_gain"`
-	Type           AlbumTypeEnum      `schema:"type"                json:"type"              db:"type"`
-	DownloadSource DownloadSourceEnum `schema:"download_source"     json:"download_source"   db:"download_source"`
-	SourceURL      zero.String        `schema:"source_url"          json:"source_url"        db:"source_url"`
-	CreatedAt      time.Time          `schema:"-"                   json:"created_at"        db:"created_at"`
-	UpdatedAt      time.Time          `schema:"-"                   json:"updated_at"        db:"updated_at"`
+	ID             uuid.UUID          `db:"id"`
+	Path           string             `db:"path"`
+	Artist         zero.String        `db:"artist"`
+	Title          zero.String        `db:"title"`
+	Year           zero.Int           `db:"year"`
+	ReleaseYear    zero.Int           `db:"release_year"`
+	Barcode        zero.String        `db:"barcode"`
+	Comment        zero.String        `db:"comment"`
+	EditionTitle   zero.String        `db:"edition_title"`
+	Mbid           zero.String        `db:"mbid"`
+	RgPeak         float64            `db:"rg_peak"`
+	RgGain         float64            `db:"rg_gain"`
+	Type           AlbumTypeEnum      `db:"type"`
+	DownloadSource DownloadSourceEnum `db:"download_source"`
+	SourceURL      zero.String        `db:"source_url"`
+	CreatedAt      time.Time          `db:"created_at"`
+	UpdatedAt      time.Time          `db:"updated_at"`
 }
 
 type Track struct {
-	ID          uuid.UUID   `schema:"id"            json:"id"              db:"id"`
-	AlbumID     uuid.UUID   `schema:"-"             json:"album_id"        db:"album_id"`
-	TrackNum    int         `schema:"track_num"     json:"track_num"       db:"track_num"`
-	Title       string      `schema:"title"         json:"title"           db:"title"`
-	TrackArtist zero.String `schema:"track_artist"  json:"track_artist"    db:"track_artist"`
-	Disc        int         `schema:"disc"          json:"disc"            db:"disc"`
-	Lirycs      zero.String `schema:"-"             json:"lirycs"          db:"lirycs"`
-	RgPeak      float64     `schema:"-"             json:"rg_peak"         db:"rg_peak"`
-	RgGain      float64     `schema:"-"             json:"rg_gain"         db:"rg_gain"`
-	Path        string      `schema:"-"             json:"path"            db:"path"`
-	Length      uint        `schema:"-"             json:"length"          db:"length"`
+	ID          uuid.UUID   `db:"id"`
+	AlbumID     uuid.UUID   `db:"album_id"`
+	TrackNum    int         `db:"track_num"`
+	Title       string      `db:"title"`
+	TrackArtist zero.String `db:"track_artist"`
+	Disc        int         `db:"disc"`
+	Lirycs      zero.String `db:"lirycs"`
+	RgPeak      float64     `db:"rg_peak"`
+	RgGain      float64     `db:"rg_gain"`
+	Path        string      `db:"path"`
+	Length      uint        `db:"length"`
 }
 
 type DraftTrack struct {
-	ID          uuid.UUID   `schema:"id"            json:"id"              db:"id"`
-	AlbumID     uuid.UUID   `schema:"-"             json:"album_id"        db:"album_id"`
-	TrackNum    zero.Int    `schema:"track_num"     json:"track_num"       db:"track_num"`
-	Title       zero.String `schema:"title"         json:"title"           db:"title"`
-	TrackArtist zero.String `schema:"track_artist"  json:"track_artist"    db:"track_artist"`
-	Disc        zero.Int    `schema:"disc"          json:"disc"            db:"disc"`
-	Lirycs      zero.String `schema:"-"             json:"lirycs"          db:"lirycs"`
-	RgPeak      float64     `schema:"-"             json:"rg_peak"         db:"rg_peak"`
-	RgGain      float64     `schema:"-"             json:"rg_gain"         db:"rg_gain"`
-	Path        string      `schema:"-"             json:"path"            db:"path"`
-	Length      uint        `schema:"-"             json:"length"          db:"length"`
+	ID          uuid.UUID   `db:"id"`
+	AlbumID     uuid.UUID   `db:"album_id"`
+	TrackNum    zero.Int    `db:"track_num"`
+	Title       zero.String `db:"title"`
+	TrackArtist zero.String `db:"track_artist"`
+	Disc        zero.Int    `db:"disc"`
+	Lirycs      zero.String `db:"lirycs"`
+	RgPeak      float64     `db:"rg_peak"`
+	RgGain      float64     `db:"rg_gain"`
+	Path        string      `db:"path"`
+	Length      uint        `db:"length"`
 }
 
 type Cover struct {
-	ID      uuid.UUID     `schema:"id"              json:"id"                  db:"id"`
-	AlbumID uuid.UUID     `schema:"-"               json:"album_id"            db:"album_id"`
-	Path    zero.String   `schema:"-"               json:"path"                db:"path"`
-	Sort    int           `schema:"sort"            json:"sort"                db:"sort"`
-	Type    CoverTypeEnum `schema:"type"            json:"type"                db:"type"`
+	ID      uuid.UUID     `db:"id"`
+	AlbumID uuid.UUID     `db:"album_id"`
+	Path    zero.String   `db:"path"`
+	Sort    int           `db:"sort"`
+	Type    CoverTypeEnum `db:"type"`
 }
 
 type DraftCover struct {
-	ID               uuid.UUID     `schema:"id"              json:"id"                  db:"id"`
-	OriginalFilename string        `schema:"-"               json:"original_filename"   db:"original_filename"`
-	AlbumID          uuid.UUID     `schema:"-"               json:"album_id"            db:"album_id"`
-	Sort             zero.Int      `schema:"sort"            json:"sort"                db:"sort"`
-	Type             CoverTypeEnum `schema:"type"            json:"type"                db:"type"`
+	ID               uuid.UUID     `db:"id"`
+	OriginalFilename string        `db:"original_filename"`
+	AlbumID          uuid.UUID     `db:"album_id"`
+	Sort             zero.Int      `db:"sort"`
+	Type             CoverTypeEnum `db:"type"`
 }
 
 type Metadata struct {
-	Path            string      `json:"path"                 db:"path"`
-	AlbumArtistName string      `json:"album_artist_name"    db:"album_artist_name"`
-	AlbumTitle      string      `json:"album_title"          db:"album_title"`
-	Year            int32       `json:"year"                 db:"year"`
-	DiscTotal       int32       `json:"disc_total"           db:"disc_total"`
-	TrackDisc       int32       `json:"track_disc"           db:"track_disc"`
-	TrackArtistName null.String `json:"track_artist_name"    db:"track_artist_name"`
-	TrackTitle      string      `json:"track_title"          db:"track_title"`
-	TrackNumber     int32       `json:"track_number"         db:"track_number"`
+	Path            string      `db:"path"`
+	AlbumArtistName string      `db:"album_artist_name"`
+	AlbumTitle      string      `db:"album_title"`
+	Year            int32       `db:"year"`
+	DiscTotal       int32       `db:"disc_total"`
+	TrackDisc       int32       `db:"track_disc"`
+	TrackArtistName null.String `db:"track_artist_name"`
+	TrackTitle      string      `db:"track_title"`
+	TrackNumber     int32       `db:"track_number"`
 
-	AlbumRgGain float32 `json:"album_rg_gain"        db:"album_rg_gain"`
-	AlbumRgPeak float32 `json:"album_rg_peak"        db:"album_rg_peak"`
-	TrackRgGain float32 `json:"track_rg_gain"        db:"track_rg_gain"`
-	TrackRgPeak float32 `json:"track_rg_peak"        db:"track_rg_peak"`
+	AlbumRgGain float32 `db:"album_rg_gain"`
+	AlbumRgPeak float32 `db:"album_rg_peak"`
+	TrackRgGain float32 `db:"track_rg_gain"`
+	TrackRgPeak float32 `db:"track_rg_peak"`
 }
 
 type AlbumStateEnum string

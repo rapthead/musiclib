@@ -23,6 +23,10 @@ type UpdateAlbumParams struct {
 	Covers       []models.Cover
 	NewCovers    []models.Cover
 	DeleteCovers []uuid.UUID
+
+	Releases       []models.Release
+	NewRelease     *models.Release
+	DeleteReleases []uuid.UUID
 }
 
 func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumParams) error {
@@ -38,22 +42,23 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 			return fmt.Errorf("Unable to update album: %w", err)
 		}
 
-		for _, draftTrack := range params.Tracks {
-			err = txQueries.UpdateTrack(ctx, draftTrack)
+		for _, track := range params.Tracks {
+			err = txQueries.UpdateTrack(ctx, track)
 			if err != nil {
 				return fmt.Errorf("Unable to update track: %w", err)
 			}
 		}
 
-		for _, draftCover := range params.Covers {
-			err = txQueries.UpdateCover(ctx, draftCover)
+		// covers processing {
+		for _, cover := range params.Covers {
+			err = txQueries.UpdateCover(ctx, cover)
 			if err != nil {
 				return fmt.Errorf("Unable to update cover: %w", err)
 			}
 		}
 
-		for _, draftCover := range params.NewCovers {
-			err = txQueries.InsertCover(ctx, draftCover)
+		for _, cover := range params.NewCovers {
+			err = txQueries.InsertCover(ctx, cover)
 			if err != nil {
 				return fmt.Errorf("Unable to insert cover: %w", err)
 			}
@@ -65,6 +70,30 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 				return fmt.Errorf("Unable to delete cover: %w", err)
 			}
 		}
+		// covers processing }
+
+		// release processing {
+		for _, release := range params.Releases {
+			err = txQueries.UpdateRelease(ctx, release)
+			if err != nil {
+				return fmt.Errorf("Unable to update release: %w", err)
+			}
+		}
+
+		if params.NewRelease != nil {
+			err = txQueries.InsertRelease(ctx, *params.NewRelease)
+			if err != nil {
+				return fmt.Errorf("Unable to insert release: %w", err)
+			}
+		}
+
+		for _, releaseID := range params.DeleteReleases {
+			err = txQueries.DeleteRelease(ctx, releaseID)
+			if err != nil {
+				return fmt.Errorf("Unable to delete release: %w", err)
+			}
+		}
+		// release processing }
 
 		err = txQueries.DeleteUnusedArtists(ctx)
 		if err != nil {

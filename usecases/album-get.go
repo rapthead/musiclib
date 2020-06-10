@@ -14,10 +14,11 @@ type GetAlbumDetailsDeps interface {
 }
 
 type AlbumDetails struct {
-	AllArtists []models.Artist
-	Album      models.Album
-	Tracks     []models.Track
-	Covers     []models.Cover
+	AllArtists  []models.Artist
+	ReleaseInfo []models.Release
+	Album       models.Album
+	Tracks      []models.Track
+	Covers      []models.Cover
 }
 
 func GetAlbumDetails(dep GetAlbumDetailsDeps, ctx context.Context, id uuid.UUID) (AlbumDetails, error) {
@@ -51,6 +52,12 @@ func GetAlbumDetails(dep GetAlbumDetailsDeps, ctx context.Context, id uuid.UUID)
 		return result, fmt.Errorf("Unable to fetch covers: %w", err)
 	}
 	result.Covers = draftCovers
+
+	releaseInfo, err := queries.GetReleaseByAlbumID(ctx, id)
+	if err != nil {
+		return result, fmt.Errorf("Unable to fetch release info: %w", err)
+	}
+	result.ReleaseInfo = releaseInfo
 
 	return result, nil
 }
