@@ -19,6 +19,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/valyala/quicktemplate v1.5.0
+    golang.org/x/tools v0.0.0-20190525145741-7be61e1b0e51
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
