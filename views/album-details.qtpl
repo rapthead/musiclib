@@ -1,5 +1,6 @@
 {% code
 type AlbumData interface {
+    IsDraft()           bool
     State()             SelectInputData
 
     Title()             StrInputData
@@ -391,7 +392,21 @@ type AlbumDetailsPage struct {
         </div>
 
         <footer class="row" id="footer">
-            <div class="col s12 right-align">
+            <div class="col s6">
+            {% if p.Album.IsDraft() %}
+                <button
+                    class="btn waves-effect waves-light red"
+                    type="submit"
+                    name="delete"
+                    formnovalidate
+                >
+                    Delete
+                    <i class="material-delete right"></i>
+                </button>
+            {% endif %}
+            </div>
+
+            <div class="col s6 right-align">
                 <button class="btn waves-effect waves-light" type="submit">
                     Save
                     <i class="material-icons right"></i>

@@ -9,8 +9,6 @@ import (
 	"github.com/rapthead/musiclib/models"
 )
 
-var DraftTrackNotFound = errors.New("Draft track not found")
-
 func (p *Queries) GetTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]models.Track, error) {
 	tracks := []models.Track{}
 	err := p.db.SelectContext(ctx, &tracks, `
@@ -19,16 +17,6 @@ func (p *Queries) GetTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]model
         ORDER BY path ASC
     `, id)
 	return tracks, err
-}
-
-func (p *Queries) GetDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]models.DraftTrack, error) {
-	draftTracks := []models.DraftTrack{}
-	err := p.db.SelectContext(ctx, &draftTracks, `
-        SELECT * FROM draft_track
-        WHERE album_id = $1
-        ORDER BY path ASC
-    `, id)
-	return draftTracks, err
 }
 
 func (p *Queries) UpdateTrack(ctx context.Context, track models.Track) error {
@@ -51,31 +39,12 @@ func (p *Queries) UpdateTrack(ctx context.Context, track models.Track) error {
 	return nil
 }
 
-func (p *Queries) UpdateDraftTrack(ctx context.Context, draftTrack models.DraftTrack) error {
-	result, err := p.db.NamedExecContext(ctx, `
-        UPDATE draft_track SET
-            disc         = :disc,
-            track_artist = :track_artist,
-            title        = :title,
-            track_num    = :track_num
-        WHERE id = :id;
-    `, draftTrack)
-	if err != nil {
-		return fmt.Errorf("draft track updation error: %w", err)
-	}
-	if affectedCount, err := result.RowsAffected(); err != nil {
-		return fmt.Errorf("draft track updation error, can't get affected rows count: %w", err)
-	} else if affectedCount == 0 {
-		return errors.New("draft track was not found")
-	}
-	return nil
-}
-
-func (p *Queries) InsertDraftTrack(ctx context.Context, draftTrack models.DraftTrack) error {
+func (p *Queries) InsertTrack(ctx context.Context, track models.Track) error {
 	_, err := p.db.NamedExecContext(ctx, `
-        INSERT INTO draft_track (
+        INSERT INTO track (
             id,
             album_id,
+            album_state,
             track_artist,
             disc,
             length,
@@ -87,6 +56,7 @@ func (p *Queries) InsertDraftTrack(ctx context.Context, draftTrack models.DraftT
         ) VALUES (
             :id,
             :album_id,
+            :album_state,
             :track_artist,
             :disc,
             :length,
@@ -96,49 +66,9 @@ func (p *Queries) InsertDraftTrack(ctx context.Context, draftTrack models.DraftT
             :rg_gain,
             :rg_peak
         )
-    `, draftTrack)
+    `, track)
 	if err != nil {
-		return fmt.Errorf("draft track updation error: %w", err)
-	}
-	return nil
-}
-
-func (p *Queries) CommitDraftTracksByAlbumID(ctx context.Context, id uuid.UUID) error {
-	result, err := p.db.ExecContext(ctx, `
-        INSERT INTO track (
-            id,
-            album_id,
-            track_artist,
-            disc,
-            length,
-            path,
-            title,
-            track_num,
-            rg_gain,
-            rg_peak
-        ) SELECT
-            id,
-            album_id,
-            track_artist,
-            disc,
-            length,
-            path,
-            title,
-            track_num,
-            rg_gain,
-            rg_peak
-        FROM draft_track
-        WHERE album_id = $1
-    `, id)
-	if err != nil {
-		return fmt.Errorf("draft track commit error: %w", err)
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("cant get affected rows: %w", err)
-	}
-	if rowsAffected == 0 {
-		return DraftTrackNotFound
+		return fmt.Errorf("track insertion error: %w", err)
 	}
 	return nil
 }

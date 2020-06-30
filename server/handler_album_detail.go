@@ -41,11 +41,16 @@ func (r AlbumForm) TitleSuggestion() string {
 func (r AlbumForm) Artist() views.StrDatalistInputData {
 	options := make([]string, len(r.AllArtists)+1, len(r.AllArtists)+1)
 	var value string
-	for i, artist := range r.AllArtists {
-		options[i+1] = artist.Name
-		if artist.ID == r.Model.ArtistID {
-			value = artist.Name
+
+	if r.Model.ArtistID.Valid {
+		for i, artist := range r.AllArtists {
+			options[i+1] = artist.Name
+			if artist.ID == r.Model.ArtistID.UUID {
+				value = artist.Name
+			}
 		}
+	} else {
+		value = r.Model.DraftArtist
 	}
 	return views.StrDatalistInputData{
 		Name:    "artist",
@@ -57,21 +62,21 @@ func (r AlbumForm) Artist() views.StrDatalistInputData {
 func (r AlbumForm) SourceURL() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("source_url"),
-		Value: r.Model.SourceURL.String,
+		Value: r.Model.SourceURL,
 	}
 }
 
 func (r AlbumForm) Barcode() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("barcode"),
-		Value: r.Model.Barcode.String,
+		Value: r.Model.Barcode,
 	}
 }
 
 func (r AlbumForm) Comment() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("commetn"),
-		Value: r.Model.Comment.String,
+		Value: r.Model.Comment,
 	}
 }
 
@@ -91,60 +96,19 @@ func (r AlbumForm) ReleaseYear() views.IntInputData {
 }
 
 func (r AlbumForm) State() views.SelectInputData {
-	currentEnumValue := r.Model.State
-	allEnumValues := models.AllAlbumStateEnum
-	fieldName := r.fieldName("state")
+	return r.Model.State.SelectInput(r.fieldName("state"))
+}
 
-	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
-	for i, enumValue := range allEnumValues {
-		options[i] = views.SelectOption{
-			Label:    string(enumValue),
-			Value:    string(enumValue),
-			Selected: enumValue == currentEnumValue,
-		}
-	}
-	return views.SelectInputData{
-		Name:    fieldName,
-		Options: options,
-	}
+func (r AlbumForm) IsDraft() bool {
+	return r.Model.State == models.AlbumStateEnumDraft
 }
 
 func (r AlbumForm) Type() views.SelectInputData {
-	currentEnumValue := r.Model.Type
-	allEnumValues := models.AllAlbumTypeEnum
-	fieldName := r.fieldName("type")
-
-	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
-	for i, enumValue := range allEnumValues {
-		options[i] = views.SelectOption{
-			Label:    string(enumValue),
-			Value:    string(enumValue),
-			Selected: enumValue == currentEnumValue,
-		}
-	}
-	return views.SelectInputData{
-		Name:    fieldName,
-		Options: options,
-	}
+	return r.Model.Type.SelectInput(r.fieldName("type"))
 }
 
 func (r AlbumForm) DownloadSource() views.SelectInputData {
-	currentEnumValue := r.Model.DownloadSource
-	allEnumValues := models.AllDownloadSourceEnum
-	fieldName := r.fieldName("download_source")
-
-	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
-	for i, enumValue := range allEnumValues {
-		options[i] = views.SelectOption{
-			Label:    string(enumValue),
-			Value:    string(enumValue),
-			Selected: enumValue == currentEnumValue,
-		}
-	}
-	return views.SelectInputData{
-		Name:    fieldName,
-		Options: options,
-	}
+	return r.Model.DownloadSource.SelectInput(r.fieldName("download_source"))
 }
 
 func (r AlbumForm) Merge(v values) error {
@@ -173,9 +137,9 @@ func (r AlbumForm) Merge(v values) error {
 	}
 
 	r.Model.Title = v.Get(r.fieldName("title"))
-	r.Model.SourceURL = zero.StringFrom(v.Get(r.fieldName("source_url")))
-	r.Model.Barcode = zero.StringFrom(v.Get(r.fieldName("barcode")))
-	r.Model.Comment = zero.StringFrom(v.Get(r.fieldName("comment")))
+	r.Model.SourceURL = v.Get(r.fieldName("source_url"))
+	r.Model.Barcode = v.Get(r.fieldName("barcode"))
+	r.Model.Comment = v.Get(r.fieldName("comment"))
 	r.Model.Year = v.GetInt(r.fieldName("year"))
 	r.Model.ReleaseYear = zero.IntFrom(v.GetInt64(r.fieldName("release_year")))
 	r.Model.State = albumState
@@ -227,7 +191,7 @@ func (r TrackForm) Title() views.StrInputData {
 func (r TrackForm) TrackArtist() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("artist"),
-		Value: r.Model.TrackArtist.String,
+		Value: r.Model.TrackArtist,
 	}
 }
 
@@ -249,7 +213,7 @@ func (r TrackForm) TrackNum() views.IntInputData {
 
 func (r TrackForm) Merge(v values) error {
 	r.Model.Title = v.Get(r.fieldName("title"))
-	r.Model.TrackArtist = zero.StringFrom(v.Get(r.fieldName("artist")))
+	r.Model.TrackArtist = v.Get(r.fieldName("artist"))
 	r.Model.Disc = v.GetInt(r.fieldName("disc"))
 	r.Model.TrackNum = v.GetInt(r.fieldName("track_num"))
 	return nil
@@ -265,7 +229,7 @@ func (r CoverForm) fieldName(fieldName string) string {
 }
 
 func (r CoverForm) Filename() string {
-	return ""
+	return r.Model.Filename.String
 }
 
 func (r CoverForm) URL() string {
@@ -273,22 +237,7 @@ func (r CoverForm) URL() string {
 }
 
 func (r CoverForm) Type() views.SelectInputData {
-	currentEnumValue := r.Model.Type
-	allEnumValues := models.AllCoverTypeEnum
-	fieldName := r.fieldName("type")
-
-	options := make([]views.SelectOption, len(allEnumValues), len(allEnumValues))
-	for i, enumValue := range allEnumValues {
-		options[i] = views.SelectOption{
-			Label:    string(enumValue),
-			Value:    string(enumValue),
-			Selected: enumValue == currentEnumValue,
-		}
-	}
-	return views.SelectInputData{
-		Name:    fieldName,
-		Options: options,
-	}
+	return r.Model.Type.SelectInput(r.fieldName("type"))
 }
 
 func (r CoverForm) Sort() views.IntInputData {
@@ -482,120 +431,132 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 		}
 		vals := values{r.PostForm}
 
-		Album := albumDetails.Album
-		AlbumData := newAlbumData(
-			&Album, albumDetails.AllArtists,
-		)
-		showError := func(w http.ResponseWriter, err error, code int) {
-			p := &views.AlbumDetailsPage{
-				Error:       err,
-				Album:       AlbumData,
-				Tracks:      newTracksData(albumDetails.Tracks),
-				Covers:      newCoversData(albumDetails.Covers),
-				ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo),
-			}
-			w.WriteHeader(code)
-			views.WritePageTemplate(w, p)
-		}
-
-		err = AlbumData.Merge(vals)
-		if err != nil {
-			showError(w, fmt.Errorf("unable to merge album data: %w", err), http.StatusBadRequest)
-			return
-		}
-		fmt.Println(AlbumData.Model.State)
-
-		Tracks := albumDetails.Tracks
-		for i := range Tracks {
-			TrackPtr := &Tracks[i]
-			err = TrackForm{TrackPtr}.Merge(vals)
+		_, doDelete := vals.Values["delete"]
+		if doDelete {
+			err := usecases.DeleteDraftAlbum(
+				d, r.Context(), albumID,
+			)
 			if err != nil {
-				showError(w, fmt.Errorf("unable to merge track data: %w", err), http.StatusBadRequest)
+				showError(w, err, http.StatusInternalServerError)
 				return
 			}
-		}
-
-		var deleteCovers []uuid.UUID
-		Covers := albumDetails.Covers
-		for i := range Covers {
-			CoverPtr := &Covers[i]
-			f := CoverForm{CoverPtr}
-			err = f.Merge(vals)
-			if err != nil {
-				showError(w, fmt.Errorf("unable to merge cover data: %w", err), http.StatusBadRequest)
-				return
-			}
-			if f.IsDeleted(vals) {
-				deleteCovers = append(deleteCovers, CoverPtr.ID)
-			}
-		}
-
-		fhs := r.MultipartForm.File["covers"]
-		newCovers := make([]models.Cover, len(fhs), len(fhs))
-		for i, fh := range fhs {
-			imageType, err := models.NewImageTypeEnum(fh.Header.Get("Content-Type"))
-			if err != nil {
-				wrapedErr := fmt.Errorf("file %s have wrong mime type: %w", fh.Filename, err)
-				showError(w, wrapedErr, http.StatusBadRequest)
-				return
-			}
-			cover := models.Cover{
-				ID:      uuid.Must(uuid.NewV4()),
-				AlbumID: albumID,
-				Sort:    1,
-				Type:    models.CoverTypeEnumFrontOut,
+			http.Redirect(w, r, p.onDeleteRedirectTo, http.StatusSeeOther)
+		} else {
+			Album := albumDetails.Album
+			AlbumData := newAlbumData(
+				&Album, albumDetails.AllArtists,
+			)
+			showError := func(w http.ResponseWriter, err error, code int) {
+				p := &views.AlbumDetailsPage{
+					Error:       err,
+					Album:       AlbumData,
+					Tracks:      newTracksData(albumDetails.Tracks),
+					Covers:      newCoversData(albumDetails.Covers),
+					ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo),
+				}
+				w.WriteHeader(code)
+				views.WritePageTemplate(w, p)
 			}
 
-			file, err := fh.Open()
+			err = AlbumData.Merge(vals)
 			if err != nil {
-				showError(w, fmt.Errorf("unable to open uploaded cover: %w", err), http.StatusInternalServerError)
+				showError(w, fmt.Errorf("unable to merge album data: %w", err), http.StatusBadRequest)
 				return
 			}
-			err = coversStorage.Save(cover.ID, imageType, file)
-			file.Close()
-			if err != nil {
-				wrapedErr := fmt.Errorf("cant't save cover image: %w", err)
-				showError(w, wrapedErr, http.StatusInternalServerError)
-				return
-			}
-			newCovers[i] = cover
-		}
+			fmt.Println(AlbumData.Model.State)
 
-		var deleteReleases []uuid.UUID
-		releaseInfo := albumDetails.ReleaseInfo
-		for i := range releaseInfo {
-			releasePtr := &releaseInfo[i]
-			f := ReleaseForm{releasePtr}
-			if f.IsDeleted(vals) {
-				deleteReleases = append(deleteReleases, releasePtr.ID)
-			} else {
+			Tracks := albumDetails.Tracks
+			for i := range Tracks {
+				TrackPtr := &Tracks[i]
+				err = TrackForm{TrackPtr}.Merge(vals)
+				if err != nil {
+					showError(w, fmt.Errorf("unable to merge track data: %w", err), http.StatusBadRequest)
+					return
+				}
+			}
+
+			var deleteCovers []uuid.UUID
+			Covers := albumDetails.Covers
+			for i := range Covers {
+				CoverPtr := &Covers[i]
+				f := CoverForm{CoverPtr}
 				err = f.Merge(vals)
 				if err != nil {
 					showError(w, fmt.Errorf("unable to merge cover data: %w", err), http.StatusBadRequest)
 					return
 				}
+				if f.IsDeleted(vals) {
+					deleteCovers = append(deleteCovers, CoverPtr.ID)
+				}
 			}
+
+			fhs := r.MultipartForm.File["covers"]
+			newCovers := make([]models.Cover, len(fhs), len(fhs))
+			for i, fh := range fhs {
+				imageType, err := models.NewImageTypeEnum(fh.Header.Get("Content-Type"))
+				if err != nil {
+					wrapedErr := fmt.Errorf("file %s have wrong mime type: %w", fh.Filename, err)
+					showError(w, wrapedErr, http.StatusBadRequest)
+					return
+				}
+				cover := models.Cover{
+					ID:      uuid.Must(uuid.NewV4()),
+					AlbumID: albumID,
+					Sort:    1,
+					Type:    models.CoverTypeEnumFrontOut,
+				}
+
+				file, err := fh.Open()
+				if err != nil {
+					showError(w, fmt.Errorf("unable to open uploaded cover: %w", err), http.StatusInternalServerError)
+					return
+				}
+				err = coversStorage.Save(cover.ID, imageType, file)
+				file.Close()
+				if err != nil {
+					wrapedErr := fmt.Errorf("cant't save cover image: %w", err)
+					showError(w, wrapedErr, http.StatusInternalServerError)
+					return
+				}
+				newCovers[i] = cover
+			}
+
+			var deleteReleases []uuid.UUID
+			releaseInfo := albumDetails.ReleaseInfo
+			for i := range releaseInfo {
+				releasePtr := &releaseInfo[i]
+				f := ReleaseForm{releasePtr}
+				if f.IsDeleted(vals) {
+					deleteReleases = append(deleteReleases, releasePtr.ID)
+				} else {
+					err = f.Merge(vals)
+					if err != nil {
+						showError(w, fmt.Errorf("unable to merge cover data: %w", err), http.StatusBadRequest)
+						return
+					}
+				}
+			}
+
+			err = usecases.UpdateAlbum(
+				d, r.Context(), usecases.UpdateAlbumParams{
+					Artist:       vals.Get("artist"),
+					Album:        Album,
+					Tracks:       Tracks,
+					Covers:       Covers,
+					DeleteCovers: deleteCovers,
+					NewCovers:    newCovers,
+
+					Releases:       releaseInfo,
+					DeleteReleases: deleteReleases,
+					NewRelease:     NewReleaseForm{}.Construct(albumID, vals),
+				},
+			)
+			if err != nil {
+				showError(w, err, http.StatusInternalServerError)
+				return
+			}
+
+			http.Redirect(w, r, p.onSuccessRedirectTo+"#footer", http.StatusSeeOther)
 		}
-
-		err = usecases.UpdateAlbum(
-			d, r.Context(), usecases.UpdateAlbumParams{
-				Artist:       vals.Get("artist"),
-				Album:        Album,
-				Tracks:       Tracks,
-				Covers:       Covers,
-				DeleteCovers: deleteCovers,
-				NewCovers:    newCovers,
-
-				Releases:       releaseInfo,
-				DeleteReleases: deleteReleases,
-				NewRelease:     NewReleaseForm{}.Construct(albumID, vals),
-			},
-		)
-		if err != nil {
-			showError(w, err, http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, p.onSuccessRedirectTo+"#footer", http.StatusSeeOther)
 	}
 }

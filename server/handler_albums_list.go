@@ -11,47 +11,6 @@ import (
 )
 
 // draft album to view data mapper
-type draftAlbumViewData struct {
-	model *models.DraftAlbum
-}
-
-func (r draftAlbumViewData) Path() string {
-	return r.model.Path
-}
-
-func (r draftAlbumViewData) Title() string {
-	return r.model.Title.String
-}
-
-func (r draftAlbumViewData) Artist() string {
-	return r.model.Artist.String
-}
-
-func (r draftAlbumViewData) URL() string {
-	return "/draft/" + r.model.ID.String()
-}
-
-func makeDraftListHandler(d deps.Deps) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		draftAlbums, err := usecases.ListDraftAlbums(d, r.Context())
-		if err != nil {
-			showError(w, fmt.Errorf("fail to fetch draft albums: %w", err), http.StatusInternalServerError)
-			return
-		}
-
-		viewRows := make([]views.DraftAlbumsRow, len(draftAlbums), len(draftAlbums))
-		for i := range draftAlbums {
-			viewRows[i] = draftAlbumViewData{&draftAlbums[i]}
-		}
-
-		p := &views.DraftAlbumsPage{
-			Rows: viewRows,
-		}
-		views.WritePageTemplate(w, p)
-	}
-}
-
-// draft album to view data mapper
 type albumViewData struct {
 	album  *models.Album
 	artist *models.Artist
@@ -70,6 +29,9 @@ func (r albumViewData) Title() string {
 }
 
 func (r albumViewData) Artist() string {
+	if r.artist == nil {
+		return r.album.DraftArtist
+	}
 	return r.artist.Name
 }
 
@@ -89,7 +51,7 @@ func makeAlbumListHandler(d deps.Deps) http.HandlerFunc {
 		for i := range listItems {
 			viewRows[i] = albumViewData{
 				album:  &listItems[i].Album,
-				artist: &listItems[i].Artist,
+				artist: listItems[i].Artist,
 			}
 		}
 

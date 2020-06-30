@@ -20,7 +20,7 @@ func MakeRoutes(d deps.Deps) http.Handler {
 	r.Use(middleware.RedirectSlashes)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/draft", http.StatusSeeOther)
+		http.Redirect(w, r, "/album", http.StatusSeeOther)
 	})
 
 	albumListHandler := makeAlbumListHandler(d)
@@ -39,27 +39,6 @@ func MakeRoutes(d deps.Deps) http.Handler {
 				albumIDStr:          albumID,
 				onDeleteRedirectTo:  "/album/",
 				onSuccessRedirectTo: "/album/" + albumID,
-			},
-			w, r,
-		)
-	})
-
-	draftListHandler := makeDraftListHandler(d)
-	r.Get("/draft", draftListHandler)
-
-	draftDetailsHandler := makeDraftDetailsHandler(d)
-	r.Get("/draft/{albumID}", func(w http.ResponseWriter, r *http.Request) {
-		draftDetailsHandler(chi.URLParam(r, "albumID"), w, r)
-	})
-
-	draftUpdateHandler := makeDraftUpdateHandler(d)
-	r.Post("/draft/{albumID}", func(w http.ResponseWriter, r *http.Request) {
-		albumID := chi.URLParam(r, "albumID")
-		draftUpdateHandler(
-			draftUpdateParams{
-				albumIDStr:          albumID,
-				onDeleteRedirectTo:  "/draft/",
-				onSuccessRedirectTo: "/draft/" + albumID,
 			},
 			w, r,
 		)

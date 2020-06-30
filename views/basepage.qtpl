@@ -29,7 +29,6 @@ Page prints a page implementing Page interface.
                 <a href="#" class="brand-logo right">Musiclib</a>
                 <ul id="nav-mobile" class="left hide-on-med-and-down">
                     <li><a href="/album">Albums</a></li>
-                    <li><a href="/draft">Draft albums</a></li>
                     <li><a href="/sync">Sync</a></li>
                     <li><a href="/rescan">Rescan new drafts</a></li>
                 </ul>

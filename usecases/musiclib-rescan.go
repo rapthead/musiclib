@@ -13,7 +13,6 @@ import (
 
 	"github.com/go-redis/redis/v7"
 	"github.com/gofrs/uuid"
-	"github.com/guregu/null/zero"
 	"github.com/jmoiron/sqlx"
 	"github.com/mewkiz/flac"
 	"github.com/mewkiz/flac/meta"
@@ -30,8 +29,8 @@ func (s orderedRelPaths) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s orderedRelPaths) Less(i, j int) bool { return s[i] < s[j] }
 
 type DraftData struct {
-	Album  models.DraftAlbum
-	Tracks map[relPath]models.DraftTrack
+	Album  models.Album
+	Tracks map[relPath]models.Track
 }
 
 type FlacFileInfo struct {
@@ -90,7 +89,8 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 	default:
 		return DraftData{}, fmt.Errorf("Unknown source: %s", pathComponents[0])
 	}
-	draftAlbum := models.DraftAlbum{
+	draftAlbum := models.Album{
+		State:          models.AlbumStateEnumDraft,
 		ID:             uuid.Must(uuid.NewV4()),
 		Path:           string(albumTagsInfo.RelPath),
 		Type:           models.AlbumTypeEnumLP,
@@ -98,7 +98,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 	}
 
 	tracksInfo := albumTagsInfo.TracksInfo
-	draftTracks := make(map[relPath]models.DraftTrack, len(tracksInfo))
+	draftTracks := make(map[relPath]models.Track, len(tracksInfo))
 
 	op := make(orderedRelPaths, 0, len(tracksInfo))
 	for path := range tracksInfo {
@@ -106,7 +106,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 	}
 	sort.Sort(op)
 
-	var disc int64
+	var disc int
 	prevDir := ""
 
 	for _, path := range op {
@@ -122,12 +122,13 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 			disc++
 			prevDir = dir
 		}
-		draftTrack := models.DraftTrack{
-			ID:      uuid.Must(uuid.NewV4()),
-			AlbumID: draftAlbum.ID,
-			Path:    trackNormalPath,
-			Length:  uint(trackInfo.Seconds),
-			Disc:    zero.IntFrom(disc),
+		draftTrack := models.Track{
+			ID:         uuid.Must(uuid.NewV4()),
+			AlbumID:    draftAlbum.ID,
+			AlbumState: models.AlbumStateEnumDraft,
+			Path:       trackNormalPath,
+			Length:     uint(trackInfo.Seconds),
+			Disc:       disc,
 		}
 		for _, tag := range trackInfo.Tags {
 			tagName := tag[0]
@@ -135,27 +136,27 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 
 			switch strings.ToLower(tagName) {
 			case "album":
-				draftAlbum.Title = zero.StringFrom(tagValue)
+				draftAlbum.Title = tagValue
 			case "artist":
-				draftAlbum.Artist = zero.StringFrom(tagValue)
+				draftAlbum.DraftArtist = tagValue
 			case "date":
 				dateParts := strings.Split(tagValue, "-")
 				if year, err := strconv.Atoi(dateParts[0]); err == nil {
-					draftAlbum.Year = zero.IntFrom(int64(year))
+					draftAlbum.Year = year
 				} else {
 					r.logger.Error(fmt.Errorf("Can't decode date tag %w", err))
 				}
 			case "title":
-				draftTrack.Title = zero.StringFrom(tagValue)
+				draftTrack.Title = tagValue
 			case "tracknumber":
 				if trackNum, err := strconv.Atoi(tagValue); err == nil {
-					draftTrack.TrackNum = zero.IntFrom(int64(trackNum))
+					draftTrack.TrackNum = trackNum
 				} else {
 					r.logger.Error(fmt.Errorf("Can't decode tracknumber tag %w", err))
 				}
 			case "discnumber":
 				if discnumber, err := strconv.Atoi(tagValue); err == nil {
-					draftTrack.Disc = zero.IntFrom(int64(discnumber))
+					draftTrack.Disc = discnumber
 				}
 			}
 		}
@@ -222,7 +223,7 @@ func (r rescanCase) findNewAlbumDirs() ([]relPath, error) {
 	return newAlbumDirs, nil
 }
 
-func (r rescanCase) addReplayGain(draftData DraftData) (DraftData, error) {
+func (r rescanCase) addReplayGain(draftData *DraftData) error {
 	absTrackPaths := make([]string, 0, len(draftData.Tracks))
 	for trackPath := range draftData.Tracks {
 		absTrackPaths = append(absTrackPaths, r.relToAbs(trackPath))
@@ -230,23 +231,24 @@ func (r rescanCase) addReplayGain(draftData DraftData) (DraftData, error) {
 
 	calcResult, err := CalcReplaygain(absTrackPaths)
 	if err != nil {
-		return draftData, fmt.Errorf("replaygain calculation failed %w", err)
+		return fmt.Errorf("replaygain calculation failed %w", err)
 	}
 
 	draftData.Album.RgGain = calcResult.AlbumGain
 	draftData.Album.RgPeak = calcResult.AlbumGain
 
-	updatedDraftTracks := make(map[relPath]models.DraftTrack, len(draftData.Tracks))
 	for _, trackGain := range calcResult.Tracks {
 		relPath := r.absToRel(trackGain.Path)
-		draftTrack := draftData.Tracks[relPath]
 
-		draftTrack.RgPeak = trackGain.Peak
-		draftTrack.RgGain = trackGain.Gain
-		updatedDraftTracks[relPath] = draftTrack
+		track := draftData.Tracks[relPath]
+
+		track.RgPeak = trackGain.Peak
+		track.RgGain = trackGain.Gain
+
+		draftData.Tracks[relPath] = track
 	}
 
-	return DraftData{draftData.Album, updatedDraftTracks}, nil
+	return nil
 }
 
 func (r rescanCase) getFlacInfo(flacPaths []relPath) (map[relPath]FlacFileInfo, error) {
@@ -317,7 +319,7 @@ func (r rescanCase) Do() {
 			continue
 		}
 
-		draftData, err = r.addReplayGain(draftData)
+		err = r.addReplayGain(&draftData)
 		if err != nil {
 			logError("Replaygain calculation error", err)
 			continue
@@ -333,13 +335,13 @@ func (r rescanCase) Do() {
 		}
 
 		txQueries := r.queries.WithTx(tx)
-		if err := txQueries.InsertDraftAlbum(ctx, draftData.Album); err != nil {
+		if err := txQueries.InsertAlbum(ctx, draftData.Album); err != nil {
 			tx.Rollback()
 			logError("Can't insert draft album", err)
 			return
 		}
 		for _, track := range draftData.Tracks {
-			if err := txQueries.InsertDraftTrack(ctx, track); err != nil {
+			if err := txQueries.InsertTrack(ctx, track); err != nil {
 				tx.Rollback()
 				logError("Can't insert draft track", err)
 				return

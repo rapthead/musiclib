@@ -34,7 +34,7 @@ func init() {
 
 	logLevelEnv := getEnv("LOG_LEVEL")
 	if logLevelEnv != "" {
-		if logLevel, err := logrus.ParseLevel(getEnv("LOG_LEVEL")); err != nil {
+		if logLevel, err := logrus.ParseLevel(getEnv("LOG_LEVEL")); err == nil {
 			Config.LogLevel = logLevel
 		} else {
 			log.Fatalln("can't parse LOG_LEVEL environment variable", err)

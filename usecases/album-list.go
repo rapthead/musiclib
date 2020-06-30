@@ -15,10 +15,10 @@ type ListAlbumsDeps interface {
 
 type ListAlbumItem struct {
 	Album  models.Album
-	Artist models.Artist
+	Artist *models.Artist
 }
 
-func ListAlbums(deps ListDraftAlbumsDeps, ctx context.Context) ([]ListAlbumItem, error) {
+func ListAlbums(deps ListAlbumsDeps, ctx context.Context) ([]ListAlbumItem, error) {
 	queries := deps.Queries()
 	albums, err := queries.ListAlbums(ctx)
 	if err != nil {
@@ -37,13 +37,18 @@ func ListAlbums(deps ListDraftAlbumsDeps, ctx context.Context) ([]ListAlbumItem,
 
 	result := make([]ListAlbumItem, len(albums), len(albums))
 	for i, album := range albums {
-		if artist, ok := artistsById[album.ArtistID]; ok {
-			result[i] = ListAlbumItem{
-				Album:  album,
-				Artist: artist,
+		var artistPtr *models.Artist
+		if album.ArtistID.Valid {
+			if artist, ok := artistsById[album.ArtistID.UUID]; ok {
+				artistPtr = &artist
+			} else {
+				return result, fmt.Errorf("Assertion error. Not found artist for album: %s", album.Title)
 			}
-		} else {
-			return result, fmt.Errorf("Assertion error. Not found artist for album: %s", album.Title)
+		}
+
+		result[i] = ListAlbumItem{
+			Album:  album,
+			Artist: artistPtr,
 		}
 	}
 
