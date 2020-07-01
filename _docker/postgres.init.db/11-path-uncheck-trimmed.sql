@@ -1,0 +1,4 @@
+BEGIN;
+    ALTER TABLE album ALTER COLUMN path TYPE text;
+    ALTER TABLE track ALTER COLUMN path TYPE text;
+COMMIT;
