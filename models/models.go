@@ -69,15 +69,15 @@ type Cover struct {
 }
 
 type Metadata struct {
-	Path            string      `db:"path"`
-	AlbumArtistName string      `db:"album_artist_name"`
-	AlbumTitle      string      `db:"album_title"`
-	Year            int32       `db:"year"`
-	DiscTotal       int32       `db:"disc_total"`
-	TrackDisc       int32       `db:"track_disc"`
-	TrackArtistName null.String `db:"track_artist_name"`
-	TrackTitle      string      `db:"track_title"`
-	TrackNumber     int32       `db:"track_number"`
+	Path            string `db:"path"`
+	AlbumArtistName string `db:"album_artist_name"`
+	AlbumTitle      string `db:"album_title"`
+	Year            int32  `db:"year"`
+	DiscTotal       int32  `db:"disc_total"`
+	TrackDisc       int32  `db:"track_disc"`
+	TrackArtistName string `db:"track_artist_name"`
+	TrackTitle      string `db:"track_title"`
+	TrackNumber     int32  `db:"track_number"`
 
 	AlbumRgGain float32 `db:"album_rg_gain"`
 	AlbumRgPeak float32 `db:"album_rg_peak"`

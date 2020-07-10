@@ -40,20 +40,17 @@ func (r AlbumForm) TitleSuggestion() string {
 
 func (r AlbumForm) Artist() views.StrDatalistInputData {
 	options := make([]string, len(r.AllArtists)+1, len(r.AllArtists)+1)
-	var value string
+	value := r.Model.DraftArtist
 
-	if r.Model.ArtistID.Valid {
-		for i, artist := range r.AllArtists {
-			options[i+1] = artist.Name
-			if artist.ID == r.Model.ArtistID.UUID {
-				value = artist.Name
-			}
+	for i, artist := range r.AllArtists {
+		options[i+1] = artist.Name
+		if r.Model.ArtistID.Valid && artist.ID == r.Model.ArtistID.UUID {
+			value = artist.Name
 		}
-	} else {
-		value = r.Model.DraftArtist
 	}
+
 	return views.StrDatalistInputData{
-		Name:    "artist",
+		Name:    r.fieldName("artist"),
 		Value:   value,
 		Options: options,
 	}
@@ -136,6 +133,7 @@ func (r AlbumForm) Merge(v values) error {
 		)
 	}
 
+	r.Model.DraftArtist = v.Get(r.fieldName("artist"))
 	r.Model.Title = v.Get(r.fieldName("title"))
 	r.Model.SourceURL = v.Get(r.fieldName("source_url"))
 	r.Model.Barcode = v.Get(r.fieldName("barcode"))
@@ -463,7 +461,6 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 				showError(w, fmt.Errorf("unable to merge album data: %w", err), http.StatusBadRequest)
 				return
 			}
-			fmt.Println(AlbumData.Model.State)
 
 			Tracks := albumDetails.Tracks
 			for i := range Tracks {
@@ -539,7 +536,6 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 
 			err = usecases.UpdateAlbum(
 				d, r.Context(), usecases.UpdateAlbumParams{
-					Artist:       vals.Get("artist"),
 					Album:        Album,
 					Tracks:       Tracks,
 					Covers:       Covers,

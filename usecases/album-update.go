@@ -17,7 +17,6 @@ type UpdateAlbumDeps interface {
 }
 
 type UpdateAlbumParams struct {
-	Artist       string
 	Album        models.Album
 	Tracks       []models.Track
 	Covers       []models.Cover
@@ -37,7 +36,18 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 	txQueries := deps.Queries().WithTx(tx)
 
 	err = func() error {
-		err := txQueries.UpdateAlbum(ctx, params.Album, params.Artist)
+		album := params.Album
+
+		if album.State != models.AlbumStateEnumDraft && album.DraftArtist != "" {
+			artist, err := txQueries.InsertOrGetArtist(ctx, album.DraftArtist)
+			if err != nil {
+				return fmt.Errorf("Unable to insert or get artist: %w", err)
+			}
+			album.ArtistID = uuid.NullUUID{UUID: artist.ID, Valid: true}
+			album.DraftArtist = ""
+		}
+
+		err := txQueries.UpdateAlbum(ctx, album)
 		if err != nil {
 			return fmt.Errorf("Unable to update album: %w", err)
 		}

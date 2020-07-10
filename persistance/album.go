@@ -61,26 +61,12 @@ func (p *Queries) GetExistenPaths(ctx context.Context) ([]string, error) {
 
 func (p *Queries) UpdateAlbum(
 	ctx context.Context,
-	album models.Album, artist string,
+	album models.Album,
 ) error {
-	type args struct {
-		models.Album
-		Artist string `db:"artist"`
-	}
 	result, err := p.db.NamedExecContext(ctx, `
-        WITH existen_artist AS (
-            SELECT id FROM artist WHERE name = :artist
-        ), inserted_artist AS (
-            INSERT INTO artist (id, name)
-            SELECT uuid_generate_v4(), :artist
-            WHERE NOT EXISTS (SELECT * FROM existen_artist)
-            RETURNING id
-        )
         UPDATE album SET
-            artist_id = COALESCE(
-                (SELECT id FROM existen_artist),
-                (SELECT id FROM inserted_artist)
-            ),
+            artist_id       = :artist_id,
+            draft_artist    = :draft_artist,
             state			= :state,
             title			= :title,
             year			= :year,
@@ -95,7 +81,7 @@ func (p *Queries) UpdateAlbum(
 
             updated_at = NOW()
         WHERE id = :id;
-    `, args{album, artist})
+    `, album)
 	if err != nil {
 		return fmt.Errorf("album updation error: %w", err)
 	}

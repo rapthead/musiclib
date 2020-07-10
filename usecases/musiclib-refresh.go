@@ -88,8 +88,8 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 			fusePath = fusePath + replacer.Replace(fusePathBaseName)
 
 			artistTag := meta.AlbumArtistName
-			if meta.TrackArtistName.Valid {
-				artistTag = meta.TrackArtistName.String
+			if meta.TrackArtistName != "" {
+				artistTag = meta.TrackArtistName
 			}
 
 			vorbisComments := [][2]string{

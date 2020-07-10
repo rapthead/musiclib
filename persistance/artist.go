@@ -16,6 +16,29 @@ func (p *Queries) ListArtists(ctx context.Context) ([]models.Artist, error) {
 	return artists, err
 }
 
+func (p *Queries) InsertOrGetArtist(ctx context.Context, artistName string) (models.Artist, error) {
+	artist := models.Artist{}
+	err := p.db.GetContext(ctx, &artist, `
+        WITH existen_artist AS (
+            SELECT id FROM artist WHERE name = $1
+        ), inserted_artist AS (
+            INSERT INTO artist (id, name)
+            SELECT uuid_generate_v4(), $1
+            WHERE NOT EXISTS (SELECT * FROM existen_artist)
+            RETURNING id
+        )
+        SELECT * FROM artist
+        WHERE id = COALESCE(
+            (SELECT id FROM existen_artist),
+            (SELECT id FROM inserted_artist)
+        )
+    `, artistName)
+	if err != nil {
+		return artist, fmt.Errorf("insert or get artist failed: %w", err)
+	}
+	return artist, nil
+}
+
 func (p *Queries) DeleteUnusedArtists(ctx context.Context) error {
 	_, err := p.db.ExecContext(ctx, `
         DELETE FROM artist
