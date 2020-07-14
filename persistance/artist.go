@@ -20,18 +20,16 @@ func (p *Queries) InsertOrGetArtist(ctx context.Context, artistName string) (mod
 	artist := models.Artist{}
 	err := p.db.GetContext(ctx, &artist, `
         WITH existen_artist AS (
-            SELECT id FROM artist WHERE name = $1
+            SELECT * FROM artist WHERE name = $1
         ), inserted_artist AS (
             INSERT INTO artist (id, name)
             SELECT uuid_generate_v4(), $1
             WHERE NOT EXISTS (SELECT * FROM existen_artist)
-            RETURNING id
+            RETURNING *
         )
-        SELECT * FROM artist
-        WHERE id = COALESCE(
-            (SELECT id FROM existen_artist),
-            (SELECT id FROM inserted_artist)
-        )
+        SELECT * FROM existen_artist
+        UNION ALL
+        SELECT * FROM inserted_artist
     `, artistName)
 	if err != nil {
 		return artist, fmt.Errorf("insert or get artist failed: %w", err)
