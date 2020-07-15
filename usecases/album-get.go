@@ -15,6 +15,7 @@ type GetAlbumDetailsDeps interface {
 
 type AlbumDetails struct {
 	AllArtists  []models.Artist
+	AllLabels   []string
 	ReleaseInfo []models.Release
 	Album       models.Album
 	Tracks      []models.Track
@@ -40,6 +41,12 @@ func GetAlbumDetails(dep GetAlbumDetailsDeps, ctx context.Context, id uuid.UUID)
 		return result, fmt.Errorf("Unable to fetch artist: %w", err)
 	}
 	result.AllArtists = artists
+
+	labels, err := queries.ListLabels(ctx)
+	if err != nil {
+		return result, fmt.Errorf("Unable to fetch labels: %w", err)
+	}
+	result.AllLabels = labels
 
 	draftTracks, err := queries.GetTracksByAlbumID(ctx, id)
 	if err != nil {

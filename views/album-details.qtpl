@@ -36,7 +36,7 @@ type CoverData interface {
 }
 
 type ReleaseData interface {
-    Label()         StrInputData
+    Label()         StrDatalistInputData
     CatalogNum()    StrInputData
     Delete()        *CheckboxInputData
 }
@@ -185,7 +185,7 @@ type AlbumDetailsPage struct {
             {% for _, r := range p.ReleaseInfo %}
             <div class="label-row row">
                 {%=
-                    makeStrInput(strInputConfig{
+                    makeStrDatalistInput(strDatalistInputConfig{
                         wraperClass: "col s5",
                         label: "Label",
 

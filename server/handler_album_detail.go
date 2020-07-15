@@ -285,17 +285,19 @@ func newCoversData(covers []models.Cover) []views.CoverData {
 
 // release to view data mapper
 type ReleaseForm struct {
-	Model *models.Release
+	Model     *models.Release
+	AllLabels []string
 }
 
 func (r ReleaseForm) fieldName(fieldName string) string {
 	return "release." + r.Model.ID.String() + "." + fieldName
 }
 
-func (r ReleaseForm) Label() views.StrInputData {
-	return views.StrInputData{
-		Name:  r.fieldName("label"),
-		Value: r.Model.Label,
+func (r ReleaseForm) Label() views.StrDatalistInputData {
+	return views.StrDatalistInputData{
+		Name:    r.fieldName("label"),
+		Value:   r.Model.Label,
+		Options: r.AllLabels,
 	}
 }
 
@@ -325,16 +327,17 @@ func (r ReleaseForm) Merge(v values) error {
 }
 
 // form to construct new release
-type NewReleaseForm struct{}
+type NewReleaseForm struct{ AllLabels []string }
 
 func (r NewReleaseForm) fieldName(fieldName string) string {
 	return "new_release." + fieldName
 }
 
-func (r NewReleaseForm) Label() views.StrInputData {
-	return views.StrInputData{
-		Name:  r.fieldName("label"),
-		Value: "",
+func (r NewReleaseForm) Label() views.StrDatalistInputData {
+	return views.StrDatalistInputData{
+		Name:    r.fieldName("label"),
+		Value:   "",
+		Options: r.AllLabels,
 	}
 }
 
@@ -362,16 +365,16 @@ func (r NewReleaseForm) Construct(albumId uuid.UUID, v values) *models.Release {
 	return nil
 }
 
-func newReleaseData(releaseInfo []models.Release) []views.ReleaseData {
+func newReleaseData(releaseInfo []models.Release, allLabels []string) []views.ReleaseData {
 	releaseForms := make(
 		[]views.ReleaseData,
 		len(releaseInfo)+1,
 		len(releaseInfo)+1,
 	)
 	for i := range releaseInfo {
-		releaseForms[i] = ReleaseForm{&releaseInfo[i]}
+		releaseForms[i] = ReleaseForm{&releaseInfo[i], allLabels}
 	}
-	releaseForms[len(releaseInfo)] = NewReleaseForm{}
+	releaseForms[len(releaseInfo)] = NewReleaseForm{allLabels}
 	return releaseForms
 }
 
@@ -394,7 +397,7 @@ func makeAlbumDetailsHandler(d deps.Deps) func(string, http.ResponseWriter, *htt
 			Album:       newAlbumData(&albumDetails.Album, albumDetails.AllArtists),
 			Tracks:      newTracksData(albumDetails.Tracks),
 			Covers:      newCoversData(albumDetails.Covers),
-			ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo),
+			ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo, albumDetails.AllLabels),
 		}
 		views.WritePageTemplate(w, p)
 	}
@@ -450,7 +453,7 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 					Album:       AlbumData,
 					Tracks:      newTracksData(albumDetails.Tracks),
 					Covers:      newCoversData(albumDetails.Covers),
-					ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo),
+					ReleaseInfo: newReleaseData(albumDetails.ReleaseInfo, albumDetails.AllLabels),
 				}
 				w.WriteHeader(code)
 				views.WritePageTemplate(w, p)
@@ -522,7 +525,7 @@ func makeAlbumUpdateHandler(d deps.Deps) func(p AlbumUpdateParams, w http.Respon
 			releaseInfo := albumDetails.ReleaseInfo
 			for i := range releaseInfo {
 				releasePtr := &releaseInfo[i]
-				f := ReleaseForm{releasePtr}
+				f := ReleaseForm{releasePtr, []string{}}
 				if f.IsDeleted(vals) {
 					deleteReleases = append(deleteReleases, releasePtr.ID)
 				} else {

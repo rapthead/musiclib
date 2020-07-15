@@ -8,6 +8,15 @@ import (
 	"github.com/rapthead/musiclib/models"
 )
 
+func (p *Queries) ListLabels(ctx context.Context) ([]string, error) {
+	labels := []string{}
+	err := p.db.SelectContext(ctx, &labels, `
+        SELECT label.name FROM label
+        ORDER BY name ASC
+    `)
+	return labels, err
+}
+
 func (p *Queries) GetReleaseByAlbumID(ctx context.Context, id uuid.UUID) ([]models.Release, error) {
 	releaseInfo := []models.Release{}
 	err := p.db.SelectContext(ctx, &releaseInfo, `

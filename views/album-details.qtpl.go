@@ -55,7 +55,7 @@ type CoverData interface {
 }
 
 type ReleaseData interface {
-	Label() StrInputData
+	Label() StrDatalistInputData
 	CatalogNum() StrInputData
 	Delete() *CheckboxInputData
 }
@@ -276,7 +276,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
             <div class="label-row row">
                 `)
 //line album-details.qtpl:188
-		streammakeStrInput(qw422016, strInputConfig{
+		streammakeStrDatalistInput(qw422016, strDatalistInputConfig{
 			wraperClass: "col s5",
 			label:       "Label",
 
