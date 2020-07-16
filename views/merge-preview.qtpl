@@ -1,0 +1,46 @@
+{% code
+type MergeAlbumsPage struct {
+    Error              error
+    RecipientFilePaths []string
+    DonorFilePaths     []string
+}
+%}
+
+{% func (p *MergeAlbumsPage) Title() %}
+    Merge albums
+{% endfunc %}
+
+{% func (p *MergeAlbumsPage) Body() %}
+    <form class="container" method="POST" enctype="multipart/form-data">
+        {% if p.Error != nil %}
+        <div class="card-panel red white-text" id="error">
+            {%s p.Error.Error() %}
+        </div>
+        {% else %}
+        <table class="merge-preview-table">
+            <thead>
+                <th>From</th>
+                <th>To</th>
+            </thead>
+
+            <tbody>
+            {% for i := 0; i < len(p.RecipientFilePaths); i++  %}
+                <tr>
+                    <td class="merge-preview-table-donor">{%s p.DonorFilePaths[i] %}</td>
+                    <td class="merge-preview-table-recipient">{%s p.RecipientFilePaths[i] %}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <footer class="row" id="footer">
+            <div class="col s6 right-align">
+                <button class="btn waves-effect waves-light" type="submit">
+                    Confirm
+                    <i class="material-icons right"></i>
+                </button>
+            </div>
+        </footer>
+        {% endif %}
+    </form>
+{% endfunc %}

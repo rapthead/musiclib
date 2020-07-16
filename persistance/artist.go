@@ -4,8 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gofrs/uuid"
 	"github.com/rapthead/musiclib/models"
 )
+
+func (p *Queries) GetArtistByID(ctx context.Context, id uuid.UUID) (models.Artist, error) {
+	artist := models.Artist{}
+	err := p.db.SelectContext(ctx, &artist, `
+        SELECT * FROM artist
+        WHERE id = $1
+    `, id)
+	return artist, err
+}
 
 func (p *Queries) ListArtists(ctx context.Context) ([]models.Artist, error) {
 	artists := []models.Artist{}

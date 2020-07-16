@@ -44,6 +44,27 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		)
 	})
 
+	listMergableHandler := makeListMergableHandler(d)
+	r.Get("/album/{recepientID}/merge", func(w http.ResponseWriter, r *http.Request) {
+		recepientIDStr := chi.URLParam(r, "recepientID")
+		listMergableHandler(recepientIDStr, w, r)
+	})
+
+	mergeHandler := makeMergeHandler(d)
+	r.Post("/album/{recepientID}/merge/{donorID}", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("executed")
+		donorIDStr := chi.URLParam(r, "donorID")
+		recepientIDStr := chi.URLParam(r, "recepientID")
+		mergeHandler(donorIDStr, recepientIDStr, w, r)
+	})
+
+	mergePreviewHandler := makeMergePreviewHandler(d)
+	r.Get("/album/{recepientID}/merge/{donorID}", func(w http.ResponseWriter, r *http.Request) {
+		donorIDStr := chi.URLParam(r, "donorID")
+		recepientIDStr := chi.URLParam(r, "recepientID")
+		mergePreviewHandler(donorIDStr, recepientIDStr, w, r)
+	})
+
 	coverHandler := makeCoverHandler(d)
 	r.Get("/cover/{coverID}", func(w http.ResponseWriter, r *http.Request) {
 		coverIDStr := chi.URLParam(r, "coverID")

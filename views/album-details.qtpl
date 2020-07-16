@@ -1,5 +1,7 @@
 {% code
 type AlbumData interface {
+    MergeURL()          string
+
     IsDraft()           bool
     State()             SelectInputData
 
@@ -403,6 +405,10 @@ type AlbumDetailsPage struct {
                     Delete
                     <i class="material-delete right"></i>
                 </button>
+            {% endif %}
+
+            {% if p.Album.MergeURL() != "" %}
+                <a href="{%s p.Album.MergeURL() %}" class="waves-effect waves-light btn">Merge</a>
             {% endif %}
             </div>
 

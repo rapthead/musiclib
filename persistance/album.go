@@ -15,6 +15,25 @@ var DraftAlbumNotFound = errors.New("Draft album not found")
 
 var AlbumNotFound = errors.New("Album not found")
 
+func (p *Queries) ListMergableAlbums(ctx context.Context, recientAlbumId uuid.UUID) ([]models.Album, error) {
+	albums := []models.Album{}
+	err := p.db.SelectContext(ctx, &albums, `
+        SELECT * FROM album
+        WHERE state = 'draft' AND
+            (SELECT count(*) FROM track WHERE album_id = album.id)
+            = (SELECT count(*) FROM track WHERE album_id = $1)
+        ORDER BY (
+            CASE
+                WHEN state = 'draft' THEN 0
+                WHEN state = 'disabled' THEN 1
+                WHEN state = 'enabled' THEN 2
+                ELSE 3
+            END
+        ) ASC, created_at DESC, path ASC
+    `, recientAlbumId)
+	return albums, err
+}
+
 func (p *Queries) ListAlbums(ctx context.Context) ([]models.Album, error) {
 	albums := []models.Album{}
 	err := p.db.SelectContext(ctx, &albums, `
@@ -78,6 +97,10 @@ func (p *Queries) UpdateAlbum(
             download_source	= :download_source,
             source_url		= :source_url,
             comment			= :comment,
+
+            path            = :path,
+            rg_gain         = :rg_gain,
+            rg_peak         = :rg_peak,
 
             updated_at = NOW()
         WHERE id = :id;

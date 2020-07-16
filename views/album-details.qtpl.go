@@ -19,6 +19,8 @@ var (
 
 //line album-details.qtpl:2
 type AlbumData interface {
+	MergeURL() string
+
 	IsDraft() bool
 	State() SelectInputData
 
@@ -68,44 +70,44 @@ type AlbumDetailsPage struct {
 	Covers      []CoverData
 }
 
-//line album-details.qtpl:53
+//line album-details.qtpl:55
 func (p *AlbumDetailsPage) StreamTitle(qw422016 *qt422016.Writer) {
-//line album-details.qtpl:53
+//line album-details.qtpl:55
 	qw422016.N().S(`
     Album details
 `)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 }
 
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 func (p *AlbumDetailsPage) WriteTitle(qq422016 qtio422016.Writer) {
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	p.StreamTitle(qw422016)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	qt422016.ReleaseWriter(qw422016)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 }
 
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 func (p *AlbumDetailsPage) Title() string {
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	qb422016 := qt422016.AcquireByteBuffer()
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	p.WriteTitle(qb422016)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	qs422016 := string(qb422016.B)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	qt422016.ReleaseByteBuffer(qb422016)
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 	return qs422016
-//line album-details.qtpl:55
+//line album-details.qtpl:57
 }
 
-//line album-details.qtpl:57
+//line album-details.qtpl:59
 func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
-//line album-details.qtpl:57
+//line album-details.qtpl:59
 	qw422016.N().S(`
     <style>
         .cover-filename {
@@ -114,26 +116,26 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
     </style>
     <form id="draft-album-detail-form" class="container" method="POST" enctype="multipart/form-data">
         `)
-//line album-details.qtpl:64
+//line album-details.qtpl:66
 	if p.Error != nil {
-//line album-details.qtpl:64
+//line album-details.qtpl:66
 		qw422016.N().S(`
         <div class="card-panel red white-text" id="error">
             `)
-//line album-details.qtpl:66
+//line album-details.qtpl:68
 		qw422016.E().S(p.Error.Error())
-//line album-details.qtpl:66
+//line album-details.qtpl:68
 		qw422016.N().S(`
         </div>
         `)
-//line album-details.qtpl:68
+//line album-details.qtpl:70
 	}
-//line album-details.qtpl:68
+//line album-details.qtpl:70
 	qw422016.N().S(`
         <div class="card">
             <div class="row">
                 `)
-//line album-details.qtpl:72
+//line album-details.qtpl:74
 	streammakeSelect(qw422016, selectConfig{
 		wraperClass: "col s6",
 		label:       "State",
@@ -141,11 +143,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.State(),
 	})
-//line album-details.qtpl:79
+//line album-details.qtpl:81
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:82
+//line album-details.qtpl:84
 	streammakeStrDatalistInput(qw422016, strDatalistInputConfig{
 		wraperClass: "col s6",
 		label:       "Artist",
@@ -153,11 +155,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.Artist(),
 	})
-//line album-details.qtpl:89
+//line album-details.qtpl:91
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:92
+//line album-details.qtpl:94
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Title",
@@ -166,11 +168,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		data:       p.Album.Title(),
 		helperText: p.Album.TitleSuggestion(),
 	})
-//line album-details.qtpl:100
+//line album-details.qtpl:102
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:103
+//line album-details.qtpl:105
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		disabled:    true,
@@ -180,11 +182,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			Value: p.Album.Path(),
 		},
 	})
-//line album-details.qtpl:112
+//line album-details.qtpl:114
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:115
+//line album-details.qtpl:117
 	streammakeIntInput(qw422016, intInputConfig{
 		wraperClass: "col s6",
 		label:       "Year",
@@ -193,11 +195,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		data: p.Album.Year(),
 		min:  takeIntPtr(1990),
 	})
-//line album-details.qtpl:123
+//line album-details.qtpl:125
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:126
+//line album-details.qtpl:128
 	streammakeIntInput(qw422016, intInputConfig{
 		wraperClass: "col s6",
 		label:       "Release year",
@@ -205,11 +207,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		data: p.Album.ReleaseYear(),
 		min:  takeIntPtr(1990),
 	})
-//line album-details.qtpl:133
+//line album-details.qtpl:135
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:136
+//line album-details.qtpl:138
 	streammakeSelect(qw422016, selectConfig{
 		wraperClass: "col s6",
 		label:       "Type",
@@ -217,11 +219,11 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.Type(),
 	})
-//line album-details.qtpl:143
+//line album-details.qtpl:145
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:146
+//line album-details.qtpl:148
 	streammakeSelect(qw422016, selectConfig{
 		wraperClass: "col s6",
 		label:       "Download source",
@@ -229,112 +231,112 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 		data: p.Album.DownloadSource(),
 	})
-//line album-details.qtpl:153
+//line album-details.qtpl:155
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:156
+//line album-details.qtpl:158
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Source url",
 
 		data: p.Album.SourceURL(),
 	})
-//line album-details.qtpl:162
+//line album-details.qtpl:164
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:165
+//line album-details.qtpl:167
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Barcode",
 
 		data: p.Album.Barcode(),
 	})
-//line album-details.qtpl:171
+//line album-details.qtpl:173
 	qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:174
+//line album-details.qtpl:176
 	streammakeStrInput(qw422016, strInputConfig{
 		wraperClass: "col s6",
 		label:       "Comment",
 
 		data: p.Album.Comment(),
 	})
-//line album-details.qtpl:180
+//line album-details.qtpl:182
 	qw422016.N().S(`
             </div>
         </div>
 
         <div class="card" id="release">
             `)
-//line album-details.qtpl:185
+//line album-details.qtpl:187
 	for _, r := range p.ReleaseInfo {
-//line album-details.qtpl:185
+//line album-details.qtpl:187
 		qw422016.N().S(`
             <div class="label-row row">
                 `)
-//line album-details.qtpl:188
+//line album-details.qtpl:190
 		streammakeStrDatalistInput(qw422016, strDatalistInputConfig{
 			wraperClass: "col s5",
 			label:       "Label",
 
 			data: r.Label(),
 		})
-//line album-details.qtpl:194
+//line album-details.qtpl:196
 		qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:197
+//line album-details.qtpl:199
 		streammakeStrInput(qw422016, strInputConfig{
 			wraperClass: "col s5",
 			label:       "Catalog number",
 
 			data: r.CatalogNum(),
 		})
-//line album-details.qtpl:203
+//line album-details.qtpl:205
 		qw422016.N().S(`
 
                 `)
-//line album-details.qtpl:205
+//line album-details.qtpl:207
 		deleteCtl := r.Delete()
 
-//line album-details.qtpl:205
+//line album-details.qtpl:207
 		qw422016.N().S(`
                 `)
-//line album-details.qtpl:206
+//line album-details.qtpl:208
 		if deleteCtl != nil {
-//line album-details.qtpl:206
+//line album-details.qtpl:208
 			qw422016.N().S(`
                 <div class="col s2">
                     <label>
                         <input
                             type="checkbox"
                             name="`)
-//line album-details.qtpl:211
+//line album-details.qtpl:213
 			qw422016.E().S((*deleteCtl).Name)
-//line album-details.qtpl:211
+//line album-details.qtpl:213
 			qw422016.N().S(`"
                             value="`)
-//line album-details.qtpl:212
+//line album-details.qtpl:214
 			qw422016.E().S((*deleteCtl).Value)
-//line album-details.qtpl:212
+//line album-details.qtpl:214
 			qw422016.N().S(`"
                         />
                         <span>Delete</span>
                     </label>
                 </div>
                 `)
-//line album-details.qtpl:217
+//line album-details.qtpl:219
 		}
-//line album-details.qtpl:217
+//line album-details.qtpl:219
 		qw422016.N().S(`
             </div>
             `)
-//line album-details.qtpl:219
+//line album-details.qtpl:221
 	}
-//line album-details.qtpl:219
+//line album-details.qtpl:221
 	qw422016.N().S(`
 
             <script>
@@ -370,14 +372,14 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
                 <tbody>
                     `)
-//line album-details.qtpl:253
+//line album-details.qtpl:255
 	for _, t := range p.Tracks {
-//line album-details.qtpl:253
+//line album-details.qtpl:255
 		qw422016.N().S(`
                     <tr>
                         <th>
                             `)
-//line album-details.qtpl:257
+//line album-details.qtpl:259
 		streammakeStrInput(qw422016, strInputConfig{
 			label:    "Path",
 			disabled: true,
@@ -386,12 +388,12 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 				Value: t.Path(),
 			},
 		})
-//line album-details.qtpl:265
+//line album-details.qtpl:267
 		qw422016.N().S(`
                         </th>
                         <td>
                             `)
-//line album-details.qtpl:269
+//line album-details.qtpl:271
 		streammakeStrInput(qw422016, strInputConfig{
 			label:    "Title",
 			required: true,
@@ -399,12 +401,12 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			data:       t.Title(),
 			helperText: t.TitleSuggestion(),
 		})
-//line album-details.qtpl:276
+//line album-details.qtpl:278
 		qw422016.N().S(`
                         </td>
                         <td>
                             `)
-//line album-details.qtpl:280
+//line album-details.qtpl:282
 		streammakeIntInput(qw422016, intInputConfig{
 			label:    "Track number",
 			required: true,
@@ -412,12 +414,12 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			min:  takeIntPtr(0),
 			data: t.TrackNum(),
 		})
-//line album-details.qtpl:287
+//line album-details.qtpl:289
 		qw422016.N().S(`
                         </td>
                         <td>
                             `)
-//line album-details.qtpl:291
+//line album-details.qtpl:293
 		streammakeIntInput(qw422016, intInputConfig{
 			label:    "Disc number",
 			required: true,
@@ -425,25 +427,25 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 			min:  takeIntPtr(1),
 			data: t.Disc(),
 		})
-//line album-details.qtpl:298
+//line album-details.qtpl:300
 		qw422016.N().S(`
                         </td>
                         <td>
                             `)
-//line album-details.qtpl:302
+//line album-details.qtpl:304
 		streammakeStrInput(qw422016, strInputConfig{
 			label: "TrackArtist",
 
 			data: t.TrackArtist(),
 		})
-//line album-details.qtpl:307
+//line album-details.qtpl:309
 		qw422016.N().S(`
                         </td>
                     </tr>
                     `)
-//line album-details.qtpl:310
+//line album-details.qtpl:312
 	}
-//line album-details.qtpl:310
+//line album-details.qtpl:312
 	qw422016.N().S(`
                 </tbody>
             </table>
@@ -452,28 +454,28 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
         <div class="card">
             <div class="row">
             `)
-//line album-details.qtpl:317
+//line album-details.qtpl:319
 	for i, c := range p.Covers {
-//line album-details.qtpl:317
+//line album-details.qtpl:319
 		qw422016.N().S(`
                 `)
-//line album-details.qtpl:318
+//line album-details.qtpl:320
 		if i%2 == 0 {
-//line album-details.qtpl:318
+//line album-details.qtpl:320
 			qw422016.N().S(`
                 <div class="clearfix"></div>
                 `)
-//line album-details.qtpl:320
+//line album-details.qtpl:322
 		}
-//line album-details.qtpl:320
+//line album-details.qtpl:322
 		qw422016.N().S(`
                 <div class ="col s6">
                     <div class="row">
                         <div class="col s6">
                             <img class="materialboxed responsive-img" src="`)
-//line album-details.qtpl:324
+//line album-details.qtpl:326
 		qw422016.E().S(c.URL())
-//line album-details.qtpl:324
+//line album-details.qtpl:326
 		qw422016.N().S(`" />
                         </div>
 
@@ -481,27 +483,27 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                             <div class="row">
                                 <div class="col s12">
                                     <h4 class="cover-filename">`)
-//line album-details.qtpl:330
+//line album-details.qtpl:332
 		qw422016.E().S(c.Filename())
-//line album-details.qtpl:330
+//line album-details.qtpl:332
 		qw422016.N().S(`</h4>
                                 </div>
 
                                 <div class="col s6">
                                     `)
-//line album-details.qtpl:335
+//line album-details.qtpl:337
 		streammakeSelect(qw422016, selectConfig{
 			label: "Cover type",
 
 			data: c.Type(),
 		})
-//line album-details.qtpl:340
+//line album-details.qtpl:342
 		qw422016.N().S(`
                                 </div>
 
                                 <div class="col s6">
                                     `)
-//line album-details.qtpl:345
+//line album-details.qtpl:347
 		streammakeIntInput(qw422016, intInputConfig{
 			label:    "Sort",
 			required: true,
@@ -509,7 +511,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 
 			data: c.Sort(),
 		})
-//line album-details.qtpl:352
+//line album-details.qtpl:354
 		qw422016.N().S(`
                                 </div>
 
@@ -518,14 +520,14 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                                         <input
                                             type="checkbox"
                                             name="`)
-//line album-details.qtpl:359
+//line album-details.qtpl:361
 		qw422016.E().S(c.Delete().Name)
-//line album-details.qtpl:359
+//line album-details.qtpl:361
 		qw422016.N().S(`"
                                             value="`)
-//line album-details.qtpl:360
+//line album-details.qtpl:362
 		qw422016.E().S(c.Delete().Value)
-//line album-details.qtpl:360
+//line album-details.qtpl:362
 		qw422016.N().S(`"
                                         />
                                         <span>Delete</span>
@@ -536,9 +538,9 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                     </div>
                 </div>
             `)
-//line album-details.qtpl:369
+//line album-details.qtpl:371
 	}
-//line album-details.qtpl:369
+//line album-details.qtpl:371
 	qw422016.N().S(`
             </div>
         </div>
@@ -567,9 +569,9 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
         <footer class="row" id="footer">
             <div class="col s6">
             `)
-//line album-details.qtpl:396
+//line album-details.qtpl:398
 	if p.Album.IsDraft() {
-//line album-details.qtpl:396
+//line album-details.qtpl:398
 		qw422016.N().S(`
                 <button
                     class="btn waves-effect waves-light red"
@@ -581,9 +583,25 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
                     <i class="material-delete right"></i>
                 </button>
             `)
-//line album-details.qtpl:406
+//line album-details.qtpl:408
 	}
-//line album-details.qtpl:406
+//line album-details.qtpl:408
+	qw422016.N().S(`
+
+            `)
+//line album-details.qtpl:410
+	if p.Album.MergeURL() != "" {
+//line album-details.qtpl:410
+		qw422016.N().S(`
+                <a href="`)
+//line album-details.qtpl:411
+		qw422016.E().S(p.Album.MergeURL())
+//line album-details.qtpl:411
+		qw422016.N().S(`" class="waves-effect waves-light btn">Merge</a>
+            `)
+//line album-details.qtpl:412
+	}
+//line album-details.qtpl:412
 	qw422016.N().S(`
             </div>
 
@@ -596,31 +614,31 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
         </footer>
     </form>
 `)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 }
 
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 func (p *AlbumDetailsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	p.StreamBody(qw422016)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	qt422016.ReleaseWriter(qw422016)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 }
 
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 func (p *AlbumDetailsPage) Body() string {
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	qb422016 := qt422016.AcquireByteBuffer()
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	p.WriteBody(qb422016)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	qs422016 := string(qb422016.B)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	qt422016.ReleaseByteBuffer(qb422016)
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 	return qs422016
-//line album-details.qtpl:417
+//line album-details.qtpl:423
 }

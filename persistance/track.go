@@ -25,7 +25,11 @@ func (p *Queries) UpdateTrack(ctx context.Context, track models.Track) error {
             disc         = :disc,
             track_artist = :track_artist,
             title        = :title,
-            track_num    = :track_num
+            track_num    = :track_num,
+
+            path         = :path,
+            rg_gain      = :rg_gain,
+            rg_peak      = :rg_peak
         WHERE id = :id;
     `, track)
 	if err != nil {

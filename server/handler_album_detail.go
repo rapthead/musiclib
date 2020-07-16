@@ -19,6 +19,10 @@ type AlbumForm struct {
 	AllArtists []models.Artist
 }
 
+func (r AlbumForm) MergeURL() string {
+	return "/album/" + r.Model.ID.String() + "/merge"
+}
+
 func (r AlbumForm) fieldName(fieldName string) string {
 	return "album." + r.Model.ID.String() + "." + fieldName
 }
