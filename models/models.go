@@ -28,7 +28,7 @@ type Album struct {
 	State          AlbumStateEnum     `db:"state"`
 	Path           string             `db:"path"`
 	Title          string             `db:"title"`
-	Year           int                `db:"year"`
+	Year           zero.Int           `db:"year"`
 	ReleaseYear    zero.Int           `db:"release_year"`
 	Barcode        string             `db:"barcode"`
 	Comment        string             `db:"comment"`

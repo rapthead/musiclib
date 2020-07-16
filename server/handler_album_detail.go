@@ -82,10 +82,9 @@ func (r AlbumForm) Comment() views.StrInputData {
 }
 
 func (r AlbumForm) Year() views.IntInputData {
-	value := int64(r.Model.Year)
 	return views.IntInputData{
 		Name:  r.fieldName("year"),
-		Value: &value,
+		Value: r.Model.Year.Ptr(),
 	}
 }
 
@@ -142,7 +141,7 @@ func (r AlbumForm) Merge(v values) error {
 	r.Model.SourceURL = v.Get(r.fieldName("source_url"))
 	r.Model.Barcode = v.Get(r.fieldName("barcode"))
 	r.Model.Comment = v.Get(r.fieldName("comment"))
-	r.Model.Year = v.GetInt(r.fieldName("year"))
+	r.Model.Year = zero.IntFrom(v.GetInt64(r.fieldName("year")))
 	r.Model.ReleaseYear = zero.IntFrom(v.GetInt64(r.fieldName("release_year")))
 	r.Model.State = albumState
 	r.Model.Type = albumType

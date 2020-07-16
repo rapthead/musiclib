@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-redis/redis/v7"
 	"github.com/gofrs/uuid"
+	"github.com/guregu/null/zero"
 	"github.com/jmoiron/sqlx"
 	"github.com/mewkiz/flac"
 	"github.com/mewkiz/flac/meta"
@@ -141,8 +142,8 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 				draftAlbum.DraftArtist = tagValue
 			case "date":
 				dateParts := strings.Split(tagValue, "-")
-				if year, err := strconv.Atoi(dateParts[0]); err == nil {
-					draftAlbum.Year = year
+				if year, err := strconv.ParseInt(dateParts[0], 10, 64); err == nil {
+					draftAlbum.Year = zero.IntFrom(year)
 				} else {
 					r.logger.Error(fmt.Errorf("Can't decode date tag %w", err))
 				}

@@ -22,14 +22,7 @@ func (p *Queries) ListMergableAlbums(ctx context.Context, recientAlbumId uuid.UU
         WHERE state = 'draft' AND
             (SELECT count(*) FROM track WHERE album_id = album.id)
             = (SELECT count(*) FROM track WHERE album_id = $1)
-        ORDER BY (
-            CASE
-                WHEN state = 'draft' THEN 0
-                WHEN state = 'disabled' THEN 1
-                WHEN state = 'enabled' THEN 2
-                ELSE 3
-            END
-        ) ASC, created_at DESC, path ASC
+        ORDER BY created_at DESC, path ASC
     `, recientAlbumId)
 	return albums, err
 }
