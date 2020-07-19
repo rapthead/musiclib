@@ -193,7 +193,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		required:    true,
 
 		data: p.Album.Year(),
-		min:  takeIntPtr(1990),
+		min:  takeIntPtr(1900),
 	})
 //line album-details.qtpl:125
 	qw422016.N().S(`
@@ -205,7 +205,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 		label:       "Release year",
 
 		data: p.Album.ReleaseYear(),
-		min:  takeIntPtr(1990),
+		min:  takeIntPtr(1900),
 	})
 //line album-details.qtpl:135
 	qw422016.N().S(`
