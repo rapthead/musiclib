@@ -120,7 +120,7 @@ type AlbumDetailsPage struct {
                         required: true,
 
                         data: p.Album.Year(),
-                        min: takeIntPtr(1990),
+                        min: takeIntPtr(1900),
                     })
                 %}
 
@@ -130,7 +130,7 @@ type AlbumDetailsPage struct {
                         label: "Release year",
 
                         data: p.Album.ReleaseYear(),
-                        min: takeIntPtr(1990),
+                        min: takeIntPtr(1900),
                     })
                 %}
 
