@@ -73,16 +73,16 @@ func (p *SyncPage) StreamBody(qw422016 *qt422016.Writer) {
 
     <script>
         function start() {
-            const output = document.getElementById("output");
+            const output = document.getElementById("output")
             const eventSource = new EventSource(`)
 //line sync.qtpl:25
 	qw422016.N().Q(p.SSEUrl)
 //line sync.qtpl:25
-	qw422016.N().S(`);
+	qw422016.N().S(`)
 
             function addLogLine(str) {
-                const logLine = document.createTextNode(str+"\n");
-                output.insertBefore(logLine, output.firstChild);
+                const logLine = document.createTextNode(str.split('\\n').join('\n')+'\n')
+                output.insertBefore(logLine, output.firstChild)
             }
 
             eventSource.addEventListener('info', (event) => {

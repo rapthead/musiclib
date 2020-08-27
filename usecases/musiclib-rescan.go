@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -133,7 +134,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 		}
 		for _, tag := range trackInfo.Tags {
 			tagName := tag[0]
-			tagValue := tag[1]
+			tagValue := strings.Trim(tag[1], "\t\n ")
 
 			switch strings.ToLower(tagName) {
 			case "album":
@@ -235,8 +236,8 @@ func (r rescanCase) addReplayGain(draftData *DraftData) error {
 		return fmt.Errorf("replaygain calculation failed %w", err)
 	}
 
+	draftData.Album.RgPeak = calcResult.AlbumPeak
 	draftData.Album.RgGain = calcResult.AlbumGain
-	draftData.Album.RgPeak = calcResult.AlbumGain
 
 	for _, trackGain := range calcResult.Tracks {
 		relPath := r.absToRel(trackGain.Path)
@@ -326,7 +327,12 @@ func (r rescanCase) Do() {
 			continue
 		}
 
-		logInfo(fmt.Sprintln("process result", draftData))
+		draftDataStr, err := json.MarshalIndent(draftData, "", " ")
+		if err != nil {
+			logError("process result marshaling error", err)
+			continue
+		}
+		logInfo(fmt.Sprintf("process result: %s\n", draftDataStr))
 
 		txOptions := sql.TxOptions{}
 		tx, err := r.sqlxClient.BeginTxx(ctx, &txOptions)

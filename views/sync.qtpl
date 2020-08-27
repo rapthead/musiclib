@@ -21,12 +21,12 @@ type SyncPage struct {
 
     <script>
         function start() {
-            const output = document.getElementById("output");
-            const eventSource = new EventSource({%q= p.SSEUrl %});
+            const output = document.getElementById("output")
+            const eventSource = new EventSource({%q= p.SSEUrl %})
 
             function addLogLine(str) {
-                const logLine = document.createTextNode(str+"\n");
-                output.insertBefore(logLine, output.firstChild);
+                const logLine = document.createTextNode(str.split('\\n').join('\n')+'\n')
+                output.insertBefore(logLine, output.firstChild)
             }
 
             eventSource.addEventListener('info', (event) => {
