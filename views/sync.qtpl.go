@@ -18,46 +18,47 @@ var (
 )
 
 //line sync.qtpl:2
-type SyncPage struct {
-	SSEUrl string
+type SSEPage struct {
+	PageTitle string
+	SSEUrl    string
 }
 
-//line sync.qtpl:7
-func (p *SyncPage) StreamTitle(qw422016 *qt422016.Writer) {
-//line sync.qtpl:7
-	qw422016.N().S(`Sync`)
-//line sync.qtpl:7
+//line sync.qtpl:8
+func (p *SSEPage) StreamTitle(qw422016 *qt422016.Writer) {
+//line sync.qtpl:8
+	qw422016.N().S(p.PageTitle)
+//line sync.qtpl:8
 }
 
-//line sync.qtpl:7
-func (p *SyncPage) WriteTitle(qq422016 qtio422016.Writer) {
-//line sync.qtpl:7
+//line sync.qtpl:8
+func (p *SSEPage) WriteTitle(qq422016 qtio422016.Writer) {
+//line sync.qtpl:8
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line sync.qtpl:7
+//line sync.qtpl:8
 	p.StreamTitle(qw422016)
-//line sync.qtpl:7
+//line sync.qtpl:8
 	qt422016.ReleaseWriter(qw422016)
-//line sync.qtpl:7
+//line sync.qtpl:8
 }
 
-//line sync.qtpl:7
-func (p *SyncPage) Title() string {
-//line sync.qtpl:7
+//line sync.qtpl:8
+func (p *SSEPage) Title() string {
+//line sync.qtpl:8
 	qb422016 := qt422016.AcquireByteBuffer()
-//line sync.qtpl:7
+//line sync.qtpl:8
 	p.WriteTitle(qb422016)
-//line sync.qtpl:7
+//line sync.qtpl:8
 	qs422016 := string(qb422016.B)
-//line sync.qtpl:7
+//line sync.qtpl:8
 	qt422016.ReleaseByteBuffer(qb422016)
-//line sync.qtpl:7
+//line sync.qtpl:8
 	return qs422016
-//line sync.qtpl:7
+//line sync.qtpl:8
 }
 
-//line sync.qtpl:9
-func (p *SyncPage) StreamBody(qw422016 *qt422016.Writer) {
-//line sync.qtpl:9
+//line sync.qtpl:10
+func (p *SSEPage) StreamBody(qw422016 *qt422016.Writer) {
+//line sync.qtpl:10
 	qw422016.N().S(`
 <div class="container">
     <button
@@ -75,9 +76,9 @@ func (p *SyncPage) StreamBody(qw422016 *qt422016.Writer) {
         function start() {
             const output = document.getElementById("output")
             const eventSource = new EventSource(`)
-//line sync.qtpl:25
+//line sync.qtpl:26
 	qw422016.N().Q(p.SSEUrl)
-//line sync.qtpl:25
+//line sync.qtpl:26
 	qw422016.N().S(`)
 
             function addLogLine(str) {
@@ -99,31 +100,31 @@ func (p *SyncPage) StreamBody(qw422016 *qt422016.Writer) {
     </script>
 </div>
 `)
-//line sync.qtpl:45
+//line sync.qtpl:46
 }
 
-//line sync.qtpl:45
-func (p *SyncPage) WriteBody(qq422016 qtio422016.Writer) {
-//line sync.qtpl:45
+//line sync.qtpl:46
+func (p *SSEPage) WriteBody(qq422016 qtio422016.Writer) {
+//line sync.qtpl:46
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line sync.qtpl:45
+//line sync.qtpl:46
 	p.StreamBody(qw422016)
-//line sync.qtpl:45
+//line sync.qtpl:46
 	qt422016.ReleaseWriter(qw422016)
-//line sync.qtpl:45
+//line sync.qtpl:46
 }
 
-//line sync.qtpl:45
-func (p *SyncPage) Body() string {
-//line sync.qtpl:45
+//line sync.qtpl:46
+func (p *SSEPage) Body() string {
+//line sync.qtpl:46
 	qb422016 := qt422016.AcquireByteBuffer()
-//line sync.qtpl:45
+//line sync.qtpl:46
 	p.WriteBody(qb422016)
-//line sync.qtpl:45
+//line sync.qtpl:46
 	qs422016 := string(qb422016.B)
-//line sync.qtpl:45
+//line sync.qtpl:46
 	qt422016.ReleaseByteBuffer(qb422016)
-//line sync.qtpl:45
+//line sync.qtpl:46
 	return qs422016
-//line sync.qtpl:45
+//line sync.qtpl:46
 }

@@ -1,12 +1,13 @@
 {% code
-type SyncPage struct {
-    SSEUrl  string
+type SSEPage struct {
+    PageTitle string
+    SSEUrl    string
 }
 %}
 
-{% func (p *SyncPage) Title() %}Sync{% endfunc %}
+{% func (p *SSEPage) Title() %}{%s= p.PageTitle %}{% endfunc %}
 
-{% func (p *SyncPage) Body() %}
+{% func (p *SSEPage) Body() %}
 <div class="container">
     <button
         class="btn waves-effect waves-light red"

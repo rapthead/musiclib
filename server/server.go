@@ -72,8 +72,9 @@ func MakeRoutes(d deps.Deps) http.Handler {
 	})
 
 	r.Get("/sync", func(w http.ResponseWriter, r *http.Request) {
-		p := &views.SyncPage{
-			SSEUrl: "/sync/sse",
+		p := &views.SSEPage{
+			PageTitle: "Sync",
+			SSEUrl:    "/sync/sse",
 		}
 		views.WritePageTemplate(w, p)
 	})
@@ -84,8 +85,9 @@ func MakeRoutes(d deps.Deps) http.Handler {
 	})
 
 	r.Get("/rescan", func(w http.ResponseWriter, r *http.Request) {
-		p := &views.SyncPage{
-			SSEUrl: "/rescan/sse",
+		p := &views.SSEPage{
+			PageTitle: "Rescan",
+			SSEUrl:    "/rescan/sse",
 		}
 		views.WritePageTemplate(w, p)
 	})

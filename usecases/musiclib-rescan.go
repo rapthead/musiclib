@@ -295,7 +295,7 @@ func (r rescanCase) Do() {
 	}
 
 	{
-		logStr := "new album dirs: "
+		logStr := "new album dirs:\n"
 		for i, newAlbumDir := range newAlbumDirs {
 			if i != 0 {
 				logStr += "\n"
