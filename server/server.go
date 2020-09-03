@@ -52,10 +52,10 @@ func MakeRoutes(d deps.Deps) http.Handler {
 
 	mergeHandler := makeMergeHandler(d)
 	r.Post("/album/{recepientID}/merge/{donorID}", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("executed")
 		donorIDStr := chi.URLParam(r, "donorID")
 		recepientIDStr := chi.URLParam(r, "recepientID")
-		mergeHandler(donorIDStr, recepientIDStr, w, r)
+		deleteOld := r.PostForm.Get("delete-old") != ""
+		mergeHandler(donorIDStr, recepientIDStr, deleteOld, w, r)
 	})
 
 	mergePreviewHandler := makeMergePreviewHandler(d)

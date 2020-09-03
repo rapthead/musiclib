@@ -34,7 +34,14 @@ type MergeAlbumsPage struct {
         </table>
 
         <footer class="row" id="footer">
-            <div class="col s6 right-align">
+            <div style="margin: 1em 0" class="col s12 center-align">
+                <label>
+                    <input type="checkbox" name="delete-old" value="y">
+                    <span>delete old dir</span>
+                </label>
+            </div>
+
+            <div class="col s12 center-align">
                 <button class="btn waves-effect waves-light" type="submit">
                     Confirm
                     <i class="material-icons right"></i>

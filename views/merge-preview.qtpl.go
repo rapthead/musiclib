@@ -114,7 +114,14 @@ func (p *MergeAlbumsPage) StreamBody(qw422016 *qt422016.Writer) {
         </table>
 
         <footer class="row" id="footer">
-            <div class="col s6 right-align">
+            <div style="margin: 1em 0" class="col s12 center-align">
+                <label>
+                    <input type="checkbox" name="delete-old" value="y">
+                    <span>delete old dir</span>
+                </label>
+            </div>
+
+            <div class="col s12 center-align">
                 <button class="btn waves-effect waves-light" type="submit">
                     Confirm
                     <i class="material-icons right"></i>
@@ -122,37 +129,37 @@ func (p *MergeAlbumsPage) StreamBody(qw422016 *qt422016.Writer) {
             </div>
         </footer>
         `)
-//line merge-preview.qtpl:44
+//line merge-preview.qtpl:51
 	}
-//line merge-preview.qtpl:44
+//line merge-preview.qtpl:51
 	qw422016.N().S(`
     </form>
 `)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 }
 
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 func (p *MergeAlbumsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	p.StreamBody(qw422016)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	qt422016.ReleaseWriter(qw422016)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 }
 
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 func (p *MergeAlbumsPage) Body() string {
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	qb422016 := qt422016.AcquireByteBuffer()
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	p.WriteBody(qb422016)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	qs422016 := string(qb422016.B)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	qt422016.ReleaseByteBuffer(qb422016)
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 	return qs422016
-//line merge-preview.qtpl:46
+//line merge-preview.qtpl:53
 }

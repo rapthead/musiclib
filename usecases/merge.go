@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
@@ -31,15 +33,18 @@ type MergableAlbum struct {
 type MergeAlbums struct {
 	sqlxClient *sqlx.DB
 	queries    *persistance.Queries
+	root       string
 }
 
 func NewMergeAlbums(deps interface {
 	SQLXClient() *sqlx.DB
 	Queries() *persistance.Queries
+	MusiclibRoot() string
 }) MergeAlbums {
 	return MergeAlbums{
 		deps.SQLXClient(),
 		deps.Queries(),
+		deps.MusiclibRoot(),
 	}
 }
 
@@ -165,7 +170,7 @@ func (u MergeAlbums) ListMergable(ctx context.Context, recipientAlbumID uuid.UUI
 
 func (u MergeAlbums) Exec(
 	ctx context.Context,
-	donorAlbumID uuid.UUID, recipientAlbumID uuid.UUID,
+	donorAlbumID uuid.UUID, recipientAlbumID uuid.UUID, deleteOld bool,
 ) error {
 	donorAlbumInfo, recipientAlbumInfo, err :=
 		u.getMergableAlbums(ctx, donorAlbumID, recipientAlbumID)
@@ -173,6 +178,7 @@ func (u MergeAlbums) Exec(
 		return err
 	}
 
+	oldPath := filepath.Join(u.root, recipientAlbumInfo.Album.Path)
 	tx, err := u.sqlxClient.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("Can't start transaction: %w", err)
@@ -217,9 +223,15 @@ func (u MergeAlbums) Exec(
 	if err != nil {
 		tx.Rollback()
 		return err
-	} else if err = tx.Commit(); err != nil {
-		return fmt.Errorf("Unable to commit transaction: %w", err)
 	} else {
-		return nil
+		if err = os.RemoveAll(oldPath); err != nil {
+			return fmt.Errorf("Unable to delete old files path: %w", err)
+		}
+
+		if err = tx.Commit(); err != nil {
+			return fmt.Errorf("Unable to commit transaction: %w", err)
+		} else {
+			return nil
+		}
 	}
 }

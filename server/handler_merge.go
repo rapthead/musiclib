@@ -113,10 +113,10 @@ func makeListMergableHandler(d deps.Deps) func(string, http.ResponseWriter, *htt
 }
 
 // merge preview handler factory
-func makeMergeHandler(d deps.Deps) func(string, string, http.ResponseWriter, *http.Request) {
+func makeMergeHandler(d deps.Deps) func(string, string, bool, http.ResponseWriter, *http.Request) {
 	mergeCase := usecases.NewMergeAlbums(d)
 	return func(
-		donorAlbumIDStr string, recipientAlbumIDStr string,
+		donorAlbumIDStr string, recipientAlbumIDStr string, deleteOld bool,
 		w http.ResponseWriter, r *http.Request,
 	) {
 		donorAlbumID, err := uuid.FromString(donorAlbumIDStr)
@@ -132,7 +132,7 @@ func makeMergeHandler(d deps.Deps) func(string, string, http.ResponseWriter, *ht
 		}
 
 		err = mergeCase.Exec(
-			r.Context(), donorAlbumID, recipientAlbumID,
+			r.Context(), donorAlbumID, recipientAlbumID, deleteOld,
 		)
 		if err != nil {
 			showError(w, err, http.StatusBadRequest)
