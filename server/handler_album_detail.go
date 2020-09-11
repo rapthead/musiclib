@@ -76,7 +76,7 @@ func (r AlbumForm) Barcode() views.StrInputData {
 
 func (r AlbumForm) Comment() views.StrInputData {
 	return views.StrInputData{
-		Name:  r.fieldName("commetn"),
+		Name:  r.fieldName("comment"),
 		Value: r.Model.Comment,
 	}
 }
