@@ -163,6 +163,20 @@ type AlbumDetailsPage struct {
                     })
                 %}
 
+                <script>
+                    const sourceUrlInput = document.getElementById({%q= p.Album.SourceURL().Name %})
+                    const downloadSourceSelect = document.getElementById({%q= p.Album.DownloadSource().Name %})
+                    sourceUrlInput.onpaste = function(event) {
+                        setTimeout(function() {
+                            const pastedValue = sourceUrlInput.value
+                            if (pastedValue.startsWith('https://redacted.ch/')) {
+                                downloadSourceSelect.value = 'REDACTED_CH'
+                                M.FormSelect.init(downloadSourceSelect)
+                            }
+                        }, 0);
+                    }
+                </script>
+
                 {%=
                     makeStrInput(strInputConfig{
                         wraperClass: "col s6",
