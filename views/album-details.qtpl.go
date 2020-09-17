@@ -605,7 +605,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
             </div>
         </div>
 
-        <footer class="page-footer" id="footer">
+        <footer class="page-footer">
             <div class="container row">
                 <div class="col s6">
                 `)
