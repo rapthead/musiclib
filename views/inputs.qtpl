@@ -95,6 +95,7 @@ type chipsInputConfig struct {
         name="{%s c.data.Name %}"
         {% endif %}
         value="{%s c.data.Value %}"
+        pattern="\S(.*\S)?"
     >
     <label for="{%s id %}">{%s c.label %}</label>
     {% if c.helperText != "" %}

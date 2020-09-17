@@ -264,404 +264,405 @@ func streammakeStrInput(qw422016 *qt422016.Writer, c strInputConfig) {
 	qw422016.E().S(c.data.Value)
 //line inputs.qtpl:97
 	qw422016.N().S(`"
+        pattern="\S(.*\S)?"
     >
     <label for="`)
-//line inputs.qtpl:99
+//line inputs.qtpl:100
 	qw422016.E().S(id)
-//line inputs.qtpl:99
+//line inputs.qtpl:100
 	qw422016.N().S(`">`)
-//line inputs.qtpl:99
+//line inputs.qtpl:100
 	qw422016.E().S(c.label)
-//line inputs.qtpl:99
+//line inputs.qtpl:100
 	qw422016.N().S(`</label>
     `)
-//line inputs.qtpl:100
+//line inputs.qtpl:101
 	if c.helperText != "" {
-//line inputs.qtpl:100
+//line inputs.qtpl:101
 		qw422016.N().S(`
         <span class="blue-text text-darken-2 helper-text">`)
-//line inputs.qtpl:101
+//line inputs.qtpl:102
 		qw422016.E().S(c.helperText)
-//line inputs.qtpl:101
+//line inputs.qtpl:102
 		qw422016.N().S(`</span>
     `)
-//line inputs.qtpl:102
+//line inputs.qtpl:103
 	}
-//line inputs.qtpl:102
+//line inputs.qtpl:103
 	qw422016.N().S(`
 </div>
 `)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 }
 
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 func writemakeStrInput(qq422016 qtio422016.Writer, c strInputConfig) {
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	streammakeStrInput(qw422016, c)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	qt422016.ReleaseWriter(qw422016)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 }
 
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 func makeStrInput(c strInputConfig) string {
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	qb422016 := qt422016.AcquireByteBuffer()
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	writemakeStrInput(qb422016, c)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	qs422016 := string(qb422016.B)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	qt422016.ReleaseByteBuffer(qb422016)
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 	return qs422016
-//line inputs.qtpl:104
+//line inputs.qtpl:105
 }
 
-//line inputs.qtpl:106
+//line inputs.qtpl:107
 func streammakeSelect(qw422016 *qt422016.Writer, c selectConfig) {
-//line inputs.qtpl:106
+//line inputs.qtpl:107
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:107
+//line inputs.qtpl:108
 	id := makeInputID(c.data.Name)
 
-//line inputs.qtpl:107
+//line inputs.qtpl:108
 	qw422016.N().S(`
 <div class="input-field `)
-//line inputs.qtpl:108
+//line inputs.qtpl:109
 	qw422016.E().S(c.wraperClass)
-//line inputs.qtpl:108
+//line inputs.qtpl:109
 	qw422016.N().S(`">
     <select
         `)
-//line inputs.qtpl:110
+//line inputs.qtpl:111
 	if c.data.Name != "" {
-//line inputs.qtpl:110
+//line inputs.qtpl:111
 		qw422016.N().S(`
         name="`)
-//line inputs.qtpl:111
+//line inputs.qtpl:112
 		qw422016.E().S(c.data.Name)
-//line inputs.qtpl:111
+//line inputs.qtpl:112
 		qw422016.N().S(`"
         `)
-//line inputs.qtpl:112
+//line inputs.qtpl:113
 	}
-//line inputs.qtpl:112
+//line inputs.qtpl:113
 	qw422016.N().S(`
         id="`)
-//line inputs.qtpl:113
+//line inputs.qtpl:114
 	qw422016.E().S(id)
-//line inputs.qtpl:113
+//line inputs.qtpl:114
 	qw422016.N().S(`"
     >
         `)
-//line inputs.qtpl:115
+//line inputs.qtpl:116
 	for _, option := range c.data.Options {
-//line inputs.qtpl:115
+//line inputs.qtpl:116
 		qw422016.N().S(`
         <option
             `)
-//line inputs.qtpl:117
+//line inputs.qtpl:118
 		if option.Selected {
-//line inputs.qtpl:117
+//line inputs.qtpl:118
 			qw422016.N().S(`
             selected
             `)
-//line inputs.qtpl:119
+//line inputs.qtpl:120
 		}
-//line inputs.qtpl:119
+//line inputs.qtpl:120
 		qw422016.N().S(`
             value="`)
-//line inputs.qtpl:120
+//line inputs.qtpl:121
 		qw422016.E().S(option.Value)
-//line inputs.qtpl:120
+//line inputs.qtpl:121
 		qw422016.N().S(`"
             >`)
-//line inputs.qtpl:121
+//line inputs.qtpl:122
 		qw422016.E().S(option.Label)
-//line inputs.qtpl:121
+//line inputs.qtpl:122
 		qw422016.N().S(`</option>
         `)
-//line inputs.qtpl:122
+//line inputs.qtpl:123
 	}
-//line inputs.qtpl:122
+//line inputs.qtpl:123
 	qw422016.N().S(`
     </select>
     <label for="`)
-//line inputs.qtpl:124
+//line inputs.qtpl:125
 	qw422016.E().S(id)
-//line inputs.qtpl:124
+//line inputs.qtpl:125
 	qw422016.N().S(`">`)
-//line inputs.qtpl:124
+//line inputs.qtpl:125
 	qw422016.E().S(c.label)
-//line inputs.qtpl:124
+//line inputs.qtpl:125
 	qw422016.N().S(`</label>
 </div>
 `)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 }
 
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 func writemakeSelect(qq422016 qtio422016.Writer, c selectConfig) {
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	streammakeSelect(qw422016, c)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	qt422016.ReleaseWriter(qw422016)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 }
 
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 func makeSelect(c selectConfig) string {
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	qb422016 := qt422016.AcquireByteBuffer()
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	writemakeSelect(qb422016, c)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	qs422016 := string(qb422016.B)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	qt422016.ReleaseByteBuffer(qb422016)
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 	return qs422016
-//line inputs.qtpl:126
+//line inputs.qtpl:127
 }
 
-//line inputs.qtpl:128
+//line inputs.qtpl:129
 func streammakeStrDatalistInput(qw422016 *qt422016.Writer, c strDatalistInputConfig) {
-//line inputs.qtpl:128
+//line inputs.qtpl:129
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:129
+//line inputs.qtpl:130
 	id := makeInputID(c.data.Name)
 
-//line inputs.qtpl:129
+//line inputs.qtpl:130
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:130
+//line inputs.qtpl:131
 	datalistID := id + "-datalist"
 
-//line inputs.qtpl:130
+//line inputs.qtpl:131
 	qw422016.N().S(`
 <div class="input-field `)
-//line inputs.qtpl:131
+//line inputs.qtpl:132
 	qw422016.E().S(c.wraperClass)
-//line inputs.qtpl:131
+//line inputs.qtpl:132
 	qw422016.N().S(`">
     <input
         id="`)
-//line inputs.qtpl:133
+//line inputs.qtpl:134
 	qw422016.E().S(id)
-//line inputs.qtpl:133
+//line inputs.qtpl:134
 	qw422016.N().S(`"
         list="`)
-//line inputs.qtpl:134
+//line inputs.qtpl:135
 	qw422016.E().S(datalistID)
-//line inputs.qtpl:134
+//line inputs.qtpl:135
 	qw422016.N().S(`"
 
         `)
-//line inputs.qtpl:136
+//line inputs.qtpl:137
 	if c.disabled {
-//line inputs.qtpl:136
+//line inputs.qtpl:137
 		qw422016.N().S(`
         disabled
         `)
-//line inputs.qtpl:138
+//line inputs.qtpl:139
 	}
-//line inputs.qtpl:138
+//line inputs.qtpl:139
 	qw422016.N().S(`
 
         `)
-//line inputs.qtpl:140
+//line inputs.qtpl:141
 	if c.required {
-//line inputs.qtpl:140
+//line inputs.qtpl:141
 		qw422016.N().S(`
         required
         `)
-//line inputs.qtpl:142
+//line inputs.qtpl:143
 	}
-//line inputs.qtpl:142
+//line inputs.qtpl:143
 	qw422016.N().S(`
 
         type="text"
         class="validate"
         `)
-//line inputs.qtpl:146
+//line inputs.qtpl:147
 	if c.data.Name != "" {
-//line inputs.qtpl:146
+//line inputs.qtpl:147
 		qw422016.N().S(`
         name="`)
-//line inputs.qtpl:147
+//line inputs.qtpl:148
 		qw422016.E().S(c.data.Name)
-//line inputs.qtpl:147
+//line inputs.qtpl:148
 		qw422016.N().S(`"
         `)
-//line inputs.qtpl:148
+//line inputs.qtpl:149
 	}
-//line inputs.qtpl:148
+//line inputs.qtpl:149
 	qw422016.N().S(`
         value="`)
-//line inputs.qtpl:149
+//line inputs.qtpl:150
 	qw422016.E().S(c.data.Value)
-//line inputs.qtpl:149
+//line inputs.qtpl:150
 	qw422016.N().S(`"
         autocomplete="off"
     >
     <label for="`)
-//line inputs.qtpl:152
+//line inputs.qtpl:153
 	qw422016.E().S(id)
-//line inputs.qtpl:152
+//line inputs.qtpl:153
 	qw422016.N().S(`">`)
-//line inputs.qtpl:152
+//line inputs.qtpl:153
 	qw422016.E().S(c.label)
-//line inputs.qtpl:152
+//line inputs.qtpl:153
 	qw422016.N().S(`</label>
 
     <datalist id="`)
-//line inputs.qtpl:154
+//line inputs.qtpl:155
 	qw422016.E().S(datalistID)
-//line inputs.qtpl:154
+//line inputs.qtpl:155
 	qw422016.N().S(`">
         `)
-//line inputs.qtpl:155
+//line inputs.qtpl:156
 	for _, option := range c.data.Options {
-//line inputs.qtpl:155
+//line inputs.qtpl:156
 		qw422016.N().S(`
         <option value="`)
-//line inputs.qtpl:156
+//line inputs.qtpl:157
 		qw422016.E().S(option)
-//line inputs.qtpl:156
+//line inputs.qtpl:157
 		qw422016.N().S(`"></option>
         `)
-//line inputs.qtpl:157
+//line inputs.qtpl:158
 	}
-//line inputs.qtpl:157
+//line inputs.qtpl:158
 	qw422016.N().S(`
     </datalist>	
 </div>
 `)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 }
 
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 func writemakeStrDatalistInput(qq422016 qtio422016.Writer, c strDatalistInputConfig) {
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	streammakeStrDatalistInput(qw422016, c)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	qt422016.ReleaseWriter(qw422016)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 }
 
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 func makeStrDatalistInput(c strDatalistInputConfig) string {
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	qb422016 := qt422016.AcquireByteBuffer()
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	writemakeStrDatalistInput(qb422016, c)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	qs422016 := string(qb422016.B)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	qt422016.ReleaseByteBuffer(qb422016)
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 	return qs422016
-//line inputs.qtpl:160
+//line inputs.qtpl:161
 }
 
-//line inputs.qtpl:162
+//line inputs.qtpl:163
 func streammakeChipsInput(qw422016 *qt422016.Writer, c chipsInputConfig) {
-//line inputs.qtpl:162
+//line inputs.qtpl:163
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:163
+//line inputs.qtpl:164
 	chipsId := makeInputID(c.data.Name)
 
-//line inputs.qtpl:163
+//line inputs.qtpl:164
 	qw422016.N().S(`
 `)
-//line inputs.qtpl:164
+//line inputs.qtpl:165
 	inputId := makeInputID(c.data.Name) + "-input"
 
-//line inputs.qtpl:164
+//line inputs.qtpl:165
 	qw422016.N().S(`
 <div class="`)
-//line inputs.qtpl:165
+//line inputs.qtpl:166
 	qw422016.E().S(c.wraperClass)
-//line inputs.qtpl:165
+//line inputs.qtpl:166
 	qw422016.N().S(`">
     <div id="`)
-//line inputs.qtpl:166
+//line inputs.qtpl:167
 	qw422016.E().S(chipsId)
-//line inputs.qtpl:166
+//line inputs.qtpl:167
 	qw422016.N().S(`" class="chips"></div>
     <input id="`)
-//line inputs.qtpl:167
+//line inputs.qtpl:168
 	qw422016.E().S(inputId)
-//line inputs.qtpl:167
+//line inputs.qtpl:168
 	qw422016.N().S(`" type="hidden" name="tags" />
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var input = document.getElementById('`)
-//line inputs.qtpl:170
+//line inputs.qtpl:171
 	qw422016.E().J(inputId)
-//line inputs.qtpl:170
+//line inputs.qtpl:171
 	qw422016.N().S(`');
             var elem = document.getElementById('`)
-//line inputs.qtpl:171
+//line inputs.qtpl:172
 	qw422016.E().J(chipsId)
-//line inputs.qtpl:171
+//line inputs.qtpl:172
 	qw422016.N().S(`');
 
             var selectedValues = [
 `)
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 	for i, value := range c.data.Values {
-//line inputs.qtpl:174
+//line inputs.qtpl:175
 		qw422016.N().S(`                    '`)
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 		qw422016.E().J(value)
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 		qw422016.N().S(`'`)
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 		if i < len(c.data.Values)-1 {
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 			qw422016.N().S(`,`)
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 		}
-//line inputs.qtpl:175
+//line inputs.qtpl:176
 		qw422016.N().S(`
 `)
-//line inputs.qtpl:176
+//line inputs.qtpl:177
 	}
-//line inputs.qtpl:176
+//line inputs.qtpl:177
 	qw422016.N().S(`            ];
             var allValues = [
 `)
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 	for i, value := range c.data.Autocomplete {
-//line inputs.qtpl:179
+//line inputs.qtpl:180
 		qw422016.N().S(`                    '`)
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 		qw422016.E().J(value)
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 		qw422016.N().S(`'`)
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 		if i < len(c.data.Autocomplete)-1 {
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 			qw422016.N().S(`,`)
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 		}
-//line inputs.qtpl:180
+//line inputs.qtpl:181
 		qw422016.N().S(`
 `)
-//line inputs.qtpl:181
+//line inputs.qtpl:182
 	}
-//line inputs.qtpl:181
+//line inputs.qtpl:182
 	qw422016.N().S(`            ];
 
             function updateTagsInput() {
@@ -689,31 +690,31 @@ func streammakeChipsInput(qw422016 *qt422016.Writer, c chipsInputConfig) {
     </script>
 </div>
 `)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 }
 
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 func writemakeChipsInput(qq422016 qtio422016.Writer, c chipsInputConfig) {
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	streammakeChipsInput(qw422016, c)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	qt422016.ReleaseWriter(qw422016)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 }
 
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 func makeChipsInput(c chipsInputConfig) string {
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	qb422016 := qt422016.AcquireByteBuffer()
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	writemakeChipsInput(qb422016, c)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	qs422016 := string(qb422016.B)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	qt422016.ReleaseByteBuffer(qb422016)
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 	return qs422016
-//line inputs.qtpl:208
+//line inputs.qtpl:209
 }
