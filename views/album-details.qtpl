@@ -61,376 +61,387 @@ type AlbumDetailsPage struct {
         .cover-filename {
             word-break: break-all;
         }
+        .page-footer {
+            padding-bottom: 1px;
+            position: sticky;
+            bottom: 0;
+        }
     </style>
-    <form id="draft-album-detail-form" class="container" method="POST" enctype="multipart/form-data">
-        {% if p.Error != nil %}
-        <div class="card-panel red white-text" id="error">
-            {%s p.Error.Error() %}
-        </div>
-        {% endif %}
-        <div class="card">
-            <div class="row">
-                {%=
-                    makeSelect(selectConfig{
-                        wraperClass: "col s6",
-                        label: "State",
-                        required: true,
+    <form id="draft-album-detail-form" method="POST" enctype="multipart/form-data">
+        <div class="container">
+            {% if p.Error != nil %}
+            <div class="card-panel red white-text" id="error">
+                {%s p.Error.Error() %}
+            </div>
+            {% endif %}
+            <div class="card">
+                <div class="row">
+                    {%=
+                        makeSelect(selectConfig{
+                            wraperClass: "col s6",
+                            label: "State",
+                            required: true,
 
-                        data: p.Album.State(),
-                    })
-                %}
+                            data: p.Album.State(),
+                        })
+                    %}
 
-                {%=
-                    makeStrDatalistInput(strDatalistInputConfig{
-                        wraperClass: "col s6",
-                        label: "Artist",
-                        required: true,
+                    {%=
+                        makeStrDatalistInput(strDatalistInputConfig{
+                            wraperClass: "col s6",
+                            label: "Artist",
+                            required: true,
 
-                        data: p.Album.Artist(),
-                    })
-                %}
+                            data: p.Album.Artist(),
+                        })
+                    %}
 
-                {%=
-                    makeStrInput(strInputConfig{
-                        wraperClass: "col s6",
-                        label: "Title",
-                        required: true,
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s6",
+                            label: "Title",
+                            required: true,
 
-                        data: p.Album.Title(),
-                        helperText: p.Album.TitleSuggestion(),
-                    })
-                %}
+                            data: p.Album.Title(),
+                            helperText: p.Album.TitleSuggestion(),
+                        })
+                    %}
 
-                {%=
-                    makeStrInput(strInputConfig{
-                        wraperClass: "col s6",
-                        disabled: true,
-                        label: "Path",
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s6",
+                            disabled: true,
+                            label: "Path",
 
-                        data: StrInputData{
-                            Value: p.Album.Path(),
-                        },
-                    })
-                %}
+                            data: StrInputData{
+                                Value: p.Album.Path(),
+                            },
+                        })
+                    %}
 
-                {%=
-                    makeIntInput(intInputConfig{
-                        wraperClass: "col s6",
-                        label: "Year",
-                        required: true,
+                    {%=
+                        makeIntInput(intInputConfig{
+                            wraperClass: "col s6",
+                            label: "Year",
+                            required: true,
 
-                        data: p.Album.Year(),
-                        min: takeIntPtr(1900),
-                    })
-                %}
+                            data: p.Album.Year(),
+                            min: takeIntPtr(1900),
+                        })
+                    %}
 
-                {%=
-                    makeIntInput(intInputConfig{
-                        wraperClass: "col s6",
-                        label: "Release year",
+                    {%=
+                        makeIntInput(intInputConfig{
+                            wraperClass: "col s6",
+                            label: "Release year",
 
-                        data: p.Album.ReleaseYear(),
-                        min: takeIntPtr(1900),
-                    })
-                %}
+                            data: p.Album.ReleaseYear(),
+                            min: takeIntPtr(1900),
+                        })
+                    %}
 
-                {%=
-                    makeSelect(selectConfig{
-                        wraperClass: "col s6",
-                        label: "Type",
-                        required: true,
+                    {%=
+                        makeSelect(selectConfig{
+                            wraperClass: "col s6",
+                            label: "Type",
+                            required: true,
 
-                        data: p.Album.Type(),
-                    })
-                %}
+                            data: p.Album.Type(),
+                        })
+                    %}
 
-                {%=
-                    makeSelect(selectConfig{
-                        wraperClass: "col s6",
-                        label: "Download source",
-                        required: true,
+                    {%=
+                        makeSelect(selectConfig{
+                            wraperClass: "col s6",
+                            label: "Download source",
+                            required: true,
 
-                        data: p.Album.DownloadSource(),
-                    })
-                %}
+                            data: p.Album.DownloadSource(),
+                        })
+                    %}
 
-                {%=
-                    makeStrInput(strInputConfig{
-                        wraperClass: "col s6",
-                        label: "Source url",
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s6",
+                            label: "Source url",
 
-                        data: p.Album.SourceURL(),
-                    })
-                %}
+                            data: p.Album.SourceURL(),
+                        })
+                    %}
+
+                    <script>
+                        const sourceUrlInput = document.getElementById({%q= p.Album.SourceURL().Name %})
+                        const downloadSourceSelect = document.getElementById({%q= p.Album.DownloadSource().Name %})
+                        sourceUrlInput.onpaste = function(event) {
+                            setTimeout(function() {
+                                const pastedValue = sourceUrlInput.value
+                                if (pastedValue.startsWith('https://redacted.ch/')) {
+                                    downloadSourceSelect.value = 'REDACTED_CH'
+                                    M.FormSelect.init(downloadSourceSelect)
+                                }
+                            }, 0);
+                        }
+                    </script>
+
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s6",
+                            label: "Barcode",
+
+                            data: p.Album.Barcode(),
+                        })
+                    %}
+
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s6",
+                            label: "Comment",
+
+                            data: p.Album.Comment(),
+                        })
+                    %}
+                </div>
+            </div>
+
+            <div class="card" id="release">
+                {% for _, r := range p.ReleaseInfo %}
+                <div class="label-row row">
+                    {%=
+                        makeStrDatalistInput(strDatalistInputConfig{
+                            wraperClass: "col s5",
+                            label: "Label",
+
+                            data: r.Label(),
+                        })
+                    %}
+
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s5",
+                            label: "Catalog number",
+
+                            data: r.CatalogNum(),
+                        })
+                    %}
+
+                    {% code deleteCtl := r.Delete() %}
+                    {% if deleteCtl != nil %}
+                    <div class="col s2">
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="{%s (*deleteCtl).Name %}"
+                                value="{%s (*deleteCtl).Value %}"
+                            />
+                            <span>Delete</span>
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
 
                 <script>
-                    const sourceUrlInput = document.getElementById({%q= p.Album.SourceURL().Name %})
-                    const downloadSourceSelect = document.getElementById({%q= p.Album.DownloadSource().Name %})
-                    sourceUrlInput.onpaste = function(event) {
-                        setTimeout(function() {
-                            const pastedValue = sourceUrlInput.value
-                            if (pastedValue.startsWith('https://redacted.ch/')) {
-                                downloadSourceSelect.value = 'REDACTED_CH'
-                                M.FormSelect.init(downloadSourceSelect)
-                            }
-                        }, 0);
+                    function deleteLabel(e) {
+                        e.target.closest('.label-row').remove()
                     }
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const deleteButtons = document.querySelectorAll('#release .delete-button')
+                        for (const button of deleteButtons) {
+                            button.onclick = deleteLabel
+                        }
+                    });
                 </script>
-
-                {%=
-                    makeStrInput(strInputConfig{
-                        wraperClass: "col s6",
-                        label: "Barcode",
-
-                        data: p.Album.Barcode(),
-                    })
-                %}
-
-                {%=
-                    makeStrInput(strInputConfig{
-                        wraperClass: "col s6",
-                        label: "Comment",
-
-                        data: p.Album.Comment(),
-                    })
-                %}
             </div>
-        </div>
 
-        <div class="card" id="release">
-            {% for _, r := range p.ReleaseInfo %}
-            <div class="label-row row">
-                {%=
-                    makeStrDatalistInput(strDatalistInputConfig{
-                        wraperClass: "col s5",
-                        label: "Label",
-
-                        data: r.Label(),
-                    })
-                %}
-
-                {%=
-                    makeStrInput(strInputConfig{
-                        wraperClass: "col s5",
-                        label: "Catalog number",
-
-                        data: r.CatalogNum(),
-                    })
-                %}
-
-                {% code deleteCtl := r.Delete() %}
-                {% if deleteCtl != nil %}
-                <div class="col s2">
-                    <label>
-                        <input
-                            type="checkbox"
-                            name="{%s (*deleteCtl).Name %}"
-                            value="{%s (*deleteCtl).Value %}"
-                        />
-                        <span>Delete</span>
-                    </label>
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
-
-            <script>
-                function deleteLabel(e) {
-                    e.target.closest('.label-row').remove()
+            <style>
+                .tracks-table td,
+                .tracks-table th {
+                    vertical-align: top;
                 }
+            </style>
 
-                document.addEventListener('DOMContentLoaded', function() {
-                    const deleteButtons = document.querySelectorAll('#release .delete-button')
-                    for (const button of deleteButtons) {
-                        button.onclick = deleteLabel
-                    }
-                });
-            </script>
-        </div>
+            <div class="card">
+                <table class="tracks-table">
+                    <!--thead>
+                        <tr>
+                            <th>Path</th>
+                            <th>Title</th>
+                            <th></th>
+                        </tr>
+                    </thead-->
 
-        <style>
-            .tracks-table td,
-            .tracks-table th {
-                vertical-align: top;
-            }
-        </style>
+                    <tbody>
+                        {% for _, t := range p.Tracks %}
+                        <tr>
+                            <th>
+                                {%=
+                                    makeStrInput(strInputConfig{
+                                        label: "Path",
+                                        disabled: true,
 
-        <div class="card">
-            <table class="tracks-table">
-                <!--thead>
-                    <tr>
-                        <th>Path</th>
-                        <th>Title</th>
-                        <th></th>
-                    </tr>
-                </thead-->
+                                        data: StrInputData{
+                                            Value: t.Path(),
+                                        },
+                                    })
+                                %}
+                            </th>
+                            <td>
+                                {%=
+                                    makeStrInput(strInputConfig{
+                                        label: "Title",
+                                        required: true,
 
-                <tbody>
-                    {% for _, t := range p.Tracks %}
-                    <tr>
-                        <th>
-                            {%=
-                                makeStrInput(strInputConfig{
-                                    label: "Path",
-                                    disabled: true,
+                                        data: t.Title(),
+                                        helperText: t.TitleSuggestion(),
+                                    })
+                                %}
+                            </td>
+                            <td>
+                                {%=
+                                    makeIntInput(intInputConfig{
+                                        label: "Track number",
+                                        required: true,
 
-                                    data: StrInputData{
-                                        Value: t.Path(),
-                                    },
-                                })
-                            %}
-                        </th>
-                        <td>
-                            {%=
-                                makeStrInput(strInputConfig{
-                                    label: "Title",
-                                    required: true,
+                                        min: takeIntPtr(0),
+                                        data: t.TrackNum(),
+                                    })
+                                %}
+                            </td>
+                            <td>
+                                {%=
+                                    makeIntInput(intInputConfig{
+                                        label: "Disc number",
+                                        required: true,
 
-                                    data: t.Title(),
-                                    helperText: t.TitleSuggestion(),
-                                })
-                            %}
-                        </td>
-                        <td>
-                            {%=
-                                makeIntInput(intInputConfig{
-                                    label: "Track number",
-                                    required: true,
+                                        min: takeIntPtr(1),
+                                        data: t.Disc(),
+                                    })
+                                %}
+                            </td>
+                            <td>
+                                {%=
+                                    makeStrInput(strInputConfig{
+                                        label: "TrackArtist",
 
-                                    min: takeIntPtr(0),
-                                    data: t.TrackNum(),
-                                })
-                            %}
-                        </td>
-                        <td>
-                            {%=
-                                makeIntInput(intInputConfig{
-                                    label: "Disc number",
-                                    required: true,
+                                        data: t.TrackArtist(),
+                                    })
+                                %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                                    min: takeIntPtr(1),
-                                    data: t.Disc(),
-                                })
-                            %}
-                        </td>
-                        <td>
-                            {%=
-                                makeStrInput(strInputConfig{
-                                    label: "TrackArtist",
+            {% if len(p.Covers) != 0 %}
+            <div class="card">
+                <div class="row">
+                {% for i, c := range p.Covers %}
+                    {% if i % 2 == 0 %}
+                    <div class="clearfix"></div>
+                    {% endif %}
+                    <div class ="col s6">
+                        <div class="row">
+                            <div class="col s6">
+                                <img class="materialboxed responsive-img" src="{%s c.URL() %}" />
+                            </div>
 
-                                    data: t.TrackArtist(),
-                                })
-                            %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <div class="col s6">
+                                <div class="row">
+                                    <div class="col s12">
+                                        <h4 class="cover-filename">{%s c.Filename() %}</h4>
+                                    </div>
 
-        <div class="card">
-            <div class="row">
-            {% for i, c := range p.Covers %}
-                {% if i % 2 == 0 %}
-                <div class="clearfix"></div>
-                {% endif %}
-                <div class ="col s6">
-                    <div class="row">
-                        <div class="col s6">
-                            <img class="materialboxed responsive-img" src="{%s c.URL() %}" />
-                        </div>
+                                    <div class="col s6">
+                                        {%=
+                                            makeSelect(selectConfig{
+                                                label: "Cover type",
 
-                        <div class="col s6">
-                            <div class="row">
-                                <div class="col s12">
-                                    <h4 class="cover-filename">{%s c.Filename() %}</h4>
-                                </div>
+                                                data: c.Type(),
+                                            })
+                                        %}
+                                    </div>
 
-                                <div class="col s6">
-                                    {%=
-                                        makeSelect(selectConfig{
-                                            label: "Cover type",
+                                    <div class="col s6">
+                                        {%=
+                                            makeIntInput(intInputConfig{
+                                                label: "Sort",
+                                                required: true,
+                                                min: takeIntPtr(1),
 
-                                            data: c.Type(),
-                                        })
-                                    %}
-                                </div>
+                                                data: c.Sort(),
+                                            })
+                                        %}
+                                    </div>
 
-                                <div class="col s6">
-                                    {%=
-                                        makeIntInput(intInputConfig{
-                                            label: "Sort",
-                                            required: true,
-                                            min: takeIntPtr(1),
-
-                                            data: c.Sort(),
-                                        })
-                                    %}
-                                </div>
-
-                                <div class="col s12">
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            name="{%s c.Delete().Name %}"
-                                            value="{%s c.Delete().Value %}"
-                                        />
-                                        <span>Delete</span>
-                                    </label>
+                                    <div class="col s12">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                name="{%s c.Delete().Name %}"
+                                                value="{%s c.Delete().Value %}"
+                                            />
+                                            <span>Delete</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                {% endfor %}
                 </div>
-            {% endfor %}
             </div>
-        </div>
+            {% endif %}
 
-        <div class="card" id="covers">
-            <div class="row">
-                <div class="col s12">
-                    <div class="file-field input-field">
-                        <div class="btn">
-                            <span>Upload files</span>
-                            <input
-                                type="file"
-                                name="covers"
-                                accept="image/jpeg, image/png"
-                                multiple
-                            >
-                        </div>
-                        <div class="file-path-wrapper">
-                            <input class="file-path validate" type="text">
+            <div class="card" id="covers">
+                <div class="row">
+                    <div class="col s12">
+                        <div class="file-field input-field">
+                            <div class="btn">
+                                <span>Upload files</span>
+                                <input
+                                    type="file"
+                                    name="covers"
+                                    accept="image/jpeg, image/png"
+                                    multiple
+                                >
+                            </div>
+                            <div class="file-path-wrapper">
+                                <input class="file-path validate" type="text">
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <footer class="row" id="footer">
-            <div class="col s6">
-            {% if p.Album.IsDraft() %}
-                <button
-                    class="btn waves-effect waves-light red"
-                    type="submit"
-                    name="delete"
-                    formnovalidate
-                >
-                    Delete
-                    <i class="material-delete right"></i>
-                </button>
-            {% endif %}
+        <footer class="page-footer" id="footer">
+            <div class="container row">
+                <div class="col s6">
+                {% if p.Album.IsDraft() %}
+                    <button
+                        class="btn waves-effect waves-light red"
+                        type="submit"
+                        name="delete"
+                        formnovalidate
+                    >
+                        Delete
+                        <i class="material-delete right"></i>
+                    </button>
+                {% endif %}
 
-            {% if p.Album.MergeURL() != "" %}
-                <a href="{%s p.Album.MergeURL() %}" class="waves-effect waves-light btn">Merge</a>
-            {% endif %}
-            </div>
+                {% if p.Album.MergeURL() != "" %}
+                    <a href="{%s p.Album.MergeURL() %}" class="waves-effect waves-light btn">Merge</a>
+                {% endif %}
+                </div>
 
-            <div class="col s6 right-align">
-                <button class="btn waves-effect waves-light" type="submit">
-                    Save
-                    <i class="material-icons right"></i>
-                </button>
+                <div class="col s6 right-align">
+                    <button class="btn waves-effect waves-light" type="submit">
+                        Save
+                        <i class="material-icons right"></i>
+                    </button>
+                </div>
             </div>
         </footer>
     </form>
