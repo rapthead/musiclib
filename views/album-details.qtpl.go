@@ -151,7 +151,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 	if p.Album.SourceURL() != "" {
 //line album-details.qtpl:85
 		qw422016.N().S(`
-                    <a class="col s3" href="`)
+                    <a target="_blank" class="col s3" href="`)
 //line album-details.qtpl:86
 		qw422016.E().S(p.Album.SourceURL())
 //line album-details.qtpl:86
@@ -166,7 +166,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 	if p.Album.FindSeedingURL() != "" {
 //line album-details.qtpl:88
 		qw422016.N().S(`
-                    <a class="col s3" href="`)
+                    <a target="_blank" class="col s3" href="`)
 //line album-details.qtpl:89
 		qw422016.E().S(p.Album.FindSeedingURL())
 //line album-details.qtpl:89
@@ -181,7 +181,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 	if p.Album.FindDiscogsURL() != "" {
 //line album-details.qtpl:91
 		qw422016.N().S(`
-                    <a class="col s3" href="`)
+                    <a target="_blank" class="col s3" href="`)
 //line album-details.qtpl:92
 		qw422016.E().S(p.Album.FindDiscogsURL())
 //line album-details.qtpl:92
@@ -196,7 +196,7 @@ func (p *AlbumDetailsPage) StreamBody(qw422016 *qt422016.Writer) {
 	if p.Album.FindMusicBrainzURL() != "" {
 //line album-details.qtpl:94
 		qw422016.N().S(`
-                    <a class="col s3" href="`)
+                    <a target="_blank" class="col s3" href="`)
 //line album-details.qtpl:95
 		qw422016.E().S(p.Album.FindMusicBrainzURL())
 //line album-details.qtpl:95
