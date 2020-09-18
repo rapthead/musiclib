@@ -13,6 +13,7 @@ type ConfigData struct {
 	Debug           bool
 	LogLevel        logrus.Level
 	PostgresConnStr string
+	RedactedUserID  string
 
 	RedisOpts *redis.Options
 
@@ -27,6 +28,7 @@ func init() {
 		Debug:           true,
 		CoversPath:      mustGetEnv("COVERS_PATH"),
 		PostgresConnStr: mustGetEnv("POSTGRES_CONN_STR"),
+		RedactedUserID:  getEnv("REDACTED_USER_ID"),
 
 		MusiclibRoot:      mustGetEnv("LIB_ROOT"),
 		MusiclibMountPath: mustGetEnv("MOUNT_PATH"),

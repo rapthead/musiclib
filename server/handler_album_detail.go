@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/gofrs/uuid"
 	"github.com/guregu/null/zero"
+	"github.com/rapthead/musiclib/config"
 	"github.com/rapthead/musiclib/deps"
 	"github.com/rapthead/musiclib/models"
 	"github.com/rapthead/musiclib/usecases"
@@ -15,8 +17,9 @@ import (
 
 //  album to view data mapper
 type AlbumForm struct {
-	Model      *models.Album
-	AllArtists []models.Artist
+	Model          *models.Album
+	ArtistsOptions []string
+	ArtistName     string
 }
 
 func (r AlbumForm) MergeURL() string {
@@ -31,7 +34,7 @@ func (r AlbumForm) Path() string {
 	return r.Model.Path
 }
 
-func (r AlbumForm) Title() views.StrInputData {
+func (r AlbumForm) TitleInput() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("title"),
 		Value: r.Model.Title,
@@ -42,60 +45,50 @@ func (r AlbumForm) TitleSuggestion() string {
 	return models.TitleSuggestion(r.Model.Title)
 }
 
-func (r AlbumForm) Artist() views.StrDatalistInputData {
-	options := make([]string, len(r.AllArtists)+1, len(r.AllArtists)+1)
-	value := r.Model.DraftArtist
-
-	for i, artist := range r.AllArtists {
-		options[i+1] = artist.Name
-		if r.Model.ArtistID.Valid && artist.ID == r.Model.ArtistID.UUID {
-			value = artist.Name
-		}
-	}
-
+func (r AlbumForm) ArtistInput() views.StrDatalistInputData {
 	return views.StrDatalistInputData{
 		Name:    r.fieldName("artist"),
-		Value:   value,
-		Options: options,
+		Value:   r.ArtistName,
+		Options: r.ArtistsOptions,
 	}
 }
 
-func (r AlbumForm) SourceURL() views.StrInputData {
+func (r AlbumForm) SourceURLInput() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("source_url"),
 		Value: r.Model.SourceURL,
 	}
 }
 
-func (r AlbumForm) Barcode() views.StrInputData {
+func (r AlbumForm) BarcodeInput() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("barcode"),
 		Value: r.Model.Barcode,
 	}
 }
 
-func (r AlbumForm) Comment() views.StrInputData {
+func (r AlbumForm) CommentInput() views.StrInputData {
 	return views.StrInputData{
 		Name:  r.fieldName("comment"),
 		Value: r.Model.Comment,
 	}
 }
 
-func (r AlbumForm) Year() views.IntInputData {
+func (r AlbumForm) YearInput() views.IntInputData {
 	return views.IntInputData{
 		Name:  r.fieldName("year"),
 		Value: r.Model.Year.Ptr(),
 	}
 }
 
-func (r AlbumForm) ReleaseYear() views.IntInputData {
+func (r AlbumForm) ReleaseYearInput() views.IntInputData {
 	return views.IntInputData{
 		Name:  r.fieldName("release_year"),
 		Value: r.Model.ReleaseYear.Ptr(),
 	}
 }
 
-func (r AlbumForm) State() views.SelectInputData {
+func (r AlbumForm) StateInput() views.SelectInputData {
 	return r.Model.State.SelectInput(r.fieldName("state"))
 }
 
@@ -103,12 +96,42 @@ func (r AlbumForm) IsDraft() bool {
 	return r.Model.State == models.AlbumStateEnumDraft
 }
 
-func (r AlbumForm) Type() views.SelectInputData {
+func (r AlbumForm) TypeInput() views.SelectInputData {
 	return r.Model.Type.SelectInput(r.fieldName("type"))
 }
 
-func (r AlbumForm) DownloadSource() views.SelectInputData {
+func (r AlbumForm) DownloadSourceInput() views.SelectInputData {
 	return r.Model.DownloadSource.SelectInput(r.fieldName("download_source"))
+}
+
+// urls
+func (r AlbumForm) SourceURL() string {
+	return r.Model.SourceURL
+}
+
+func (r AlbumForm) FindSeedingURL() string {
+	if config.Config.RedactedUserID == "" {
+		return ""
+	}
+	return fmt.Sprintf(
+		"https://redacted.ch/torrents.php?type=seeding&userid=%s&search=%s",
+		config.Config.RedactedUserID,
+		url.QueryEscape(r.ArtistName+" "+r.Model.Title),
+	)
+}
+
+func (r AlbumForm) FindDiscogsURL() string {
+	return fmt.Sprintf(
+		"https://www.discogs.com/search/?q=%s&type=release",
+		url.QueryEscape(r.ArtistName+" "+r.Model.Title),
+	)
+}
+
+func (r AlbumForm) FindMusicBrainzURL() string {
+	return fmt.Sprintf(
+		"https://musicbrainz.org/taglookup?tag-lookup.artist=%s&tag-lookup.release=%s",
+		url.QueryEscape(r.ArtistName), url.QueryEscape(r.Model.Title),
+	)
 }
 
 func (r AlbumForm) Merge(v values) error {
@@ -150,7 +173,17 @@ func (r AlbumForm) Merge(v values) error {
 }
 
 func newAlbumData(album *models.Album, allArtists []models.Artist) AlbumForm {
-	return AlbumForm{album, allArtists}
+	artistOptions := make([]string, len(allArtists)+1, len(allArtists)+1)
+	artistName := album.DraftArtist
+
+	for i, artist := range allArtists {
+		artistOptions[i+1] = artist.Name
+		if album.ArtistID.Valid && artist.ID == album.ArtistID.UUID {
+			artistName = artist.Name
+		}
+	}
+
+	return AlbumForm{album, artistOptions, artistName}
 }
 
 //  track to view data mapper

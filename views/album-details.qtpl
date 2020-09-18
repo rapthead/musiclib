@@ -3,20 +3,25 @@ type AlbumData interface {
     MergeURL()          string
 
     IsDraft()           bool
-    State()             SelectInputData
+    StateInput()        SelectInputData
 
-    Title()             StrInputData
+    TitleInput()        StrInputData
     TitleSuggestion()   string
 
     Path()              string
-    Artist()            StrDatalistInputData
-    Type()              SelectInputData
-    DownloadSource()    SelectInputData
-    SourceURL()         StrInputData
-    Barcode()           StrInputData
-    Comment()           StrInputData
-    Year()              IntInputData
-    ReleaseYear()       IntInputData
+    ArtistInput()            StrDatalistInputData
+    TypeInput()              SelectInputData
+    DownloadSourceInput()    SelectInputData
+    SourceURLInput()         StrInputData
+    BarcodeInput()           StrInputData
+    CommentInput()           StrInputData
+    YearInput()              IntInputData
+    ReleaseYearInput()       IntInputData
+
+    SourceURL()             string
+    FindSeedingURL()        string
+    FindDiscogsURL()        string
+    FindMusicBrainzURL()    string
 }
 
 type TrackData interface {
@@ -74,6 +79,24 @@ type AlbumDetailsPage struct {
                 {%s p.Error.Error() %}
             </div>
             {% endif %}
+
+            <div class="card">
+                <div class="row">
+                {% if p.Album.SourceURL() != "" %}
+                    <a class="col s3" href="{%s p.Album.SourceURL() %}">Source</a>
+                {% endif %}
+                {% if p.Album.FindSeedingURL() != "" %}
+                    <a class="col s3" href="{%s p.Album.FindSeedingURL() %}">Find Seeding</a>
+                {% endif %}
+                {% if p.Album.FindDiscogsURL() != "" %}
+                    <a class="col s3" href="{%s p.Album.FindDiscogsURL() %}">Find Discogs</a>
+                {% endif %}
+                {% if p.Album.FindMusicBrainzURL() != "" %}
+                    <a class="col s3" href="{%s p.Album.FindMusicBrainzURL() %}">Find MusicBrainz</a>
+                {% endif %}
+                </div>
+            </div>
+
             <div class="card">
                 <div class="row">
                     {%=
@@ -82,7 +105,7 @@ type AlbumDetailsPage struct {
                             label: "State",
                             required: true,
 
-                            data: p.Album.State(),
+                            data: p.Album.StateInput(),
                         })
                     %}
 
@@ -92,7 +115,7 @@ type AlbumDetailsPage struct {
                             label: "Artist",
                             required: true,
 
-                            data: p.Album.Artist(),
+                            data: p.Album.ArtistInput(),
                         })
                     %}
 
@@ -102,7 +125,7 @@ type AlbumDetailsPage struct {
                             label: "Title",
                             required: true,
 
-                            data: p.Album.Title(),
+                            data: p.Album.TitleInput(),
                             helperText: p.Album.TitleSuggestion(),
                         })
                     %}
@@ -125,7 +148,7 @@ type AlbumDetailsPage struct {
                             label: "Year",
                             required: true,
 
-                            data: p.Album.Year(),
+                            data: p.Album.YearInput(),
                             min: takeIntPtr(1900),
                         })
                     %}
@@ -135,7 +158,7 @@ type AlbumDetailsPage struct {
                             wraperClass: "col s6",
                             label: "Release year",
 
-                            data: p.Album.ReleaseYear(),
+                            data: p.Album.ReleaseYearInput(),
                             min: takeIntPtr(1900),
                         })
                     %}
@@ -146,7 +169,7 @@ type AlbumDetailsPage struct {
                             label: "Type",
                             required: true,
 
-                            data: p.Album.Type(),
+                            data: p.Album.TypeInput(),
                         })
                     %}
 
@@ -156,7 +179,7 @@ type AlbumDetailsPage struct {
                             label: "Download source",
                             required: true,
 
-                            data: p.Album.DownloadSource(),
+                            data: p.Album.DownloadSourceInput(),
                         })
                     %}
 
@@ -165,13 +188,13 @@ type AlbumDetailsPage struct {
                             wraperClass: "col s6",
                             label: "Source url",
 
-                            data: p.Album.SourceURL(),
+                            data: p.Album.SourceURLInput(),
                         })
                     %}
 
                     <script>
-                        const sourceUrlInput = document.getElementById({%q= p.Album.SourceURL().Name %})
-                        const downloadSourceSelect = document.getElementById({%q= p.Album.DownloadSource().Name %})
+                        const sourceUrlInput = document.getElementById({%q= p.Album.SourceURLInput().Name %})
+                        const downloadSourceSelect = document.getElementById({%q= p.Album.DownloadSourceInput().Name %})
                         sourceUrlInput.onpaste = function(event) {
                             setTimeout(function() {
                                 const pastedValue = sourceUrlInput.value
@@ -188,7 +211,7 @@ type AlbumDetailsPage struct {
                             wraperClass: "col s6",
                             label: "Barcode",
 
-                            data: p.Album.Barcode(),
+                            data: p.Album.BarcodeInput(),
                         })
                     %}
 
@@ -197,7 +220,7 @@ type AlbumDetailsPage struct {
                             wraperClass: "col s6",
                             label: "Comment",
 
-                            data: p.Album.Comment(),
+                            data: p.Album.CommentInput(),
                         })
                     %}
                 </div>
