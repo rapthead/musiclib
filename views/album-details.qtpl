@@ -83,16 +83,16 @@ type AlbumDetailsPage struct {
             <div class="card">
                 <div class="row">
                 {% if p.Album.SourceURL() != "" %}
-                    <a class="col s3" href="{%s p.Album.SourceURL() %}">Source</a>
+                    <a target="_blank" class="col s3" href="{%s p.Album.SourceURL() %}">Source</a>
                 {% endif %}
                 {% if p.Album.FindSeedingURL() != "" %}
-                    <a class="col s3" href="{%s p.Album.FindSeedingURL() %}">Find Seeding</a>
+                    <a target="_blank" class="col s3" href="{%s p.Album.FindSeedingURL() %}">Find Seeding</a>
                 {% endif %}
                 {% if p.Album.FindDiscogsURL() != "" %}
-                    <a class="col s3" href="{%s p.Album.FindDiscogsURL() %}">Find Discogs</a>
+                    <a target="_blank" class="col s3" href="{%s p.Album.FindDiscogsURL() %}">Find Discogs</a>
                 {% endif %}
                 {% if p.Album.FindMusicBrainzURL() != "" %}
-                    <a class="col s3" href="{%s p.Album.FindMusicBrainzURL() %}">Find MusicBrainz</a>
+                    <a target="_blank" class="col s3" href="{%s p.Album.FindMusicBrainzURL() %}">Find MusicBrainz</a>
                 {% endif %}
                 </div>
             </div>
