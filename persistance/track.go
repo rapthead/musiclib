@@ -14,7 +14,7 @@ func (p *Queries) GetTracksByAlbumID(ctx context.Context, id uuid.UUID) ([]model
 	err := p.db.SelectContext(ctx, &tracks, `
         SELECT * FROM track
         WHERE album_id = $1
-        ORDER BY path ASC
+        ORDER BY disc ASC, track_num ASC, path ASC;
     `, id)
 	return tracks, err
 }
@@ -100,7 +100,7 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
         JOIN artist ON album.artist_id = artist.id
         JOIN track ON track.album_id = album.id
         WHERE album.state = 'enabled'
-        ORDER BY artist.name ASC, year ASC, track_number ASC;
+        ORDER BY artist.name ASC, year ASC, track_disc ASC, track_number ASC;
     `)
 	if err != nil {
 		return nil, fmt.Errorf("meta featching error: %w", err)
