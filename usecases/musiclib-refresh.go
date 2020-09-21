@@ -56,14 +56,14 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 		for i, meta := range allMetadata {
 			fusePathDirname := fmt.Sprintf(
 				"%s–%d–%s",
-				meta.AlbumArtistName,
-				meta.Year,
-				meta.AlbumTitle,
+				meta.ALBUMARTIST,
+				meta.DATE,
+				meta.ALBUM,
 			)
 			fusePathBaseName := fmt.Sprintf(
 				"%02d-%s.flac",
-				meta.TrackNumber,
-				meta.TrackTitle,
+				meta.TRACKNUMBER,
+				meta.TITLE,
 			)
 
 			replacer := strings.NewReplacer(
@@ -79,35 +79,37 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				",", "_",
 			)
 			fusePath := replacer.Replace(fusePathDirname) + "/"
-			if meta.DiscTotal != 1 {
+			if meta.DISCTOTAL != 1 {
 				fusePath = fusePath + fmt.Sprintf(
 					"cd%d/",
-					meta.TrackDisc,
+					meta.DISCNUMBER,
 				)
 			}
 			fusePath = fusePath + replacer.Replace(fusePathBaseName)
 
-			artistTag := meta.AlbumArtistName
-			if meta.TrackArtistName != "" {
-				artistTag = meta.TrackArtistName
-			}
-
 			vorbisComments := [][2]string{
-				{"ALBUMARTIST", meta.AlbumArtistName},
-				{"ARTIST", artistTag},
-				{"DATE", strconv.Itoa(int(meta.Year))},
-				{"ALBUM", meta.AlbumTitle},
-				{"TITLE", meta.TrackTitle},
-				{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TrackNumber)},
-				{"DISCNUMBER", fmt.Sprintf("%02d", meta.TrackDisc)},
-				{"DISCTOTAL", fmt.Sprintf("%d", meta.DiscTotal)},
+				{"ALBUMARTIST", meta.ALBUMARTIST},
+				{"ARTIST", meta.ARTIST},
+				{"DATE", strconv.Itoa(int(meta.DATE))},
+				{"ORIGINALDATE", strconv.Itoa(int(meta.ORIGINALDATE))},
+				{"ALBUM", meta.ALBUM},
+				{"TITLE", meta.TITLE},
+				{"RELEASETYPE", string(meta.RELEASETYPE)},
+
+				{"DISCNUMBER", fmt.Sprintf("%02d", meta.DISCNUMBER)},
+				{"DISCTOTAL", fmt.Sprintf("%d", meta.DISCTOTAL)},
+
+				{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TRACKNUMBER)},
+				{"TRACKTOTAL", fmt.Sprintf("%02d", meta.TRACKTOTAL)},
 
 				{"REPLAYGAIN_REFERENCE_LOUDNESS", "89.0 dB"},
-				{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.AlbumRgGain)},
-				{"REPLAYGAIN_ALBUM_PEAK", fmt.Sprintf("%.8f", meta.AlbumRgPeak)},
+				{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.REPLAYGAIN_ALBUM_GAIN)},
+				{"REPLAYGAIN_ALBUM_PEAK", fmt.Sprintf("%.8f", meta.REPLAYGAIN_ALBUM_PEAK)},
 
-				{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", meta.TrackRgGain)},
-				{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", meta.TrackRgPeak)},
+				{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", meta.REPLAYGAIN_TRACK_GAIN)},
+				{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", meta.REPLAYGAIN_TRACK_PEAK)},
+
+				{"ORIGINALFILENAME", meta.ORIGINALFILENAME},
 
 				// CATALOGNUMBER=REBL021
 				// DATE=2017
@@ -118,7 +120,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 				// TRACKTOTAL=8
 			}
 			fuseEntities[i] = sync.FuseEntity{
-				OriginPath:     meta.Path,
+				OriginPath:     meta.ORIGINALFILENAME,
 				FusePath:       fusePath,
 				VorbisComments: vorbisComments,
 			}

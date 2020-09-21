@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/guregu/null"
 	"github.com/guregu/null/zero"
+	"github.com/lib/pq"
 )
 
 type Artist struct {
@@ -69,20 +70,26 @@ type Cover struct {
 }
 
 type Metadata struct {
-	Path            string `db:"path"`
-	AlbumArtistName string `db:"album_artist_name"`
-	AlbumTitle      string `db:"album_title"`
-	Year            int32  `db:"year"`
-	DiscTotal       int32  `db:"disc_total"`
-	TrackDisc       int32  `db:"track_disc"`
-	TrackArtistName string `db:"track_artist_name"`
-	TrackTitle      string `db:"track_title"`
-	TrackNumber     int32  `db:"track_number"`
+	ORIGINALFILENAME string         `db:"originalfilename"`
+	ALBUMARTIST      string         `db:"albumartist"`
+	ALBUM            string         `db:"album"`
+	DATE             int32          `db:"date"`
+	ORIGINALDATE     int32          `db:"originaldate"`
+	ARTIST           string         `db:"artist"`
+	TITLE            string         `db:"title"`
+	RELEASETYPE      AlbumTypeEnum  `db:"releasetype"`
+	LABELS           pq.StringArray `db:"labels"`
 
-	AlbumRgGain float32 `db:"album_rg_gain"`
-	AlbumRgPeak float32 `db:"album_rg_peak"`
-	TrackRgGain float32 `db:"track_rg_gain"`
-	TrackRgPeak float32 `db:"track_rg_peak"`
+	DISCNUMBER int32 `db:"discnumber"`
+	DISCTOTAL  int32 `db:"disctotal"`
+
+	TRACKNUMBER int32 `db:"tracknumber"`
+	TRACKTOTAL  int32 `db:"tracktotal"`
+
+	REPLAYGAIN_ALBUM_GAIN float32 `db:"replaygain_album_gain"`
+	REPLAYGAIN_ALBUM_PEAK float32 `db:"replaygain_album_peak"`
+	REPLAYGAIN_TRACK_GAIN float32 `db:"replaygain_track_gain"`
+	REPLAYGAIN_TRACK_PEAK float32 `db:"replaygain_track_peak"`
 }
 
 type ImageTypeEnum string

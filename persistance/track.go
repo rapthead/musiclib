@@ -81,26 +81,56 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
 	metas := []models.Metadata{}
 	err := p.db.SelectContext(ctx, &metas, `
         SELECT
-                concat(album.path, '/', track.path)::TEXT as path,
-                artist.name as album_artist_name,
-                album.title as album_title,
-                album.year as year,
-                (SELECT MAX(disc) FROM track WHERE album_id = album.id) as disc_total,
-                track.disc as track_disc,
-                track.track_artist as track_artist_name,
-                track.title as track_title,
-                track.track_num as track_number,
+                concat(album.path, '/', track.path)::TEXT as ORIGINALFILENAME,
+                artist.name as ALBUMARTIST,
+                album.title as ALBUM,
+                COALESCE(album.release_year, album.year) as DATE,
+                album.year as ORIGINALDATE,
+                album.type as RELEASETYPE,
 
-                album.rg_gain as album_rg_gain,
-                album.rg_peak as album_rg_peak,
+                COALESCE(NULLIF(track.track_artist, ''), artist.name) as ARTIST,
+                track.title as TITLE,
 
-                track.rg_gain as track_rg_gain,
-                track.rg_peak as track_rg_peak
+                track.disc as DISCNUMBER,
+                (
+                    SELECT MAX(disc)
+                    FROM track AS t
+                    WHERE album_id = album.id
+                ) as DISCTOTAL,
+
+                track.track_num as TRACKNUMBER,
+                (
+                    SELECT MAX(track_num)
+                    FROM track AS t
+                    WHERE
+                        album_id = album.id
+                        AND t.disc = track.disc
+                ) as TRACKTOTAL,
+
+                (
+                    SELECT ARRAY_AGG(label.name)::TEXT[]
+                    FROM release
+                    JOIN label ON release.label_id = label.id
+                    WHERE
+                        release.album_id = album.id
+                ) as LABELS,
+
+                album.rg_gain as REPLAYGAIN_ALBUM_GAIN,
+                album.rg_peak as REPLAYGAIN_ALBUM_PEAK,
+
+                track.rg_gain as REPLAYGAIN_TRACK_GAIN,
+                track.rg_peak as REPLAYGAIN_TRACK_PEAK
         FROM album
         JOIN artist ON album.artist_id = artist.id
         JOIN track ON track.album_id = album.id
-        WHERE album.state = 'enabled'
-        ORDER BY artist.name ASC, year ASC, track_disc ASC, track_number ASC;
+        WHERE album.state = 'enabled' AND album.id = '7a80e112-8b3f-4831-b61c-37941e5c5f9e'
+        ORDER BY
+            artist.name ASC,
+            album.year ASC,
+            album.title ASC,
+            track.disc ASC,
+            track.track_num ASC
+        ;
     `)
 	if err != nil {
 		return nil, fmt.Errorf("meta featching error: %w", err)
