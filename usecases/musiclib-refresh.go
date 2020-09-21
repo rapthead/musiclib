@@ -47,6 +47,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 
 	go func() {
 		defer close(logChan)
+		logInfo("GetAllMetadata query started")
 		allMetadata, err := queries.GetAllMetadata(ctx)
 		if err != nil {
 			logError(fmt.Errorf("Unable to fetch metadata: %w", err))
