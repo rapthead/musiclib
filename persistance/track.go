@@ -123,7 +123,7 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
         FROM album
         JOIN artist ON album.artist_id = artist.id
         JOIN track ON track.album_id = album.id
-        WHERE album.state = 'enabled' AND album.id = '7a80e112-8b3f-4831-b61c-37941e5c5f9e'
+        WHERE album.state = 'enabled'
         ORDER BY
             artist.name ASC,
             album.year ASC,
