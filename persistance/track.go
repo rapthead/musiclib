@@ -83,7 +83,7 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
 	SELECT
 		CONCAT(album.path, '/', track.path)::TEXT as ORIGINALFILENAME,
 		artist.name as ALBUMARTIST,
-		album.title || COALESCE(' ◆ ' || album.edition_title, '') as ALBUM,
+		album.title || COALESCE(' ◆ ' || NULLIF(album.edition_title, 'Original Release'), '') as ALBUM,
         COALESCE(
             NULLIF(album.year, album.release_year)::text || '/' || album.release_year::text,
             album.year::text
