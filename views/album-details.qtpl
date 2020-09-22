@@ -8,15 +8,16 @@ type AlbumData interface {
     TitleInput()        StrInputData
     TitleSuggestion()   string
 
-    Path()              string
-    ArtistInput()            StrDatalistInputData
-    TypeInput()              SelectInputData
-    DownloadSourceInput()    SelectInputData
-    SourceURLInput()         StrInputData
-    BarcodeInput()           StrInputData
-    CommentInput()           StrInputData
-    YearInput()              IntInputData
-    ReleaseYearInput()       IntInputData
+    Path()                  string
+    ArtistInput()           StrDatalistInputData
+    TypeInput()             SelectInputData
+    DownloadSourceInput()   SelectInputData
+    EditionTitleInput()     StrInputData
+    SourceURLInput()        StrInputData
+    BarcodeInput()          StrInputData
+    CommentInput()          StrInputData
+    YearInput()             IntInputData
+    ReleaseYearInput()      IntInputData
 
     SourceURL()             string
     FindSeedingURL()        string
@@ -170,6 +171,15 @@ type AlbumDetailsPage struct {
                             required: true,
 
                             data: p.Album.TypeInput(),
+                        })
+                    %}
+
+                    {%=
+                        makeStrInput(strInputConfig{
+                            wraperClass: "col s6",
+                            label: "Edition title",
+
+                            data: p.Album.EditionTitleInput(),
                         })
                     %}
 

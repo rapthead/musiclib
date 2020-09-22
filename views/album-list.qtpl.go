@@ -73,8 +73,8 @@ func (p *AlbumsPage) StreamBody(qw422016 *qt422016.Writer) {
         <table>
             <thead>
                 <tr>
-                    <th>State</th>
                     <th>Path</th>
+                    <th>State</th>
                     <th>Artist</th>
                     <th>Title</th>
                 </tr>

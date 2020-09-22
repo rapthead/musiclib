@@ -22,6 +22,10 @@ type AlbumForm struct {
 	ArtistName     string
 }
 
+func (r AlbumForm) IsDraft() bool {
+	return r.Model.State == models.AlbumStateEnumDraft
+}
+
 func (r AlbumForm) MergeURL() string {
 	return "/album/" + r.Model.ID.String() + "/merge"
 }
@@ -92,12 +96,15 @@ func (r AlbumForm) StateInput() views.SelectInputData {
 	return r.Model.State.SelectInput(r.fieldName("state"))
 }
 
-func (r AlbumForm) IsDraft() bool {
-	return r.Model.State == models.AlbumStateEnumDraft
-}
-
 func (r AlbumForm) TypeInput() views.SelectInputData {
 	return r.Model.Type.SelectInput(r.fieldName("type"))
+}
+
+func (r AlbumForm) EditionTitleInput() views.StrInputData {
+	return views.StrInputData{
+		Name:  r.fieldName("edition_title"),
+		Value: r.Model.EditionTitle,
+	}
 }
 
 func (r AlbumForm) DownloadSourceInput() views.SelectInputData {
@@ -164,6 +171,7 @@ func (r AlbumForm) Merge(v values) error {
 	r.Model.SourceURL = v.Get(r.fieldName("source_url"))
 	r.Model.Barcode = v.Get(r.fieldName("barcode"))
 	r.Model.Comment = v.Get(r.fieldName("comment"))
+	r.Model.EditionTitle = v.Get(r.fieldName("edition_title"))
 	r.Model.Year = zero.IntFrom(v.GetInt64(r.fieldName("year")))
 	r.Model.ReleaseYear = zero.IntFrom(v.GetInt64(r.fieldName("release_year")))
 	r.Model.State = albumState

@@ -23,8 +23,8 @@ type AlbumsPage struct {
         <table>
             <thead>
                 <tr>
-                    <th>State</th>
                     <th>Path</th>
+                    <th>State</th>
                     <th>Artist</th>
                     <th>Title</th>
                 </tr>
