@@ -71,6 +71,10 @@ func (r mergableAlbumViewData) Artist() string {
 	return r.artist.Name
 }
 
+func (r mergableAlbumViewData) SourceURL() string {
+	return r.album.SourceURL
+}
+
 func (r mergableAlbumViewData) URL() string {
 	return "/album/" + r.recipientAlbumID.String() + "/merge/" + r.album.ID.String()
 }

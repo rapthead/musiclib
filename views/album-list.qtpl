@@ -1,10 +1,11 @@
 {% code
 type AlbumsRow interface {
-    URL()    string
-    Path()   string
-    Artist() string
-    Title()  string
-    State()  string
+    URL()       string
+    Path()      string
+    Artist()    string
+    Title()     string
+    State()     string
+    SourceURL() string
 }
 
 type AlbumsPage struct {
@@ -27,6 +28,7 @@ type AlbumsPage struct {
                     <th>State</th>
                     <th>Artist</th>
                     <th>Title</th>
+                    <th>Links</th>
                 </tr>
             </thead>
 
@@ -37,6 +39,11 @@ type AlbumsPage struct {
                     <td>{%s r.State() %}</td>
                     <td>{%s r.Artist() %}</td>
                     <td>{%s r.Title() %}</td>
+                    <td>
+                        {% if r.SourceURL() != "" %}
+                            <a href="{%s r.SourceURL() %}" target="_blank">Source</a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {%- endfor -%}
             </tbody>

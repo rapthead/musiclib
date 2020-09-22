@@ -35,6 +35,10 @@ func (r albumViewData) Artist() string {
 	return r.artist.Name
 }
 
+func (r albumViewData) SourceURL() string {
+	return r.album.SourceURL
+}
+
 func (r albumViewData) URL() string {
 	return "/album/" + r.album.ID.String()
 }

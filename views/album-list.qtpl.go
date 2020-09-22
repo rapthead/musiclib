@@ -24,50 +24,51 @@ type AlbumsRow interface {
 	Artist() string
 	Title() string
 	State() string
+	SourceURL() string
 }
 
 type AlbumsPage struct {
 	Rows []AlbumsRow
 }
 
-//line album-list.qtpl:16
+//line album-list.qtpl:17
 func (p *AlbumsPage) StreamTitle(qw422016 *qt422016.Writer) {
-//line album-list.qtpl:16
+//line album-list.qtpl:17
 	qw422016.N().S(`
     Album list
 `)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 }
 
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 func (p *AlbumsPage) WriteTitle(qq422016 qtio422016.Writer) {
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	p.StreamTitle(qw422016)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	qt422016.ReleaseWriter(qw422016)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 }
 
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 func (p *AlbumsPage) Title() string {
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	qb422016 := qt422016.AcquireByteBuffer()
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	p.WriteTitle(qb422016)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	qs422016 := string(qb422016.B)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	qt422016.ReleaseByteBuffer(qb422016)
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 	return qs422016
-//line album-list.qtpl:18
+//line album-list.qtpl:19
 }
 
-//line album-list.qtpl:21
+//line album-list.qtpl:22
 func (p *AlbumsPage) StreamBody(qw422016 *qt422016.Writer) {
-//line album-list.qtpl:21
+//line album-list.qtpl:22
 	qw422016.N().S(`
     <div class="container">
         <table>
@@ -77,73 +78,91 @@ func (p *AlbumsPage) StreamBody(qw422016 *qt422016.Writer) {
                     <th>State</th>
                     <th>Artist</th>
                     <th>Title</th>
+                    <th>Links</th>
                 </tr>
             </thead>
 
             <tbody>
 `)
-//line album-list.qtpl:34
+//line album-list.qtpl:36
 	for _, r := range p.Rows {
-//line album-list.qtpl:34
+//line album-list.qtpl:36
 		qw422016.N().S(`                <tr>
                     <th><a href="`)
-//line album-list.qtpl:36
+//line album-list.qtpl:38
 		qw422016.E().S(r.URL())
-//line album-list.qtpl:36
+//line album-list.qtpl:38
 		qw422016.N().S(`">`)
-//line album-list.qtpl:36
+//line album-list.qtpl:38
 		qw422016.E().S(r.Path())
-//line album-list.qtpl:36
+//line album-list.qtpl:38
 		qw422016.N().S(`</a></th>
                     <td>`)
-//line album-list.qtpl:37
+//line album-list.qtpl:39
 		qw422016.E().S(r.State())
-//line album-list.qtpl:37
+//line album-list.qtpl:39
 		qw422016.N().S(`</td>
                     <td>`)
-//line album-list.qtpl:38
+//line album-list.qtpl:40
 		qw422016.E().S(r.Artist())
-//line album-list.qtpl:38
+//line album-list.qtpl:40
 		qw422016.N().S(`</td>
                     <td>`)
-//line album-list.qtpl:39
+//line album-list.qtpl:41
 		qw422016.E().S(r.Title())
-//line album-list.qtpl:39
+//line album-list.qtpl:41
 		qw422016.N().S(`</td>
+                    <td>
+                        `)
+//line album-list.qtpl:43
+		if r.SourceURL() != "" {
+//line album-list.qtpl:43
+			qw422016.N().S(`
+                            <a href="`)
+//line album-list.qtpl:44
+			qw422016.E().S(r.SourceURL())
+//line album-list.qtpl:44
+			qw422016.N().S(`" target="_blank">Source</a>
+                        `)
+//line album-list.qtpl:45
+		}
+//line album-list.qtpl:45
+		qw422016.N().S(`
+                    </td>
                 </tr>
 `)
-//line album-list.qtpl:41
+//line album-list.qtpl:48
 	}
-//line album-list.qtpl:41
+//line album-list.qtpl:48
 	qw422016.N().S(`            </tbody>
         </table>
     </div>
 `)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 }
 
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 func (p *AlbumsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	p.StreamBody(qw422016)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	qt422016.ReleaseWriter(qw422016)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 }
 
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 func (p *AlbumsPage) Body() string {
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	qb422016 := qt422016.AcquireByteBuffer()
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	p.WriteBody(qb422016)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	qs422016 := string(qb422016.B)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	qt422016.ReleaseByteBuffer(qb422016)
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 	return qs422016
-//line album-list.qtpl:45
+//line album-list.qtpl:52
 }
