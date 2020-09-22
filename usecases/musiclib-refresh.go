@@ -3,7 +3,6 @@ package usecases
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/go-redis/redis/v7"
@@ -51,12 +50,13 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 		allMetadata, err := queries.GetAllMetadata(ctx)
 		if err != nil {
 			logError(fmt.Errorf("Unable to fetch metadata: %w", err))
+			return
 		}
 
 		fuseEntities := make([]sync.FuseEntity, len(allMetadata), len(allMetadata))
 		for i, meta := range allMetadata {
 			fusePathDirname := fmt.Sprintf(
-				"%s–%d–%s",
+				"%s–%s–%s",
 				meta.ALBUMARTIST,
 				meta.DATE,
 				meta.ALBUM,
@@ -91,8 +91,8 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 			vorbisComments := [][2]string{
 				{"ALBUMARTIST", meta.ALBUMARTIST},
 				{"ARTIST", meta.ARTIST},
-				{"DATE", strconv.Itoa(int(meta.DATE))},
-				{"ORIGINALDATE", strconv.Itoa(int(meta.ORIGINALDATE))},
+				{"DATE", meta.DATE},
+				{"ORIGINALDATE", meta.ORIGINALDATE},
 				{"ALBUM", meta.ALBUM},
 				{"TITLE", meta.TITLE},
 				{"RELEASETYPE", string(meta.RELEASETYPE)},

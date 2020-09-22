@@ -73,8 +73,8 @@ type Metadata struct {
 	ORIGINALFILENAME string         `db:"originalfilename"`
 	ALBUMARTIST      string         `db:"albumartist"`
 	ALBUM            string         `db:"album"`
-	DATE             int32          `db:"date"`
-	ORIGINALDATE     int32          `db:"originaldate"`
+	DATE             string         `db:"date"`
+	ORIGINALDATE     string         `db:"originaldate"`
 	ARTIST           string         `db:"artist"`
 	TITLE            string         `db:"title"`
 	RELEASETYPE      AlbumTypeEnum  `db:"releasetype"`
