@@ -133,13 +133,18 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 			}
 			fusePath = strings.TrimPrefix(fusePath, "/")
 
+			var albumSuffix string
+			if meta.EditionTitle != "" && meta.EditionTitle != "Original Release" {
+				albumSuffix = " ◆ " + meta.EditionTitle
+			}
+
 			vorbisComments := [][2]string{
 				{"SORTALBUMARTIST", sortAlbumArtist},
 				{"ALBUMARTIST", meta.AlbumArtist},
 				{"ARTIST", meta.TrackArtist},
 				{"DATE", date},
 				{"ORIGINALDATE", strconv.FormatInt(meta.OriginalYear, 10)},
-				{"ALBUM", meta.AlbumTitle},
+				{"ALBUM", meta.AlbumTitle + albumSuffix},
 				{"TITLE", meta.TrackTitle},
 				{"RELEASETYPE", string(meta.ReleaseType)},
 
