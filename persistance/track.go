@@ -81,37 +81,32 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
 	metas := []models.Metadata{}
 	err := p.db.SelectContext(ctx, &metas, `
 	SELECT
-		CONCAT(album.path, '/', track.path)::TEXT as ORIGINALFILENAME,
-		artist.name as ALBUMARTIST,
-		album.title || COALESCE(
-            ' ◆ ' || NULLIF(NULLIF(album.edition_title, ''), 'Original Release')
-            , ''
-        ) as ALBUM,
-        COALESCE(
-            NULLIF(album.year, album.release_year)::text || '/' || album.release_year::text,
-            album.year::text
-        ) as DATE,
-        album.year::text as ORIGINALDATE,
-		album.type as RELEASETYPE,
+		CONCAT(album.path, '/', track.path)::TEXT as original_filename,
+		artist.name as album_artist,
+		album.title as album_title,
+        album.edition_title as edition_title,
+        album.year as original_year,
+        album.release_year as release_year,
+		album.type as release_type,
 
-		COALESCE(NULLIF(track.track_artist, ''), artist.name) as ARTIST,
-		track.title as TITLE,
+		track.track_artist as track_artist,
+		track.title as track_title,
 
-		track.disc as DISCNUMBER,
+		track.disc as disc_number,
 		(
 		    SELECT MAX(disc)
 		    FROM track AS t
 		    WHERE t.album_id = track.album_id
-		) as DISCTOTAL,
+		) as disc_total,
 
-		track.track_num as TRACKNUMBER,
+		track.track_num as track_number,
 		(
 		    SELECT MAX(track_num)
 		    FROM track AS t
 		    WHERE
 			t.album_id = track.album_id
 			AND t.disc = track.disc
-		) as TRACKTOTAL,
+		) as track_total,
 
 		(
 		    SELECT ARRAY_AGG(label.name)::TEXT[]
@@ -119,13 +114,13 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
 		    JOIN label ON release.label_id = label.id
 		    WHERE
 			release.album_id = track.album_id
-		) as LABELS,
+		) as labels,
 
-		album.rg_gain as REPLAYGAIN_ALBUM_GAIN,
-		album.rg_peak as REPLAYGAIN_ALBUM_PEAK,
+		album.rg_gain as replaygain_album_gain,
+		album.rg_peak as replaygain_album_peak,
 
-		track.rg_gain as REPLAYGAIN_TRACK_GAIN,
-		track.rg_peak as REPLAYGAIN_TRACK_PEAK
+		track.rg_gain as replaygain_track_gain,
+		track.rg_peak as replaygain_track_peak
 	FROM track
 	JOIN album ON track.album_id = album.id
 	JOIN artist ON album.artist_id = artist.id

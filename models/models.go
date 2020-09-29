@@ -70,26 +70,28 @@ type Cover struct {
 }
 
 type Metadata struct {
-	ORIGINALFILENAME string         `db:"originalfilename"`
-	ALBUMARTIST      string         `db:"albumartist"`
-	ALBUM            string         `db:"album"`
-	DATE             string         `db:"date"`
-	ORIGINALDATE     string         `db:"originaldate"`
-	ARTIST           string         `db:"artist"`
-	TITLE            string         `db:"title"`
-	RELEASETYPE      AlbumTypeEnum  `db:"releasetype"`
-	LABELS           pq.StringArray `db:"labels"`
+	OriginalFilename string         `db:"original_filename"`
+	AlbumArtist      string         `db:"album_artist"`
+	AlbumTitle       string         `db:"album_title"`
+	Date             string         `db:"date"`
+	OriginalYear     int64          `db:"original_year"`
+	ReleaseYear      null.Int       `db:"release_year"`
+	TrackArtist      string         `db:"track_artist"`
+	TrackTitle       string         `db:"track_title"`
+	EditionTitle     string         `db:"edition_title"`
+	ReleaseType      AlbumTypeEnum  `db:"release_type"`
+	Labels           pq.StringArray `db:"labels"`
 
-	DISCNUMBER int32 `db:"discnumber"`
-	DISCTOTAL  int32 `db:"disctotal"`
+	DiscNumber int32 `db:"disc_number"`
+	DiscTotal  int32 `db:"disc_total"`
 
-	TRACKNUMBER int32 `db:"tracknumber"`
-	TRACKTOTAL  int32 `db:"tracktotal"`
+	TrackNumber int32 `db:"track_number"`
+	TrackTotal  int32 `db:"track_total"`
 
-	REPLAYGAIN_ALBUM_GAIN float32 `db:"replaygain_album_gain"`
-	REPLAYGAIN_ALBUM_PEAK float32 `db:"replaygain_album_peak"`
-	REPLAYGAIN_TRACK_GAIN float32 `db:"replaygain_track_gain"`
-	REPLAYGAIN_TRACK_PEAK float32 `db:"replaygain_track_peak"`
+	ReplayGainAlbumGain float32 `db:"replaygain_album_gain"`
+	ReplayGainAlbumPeak float32 `db:"replaygain_album_peak"`
+	ReplayGainTrackGain float32 `db:"replaygain_track_gain"`
+	ReplayGainTrackPeak float32 `db:"replaygain_track_peak"`
 }
 
 type ImageTypeEnum string
