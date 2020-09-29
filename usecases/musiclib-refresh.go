@@ -129,8 +129,9 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 			)
 			fusePath := ""
 			for _, pathPart := range pathParts {
-				fusePath = fusePath + replacer.Replace(pathPart)
+				fusePath = fusePath + "/" + replacer.Replace(pathPart)
 			}
+			fusePath = strings.TrimPrefix(fusePath, "/")
 
 			vorbisComments := [][2]string{
 				{"SORTALBUMARTIST", sortAlbumArtist},
