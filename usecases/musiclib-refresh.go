@@ -141,7 +141,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 			vorbisComments := [][2]string{
 				{"SORTALBUMARTIST", sortAlbumArtist},
 				{"ALBUMARTIST", meta.AlbumArtist},
-				{"ARTIST", meta.TrackArtist},
+				{"ARTIST", strCoalesce(meta.TrackArtist, meta.AlbumArtist)},
 				{"DATE", date},
 				{"ORIGINALDATE", strconv.FormatInt(meta.OriginalYear, 10)},
 				{"ALBUM", meta.AlbumTitle + albumSuffix},
