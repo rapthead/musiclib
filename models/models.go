@@ -2,7 +2,10 @@ package models
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/gofrs/uuid"
 	"github.com/guregu/null"
@@ -69,31 +72,6 @@ type Cover struct {
 	Filename   null.String    `db:"filename"`
 }
 
-type Metadata struct {
-	OriginalFilename string         `db:"original_filename"`
-	AlbumArtist      string         `db:"album_artist"`
-	AlbumTitle       string         `db:"album_title"`
-	Date             string         `db:"date"`
-	OriginalYear     int64          `db:"original_year"`
-	ReleaseYear      null.Int       `db:"release_year"`
-	TrackArtist      string         `db:"track_artist"`
-	TrackTitle       string         `db:"track_title"`
-	EditionTitle     string         `db:"edition_title"`
-	ReleaseType      AlbumTypeEnum  `db:"release_type"`
-	Labels           pq.StringArray `db:"labels"`
-
-	DiscNumber int32 `db:"disc_number"`
-	DiscTotal  int32 `db:"disc_total"`
-
-	TrackNumber int32 `db:"track_number"`
-	TrackTotal  int32 `db:"track_total"`
-
-	ReplayGainAlbumGain float32 `db:"replaygain_album_gain"`
-	ReplayGainAlbumPeak float32 `db:"replaygain_album_peak"`
-	ReplayGainTrackGain float32 `db:"replaygain_track_gain"`
-	ReplayGainTrackPeak float32 `db:"replaygain_track_peak"`
-}
-
 type ImageTypeEnum string
 
 func NewImageTypeEnum(mimeStr string) (ImageTypeEnum, error) {
@@ -131,4 +109,147 @@ func (e ImageTypeEnum) MakeExt() string {
 	default:
 		panic("assertion error: unknown image type")
 	}
+}
+
+type Metadata struct {
+	OriginalFilename string         `db:"original_filename"`
+	AlbumArtist      string         `db:"album_artist"`
+	AlbumTitle       string         `db:"album_title"`
+	OriginalYear     int64          `db:"original_year"`
+	ReleaseYear      null.Int       `db:"release_year"`
+	TrackArtist      string         `db:"track_artist"`
+	TrackTitle       string         `db:"track_title"`
+	EditionTitle     string         `db:"edition_title"`
+	ReleaseType      AlbumTypeEnum  `db:"release_type"`
+	Labels           pq.StringArray `db:"labels"`
+
+	DiscNumber int32 `db:"disc_number"`
+	DiscTotal  int32 `db:"disc_total"`
+
+	TrackNumber int32 `db:"track_number"`
+	TrackTotal  int32 `db:"track_total"`
+
+	ReplayGainAlbumGain float32 `db:"replaygain_album_gain"`
+	ReplayGainAlbumPeak float32 `db:"replaygain_album_peak"`
+	ReplayGainTrackGain float32 `db:"replaygain_track_gain"`
+	ReplayGainTrackPeak float32 `db:"replaygain_track_peak"`
+}
+
+func (meta Metadata) sortAlbumArtist() string {
+	return strings.TrimPrefix(meta.AlbumArtist, "The ")
+}
+
+func (meta Metadata) date(delemiter string) string {
+	if meta.ReleaseYear.Valid &&
+		meta.OriginalYear != meta.ReleaseYear.Int64 {
+		return fmt.Sprintf(
+			"%d%s%d",
+			meta.OriginalYear,
+			delemiter,
+			meta.ReleaseYear.Int64,
+		)
+	} else {
+		return strconv.FormatInt(meta.OriginalYear, 10)
+	}
+}
+
+func (meta Metadata) FusePath() string {
+	firstArtistChar := unicode.ToLower([]rune(meta.sortAlbumArtist())[0])
+	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
+		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
+	} else {
+		firstArtistChar = '#'
+	}
+
+	pathParts := []string{
+		string(firstArtistChar),
+		meta.AlbumArtist,
+		fmt.Sprintf(
+			"%s-%s",
+			meta.date("-"),
+			meta.AlbumTitle,
+		),
+	}
+
+	if meta.DiscTotal != 1 {
+		pathParts = append(pathParts, fmt.Sprintf(
+			"cd%d/",
+			meta.DiscTotal,
+		))
+	}
+
+	pathParts = append(pathParts, fmt.Sprintf(
+		"%02d-%s.flac",
+		meta.TrackNumber,
+		meta.TrackTitle,
+	))
+
+	replacer := strings.NewReplacer(
+		"<", "_",
+		">", "_",
+		":", "_",
+		"\"", "_",
+		"/", "_",
+		"\\", "_",
+		"|", "_",
+		"?", "_",
+		"*", "_",
+		",", "_",
+	)
+	fusePath := ""
+	for _, pathPart := range pathParts {
+		fusePath = fusePath + "/" + replacer.Replace(pathPart)
+	}
+	fusePath = strings.TrimPrefix(fusePath, "/")
+	return fusePath
+}
+
+func (meta Metadata) VorbisComments() [][2]string {
+	var albumSuffix string
+	if meta.EditionTitle != "" && meta.EditionTitle != "Original Release" {
+		albumSuffix = " ◆ " + meta.EditionTitle
+	}
+
+	return [][2]string{
+		{"SORTALBUMARTIST", strings.TrimPrefix(meta.AlbumArtist, "The ")},
+		{"ALBUMARTIST", meta.AlbumArtist},
+		{"ARTIST", strCoalesce(meta.TrackArtist, meta.AlbumArtist)},
+		{"DATE", meta.date("/")},
+		{"ORIGINALDATE", strconv.FormatInt(meta.OriginalYear, 10)},
+		{"ALBUM", meta.AlbumTitle + albumSuffix},
+		{"TITLE", meta.TrackTitle},
+		{"RELEASETYPE", string(meta.ReleaseType)},
+
+		{"DISCNUMBER", fmt.Sprintf("%02d", meta.DiscNumber)},
+		{"DISCTOTAL", fmt.Sprintf("%d", meta.DiscTotal)},
+
+		{"TRACKNUMBER", fmt.Sprintf("%02d", meta.TrackNumber)},
+		{"TRACKTOTAL", fmt.Sprintf("%02d", meta.TrackTotal)},
+
+		{"REPLAYGAIN_REFERENCE_LOUDNESS", "89.0 dB"},
+		{"REPLAYGAIN_ALBUM_GAIN", fmt.Sprintf("%.2f dB", meta.ReplayGainAlbumGain)},
+		{"REPLAYGAIN_ALBUM_PEAK", fmt.Sprintf("%.8f", meta.ReplayGainAlbumPeak)},
+
+		{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", meta.ReplayGainTrackGain)},
+		{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", meta.ReplayGainTrackPeak)},
+
+		{"ORIGINALFILENAME", meta.OriginalFilename},
+
+		// CATALOGNUMBER=REBL021
+		// DATE=2017
+		// GENRE=Ska
+		// GENRE=Punk
+		// LABEL=Rebel Alliance Recordings
+		// MEDIA=CD
+		// TRACKTOTAL=8
+	}
+}
+
+func strCoalesce(strs ...string) string {
+	for _, str := range strs {
+		if str != "" {
+			return str
+		}
+	}
+	return ""
 }
