@@ -54,11 +54,7 @@ func Refresh(deps RefreshDeps, ctx context.Context) <-chan LogEvent {
 
 		fuseEntities := make([]sync.FuseEntity, len(allMetadata), len(allMetadata))
 		for i, meta := range allMetadata {
-			fuseEntities[i] = sync.FuseEntity{
-				OriginPath:     meta.OriginalFilename,
-				FusePath:       meta.FusePath(),
-				VorbisComments: meta.VorbisComments(),
-			}
+			fuseEntities[i] = meta
 		}
 
 		redisPipe := rdb.Pipeline()

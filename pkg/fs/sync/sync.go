@@ -9,10 +9,10 @@ import (
 	"github.com/rapthead/musiclib/pkg/fs/utils"
 )
 
-type FuseEntity struct {
-	OriginPath     string      `json:"originPath"`
-	FusePath       string      `json:"fusePath"`
-	VorbisComments [][2]string `json:"vorbisComments"`
+type FuseEntity interface {
+	OriginPath() string
+	FusePath() string
+	VorbisComments() [][2]string
 }
 
 type ProgressInfo struct {
@@ -32,7 +32,7 @@ func Sync(
 		defer close(progressChan)
 		total := len(entities)
 		for i, entity := range entities {
-			absPath := path.Join(musiclibRoot, entity.OriginPath)
+			absPath := path.Join(musiclibRoot, entity.OriginPath())
 			stat, err := os.Stat(absPath)
 			if err != nil {
 				if os.IsNotExist(err) {
@@ -56,7 +56,7 @@ func Sync(
 			}
 
 			metaBlock, err := utils.EncodeVorbisComment(
-				"musiclib", entity.VorbisComments,
+				"musiclib", entity.VorbisComments(),
 			)
 			if err != nil {
 				progressChan <- ProgressInfo{
@@ -65,7 +65,7 @@ func Sync(
 				continue
 			}
 
-			fuseStore.AddFlacPath(entity.FusePath, store.FlacData{
+			fuseStore.AddFlacPath(entity.FusePath(), store.FlacData{
 				OriginPath:       absPath,
 				ReplacementStart: blockStart,
 				ReplacementEnd:   blockEnd,
@@ -74,7 +74,7 @@ func Sync(
 			})
 
 			progressChan <- ProgressInfo{
-				entity.OriginPath,
+				entity.OriginPath(),
 				total,
 				i + 1,
 				nil,

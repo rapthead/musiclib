@@ -153,6 +153,10 @@ func (meta Metadata) date(delemiter string) string {
 	}
 }
 
+func (meta Metadata) OriginPath() string {
+	return meta.OriginalFilename
+}
+
 func (meta Metadata) FusePath() string {
 	firstArtistChar := unicode.ToLower([]rune(meta.sortAlbumArtist())[0])
 	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
@@ -210,7 +214,7 @@ func (meta Metadata) VorbisComments() [][2]string {
 		albumSuffix = " ◆ " + meta.EditionTitle
 	}
 
-	return [][2]string{
+	vorbisComments := [][2]string{
 		{"SORTALBUMARTIST", strings.TrimPrefix(meta.AlbumArtist, "The ")},
 		{"ALBUMARTIST", meta.AlbumArtist},
 		{"ARTIST", strCoalesce(meta.TrackArtist, meta.AlbumArtist)},
@@ -236,13 +240,16 @@ func (meta Metadata) VorbisComments() [][2]string {
 		{"ORIGINALFILENAME", meta.OriginalFilename},
 
 		// CATALOGNUMBER=REBL021
-		// DATE=2017
 		// GENRE=Ska
 		// GENRE=Punk
-		// LABEL=Rebel Alliance Recordings
 		// MEDIA=CD
-		// TRACKTOTAL=8
 	}
+	for _, label := range meta.Labels {
+		vorbisComments = append(vorbisComments, [2]string{
+			"LABEL", label,
+		})
+	}
+	return vorbisComments
 }
 
 func strCoalesce(strs ...string) string {
