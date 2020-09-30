@@ -123,6 +123,9 @@ type Metadata struct {
 	ReleaseType      AlbumTypeEnum  `db:"release_type"`
 	Labels           pq.StringArray `db:"labels"`
 
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
+
 	DiscNumber int32 `db:"disc_number"`
 	DiscTotal  int32 `db:"disc_total"`
 
@@ -151,6 +154,14 @@ func (meta Metadata) date(delemiter string) string {
 	} else {
 		return strconv.FormatInt(meta.OriginalYear, 10)
 	}
+}
+
+func (meta Metadata) CTime() time.Time {
+	return meta.CreatedAt
+}
+
+func (meta Metadata) MTime() time.Time {
+	return meta.UpdatedAt
 }
 
 func (meta Metadata) OriginPath() string {

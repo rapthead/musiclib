@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/utils"
@@ -13,6 +14,8 @@ type FuseEntity interface {
 	OriginPath() string
 	FusePath() string
 	VorbisComments() [][2]string
+	CTime() time.Time
+	MTime() time.Time
 }
 
 type ProgressInfo struct {
@@ -71,6 +74,8 @@ func Sync(
 				ReplacementEnd:   blockEnd,
 				MetaBlock:        metaBlock,
 				Size:             uint64(stat.Size() + int64(len(metaBlock)) - (blockEnd - blockStart)),
+				CTime:            entity.CTime(),
+				MTime:            entity.MTime(),
 			})
 
 			progressChan <- ProgressInfo{

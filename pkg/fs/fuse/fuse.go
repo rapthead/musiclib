@@ -139,9 +139,12 @@ func (s *MusiclibFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 	case store.FLAC_FILE:
 		fileProps, err := s.store.GetFlacProps(name)
 		if err == nil {
-			return &fuse.Attr{
-				Mode: fuse.S_IFREG | 0644, Size: fileProps.Size,
-			}, fuse.OK
+			attr := &fuse.Attr{
+				Mode: fuse.S_IFREG | 0644,
+				Size: fileProps.Size,
+			}
+			attr.SetTimes(nil, &fileProps.MTime, &fileProps.CTime)
+			return attr, fuse.OK
 		}
 	}
 	return nil, fuse.EIO

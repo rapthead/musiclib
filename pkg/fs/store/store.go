@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	redis "github.com/go-redis/redis/v7"
 )
@@ -19,6 +20,9 @@ type FlacData struct {
 	ReplacementEnd   int64
 	MetaBlock        []byte
 	Size             uint64
+
+	CTime time.Time
+	MTime time.Time
 }
 
 var NotFound = errors.New("entity not found")
