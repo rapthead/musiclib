@@ -71,6 +71,12 @@ func MakeRoutes(d deps.Deps) http.Handler {
 		coverHandler(coverIDStr, w, r)
 	})
 
+	thumbnailHandler := makeThumbnailHandler(d)
+	r.Get("/thumbnail/{coverID}", func(w http.ResponseWriter, r *http.Request) {
+		coverIDStr := chi.URLParam(r, "coverID")
+		thumbnailHandler(coverIDStr, w, r)
+	})
+
 	r.Get("/sync", func(w http.ResponseWriter, r *http.Request) {
 		p := &views.SSEPage{
 			PageTitle: "Sync",
@@ -80,7 +86,7 @@ func MakeRoutes(d deps.Deps) http.Handler {
 	})
 
 	r.Get("/sync/sse", func(w http.ResponseWriter, r *http.Request) {
-		logChan := usecases.Refresh(d, r.Context())
+		logChan := usecases.Sync(d, r.Context())
 		EventStreamHandler(logChan, w, r)
 	})
 

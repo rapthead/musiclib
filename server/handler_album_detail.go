@@ -278,6 +278,10 @@ func (r CoverForm) URL() string {
 	return "/cover/" + r.Model.ID.String()
 }
 
+func (r CoverForm) Thumbnail() string {
+	return "/thumbnail/" + r.Model.ID.String()
+}
+
 func (r CoverForm) Type() views.SelectInputData {
 	return r.Model.Type.SelectInput(r.fieldName("type"))
 }

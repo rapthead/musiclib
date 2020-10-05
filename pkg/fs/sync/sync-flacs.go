@@ -1,16 +1,18 @@
 package sync
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
 	"time"
 
+	"github.com/rapthead/musiclib/pkg/fs/models"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/utils"
 )
 
-type FuseEntity interface {
+type FuseFlacEntity interface {
 	OriginPath() string
 	FusePath() string
 	VorbisComments() [][2]string
@@ -25,10 +27,10 @@ type ProgressInfo struct {
 	Error   error
 }
 
-func Sync(
+func SyncFlacs(
 	musiclibRoot string,
-	fuseStore store.FuseStore,
-	entities []FuseEntity,
+	fuseStore *store.FuseStore,
+	entities []FuseFlacEntity,
 ) <-chan ProgressInfo {
 	progressChan := make(chan ProgressInfo)
 	go func() {
@@ -68,7 +70,7 @@ func Sync(
 				continue
 			}
 
-			fuseStore.AddFlacPath(entity.FusePath(), store.FlacData{
+			fuseStore.AddFlacPath(context.TODO(), entity.FusePath(), models.FlacData{
 				OriginPath:       absPath,
 				ReplacementStart: blockStart,
 				ReplacementEnd:   blockEnd,

@@ -111,6 +111,19 @@ func (e ImageTypeEnum) MakeExt() string {
 	}
 }
 
+var pathReplacer = strings.NewReplacer(
+	"<", "_",
+	">", "_",
+	":", "_",
+	"\"", "_",
+	"/", "_",
+	"\\", "_",
+	"|", "_",
+	"?", "_",
+	"*", "_",
+	",", "_",
+)
+
 type Metadata struct {
 	OriginalFilename string         `db:"original_filename"`
 	AlbumArtist      string         `db:"album_artist"`
@@ -186,34 +199,24 @@ func (meta Metadata) FusePath() string {
 		),
 	}
 
-	if meta.DiscTotal != 1 {
-		pathParts = append(pathParts, fmt.Sprintf(
-			"cd%d/",
-			meta.DiscTotal,
-		))
-	}
-
-	pathParts = append(pathParts, fmt.Sprintf(
+	pathSuffix := fmt.Sprintf(
 		"%02d-%s.flac",
 		meta.TrackNumber,
 		meta.TrackTitle,
-	))
-
-	replacer := strings.NewReplacer(
-		"<", "_",
-		">", "_",
-		":", "_",
-		"\"", "_",
-		"/", "_",
-		"\\", "_",
-		"|", "_",
-		"?", "_",
-		"*", "_",
-		",", "_",
 	)
+	if meta.DiscTotal != 1 {
+		pathParts = append(pathParts, fmt.Sprintf(
+			"%d.%s",
+			meta.DiscNumber,
+			pathSuffix,
+		))
+	} else {
+		pathParts = append(pathParts, pathSuffix)
+	}
+
 	fusePath := ""
 	for _, pathPart := range pathParts {
-		fusePath = fusePath + "/" + replacer.Replace(pathPart)
+		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
 	}
 	fusePath = strings.TrimPrefix(fusePath, "/")
 	return fusePath
@@ -270,4 +273,72 @@ func strCoalesce(strs ...string) string {
 		}
 	}
 	return ""
+}
+
+type FuseCover struct {
+	CoverID      uuid.UUID `db:"id"`
+	AlbumArtist  string    `db:"album_artist"`
+	AlbumTitle   string    `db:"album_title"`
+	OriginalYear int64     `db:"original_year"`
+	ReleaseYear  null.Int  `db:"release_year"`
+
+	CreatedAt time.Time `db:"created_at"`
+	UpdatedAt time.Time `db:"updated_at"`
+}
+
+func (meta FuseCover) sortAlbumArtist() string {
+	return strings.TrimPrefix(meta.AlbumArtist, "The ")
+}
+
+func (meta FuseCover) date(delemiter string) string {
+	if meta.ReleaseYear.Valid &&
+		meta.OriginalYear != meta.ReleaseYear.Int64 {
+		return fmt.Sprintf(
+			"%d%s%d",
+			meta.OriginalYear,
+			delemiter,
+			meta.ReleaseYear.Int64,
+		)
+	} else {
+		return strconv.FormatInt(meta.OriginalYear, 10)
+	}
+}
+
+func (meta FuseCover) CTime() time.Time {
+	return meta.CreatedAt
+}
+
+func (meta FuseCover) MTime() time.Time {
+	return meta.UpdatedAt
+}
+
+func (meta FuseCover) ID() uuid.UUID {
+	return meta.CoverID
+}
+
+func (meta FuseCover) FusePath() string {
+	firstArtistChar := unicode.ToLower([]rune(meta.sortAlbumArtist())[0])
+	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
+		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
+	} else {
+		firstArtistChar = '#'
+	}
+
+	pathParts := []string{
+		string(firstArtistChar),
+		meta.AlbumArtist,
+		fmt.Sprintf(
+			"%s-%s",
+			meta.date("-"),
+			meta.AlbumTitle,
+		),
+		"cover.jpeg",
+	}
+
+	fusePath := ""
+	for _, pathPart := range pathParts {
+		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
+	}
+	fusePath = strings.TrimPrefix(fusePath, "/")
+	return fusePath
 }

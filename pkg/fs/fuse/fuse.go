@@ -1,97 +1,43 @@
 package fuse
 
 import (
-	"bytes"
+	"context"
 	"io"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/rapthead/musiclib/pkg/fs/models"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 )
 
-type flacFile struct {
+type fuseFile struct {
 	nodefs.File
-	lock   sync.Mutex
-	fsFile *os.File
+	file   models.File
 	logger *log.Entry
-
-	sections []*io.SectionReader
 }
 
-func newFlacFile(fp store.FlacData, logger *log.Entry) (*flacFile, error) {
-	fsFile, err := os.Open(fp.OriginPath)
-	if err != nil {
-		return nil, err
-	}
-
-	stat, err := fsFile.Stat()
-	if err != nil {
-		return nil, err
-	}
-
-	sections := []*io.SectionReader{
-		io.NewSectionReader(
-			fsFile,
-			0,
-			fp.ReplacementStart,
-		),
-		io.NewSectionReader(
-			bytes.NewReader(fp.MetaBlock),
-			0,
-			int64(len(fp.MetaBlock)),
-		),
-		io.NewSectionReader(
-			fsFile,
-			fp.ReplacementEnd,
-			stat.Size()-fp.ReplacementEnd,
-		),
-	}
-
-	f := flacFile{
+func newFuseFile(file models.File, logger *log.Entry) *fuseFile {
+	return &fuseFile{
 		nodefs.NewReadOnlyFile(nodefs.NewDefaultFile()),
-		sync.Mutex{},
-		fsFile,
+		file,
 		logger,
-		sections,
 	}
-	return &f, nil
 }
 
-func (f *flacFile) Release() {
-	f.lock.Lock()
-	f.fsFile.Close()
-	f.lock.Unlock()
+func (f *fuseFile) Release() {
+	f.file.Close()
 }
 
-func (f *flacFile) Read(buf []byte, off int64) (fuse.ReadResult, fuse.Status) {
-	f.lock.Lock()
-	defer f.lock.Unlock()
+func (f *fuseFile) Read(buf []byte, off int64) (fuse.ReadResult, fuse.Status) {
+	n, err := f.file.ReadAt(buf, off)
 
-	readers := make([]io.Reader, 0, len(f.sections))
-	var position int64
-	for _, section := range f.sections {
-		if section.Size()+position > off {
-			if off-position > 0 {
-				_, err := section.Seek(off-position, io.SeekStart)
-				if err != nil {
-					panic(err)
-				}
-			}
-			readers = append(readers, section)
-		}
-		position += section.Size()
-	}
-	r := io.MultiReader(readers...)
-
-	n, err := io.ReadFull(r, buf)
 	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 		f.logger.
 			WithField("readed bytes", n).
@@ -108,11 +54,11 @@ func (f *flacFile) Read(buf []byte, off int64) (fuse.ReadResult, fuse.Status) {
 
 type MusiclibFS struct {
 	pathfs.FileSystem
-	store  store.FuseStore
+	store  models.StoreFetcher
 	logger *log.Entry
 }
 
-func NewMusiclibFS(fuseStore store.FuseStore, logger *log.Entry) *MusiclibFS {
+func NewMusiclibFS(fuseStore *store.FuseStore, logger *log.Entry) *MusiclibFS {
 	return &MusiclibFS{
 		pathfs.NewDefaultFileSystem(),
 		fuseStore,
@@ -120,10 +66,16 @@ func NewMusiclibFS(fuseStore store.FuseStore, logger *log.Entry) *MusiclibFS {
 	}
 }
 
-func (s *MusiclibFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
+func (s *MusiclibFS) GetAttr(name string, ctx *fuse.Context) (*fuse.Attr, fuse.Status) {
 	logEntry := s.logger.WithField("name", name)
-	logEntry.Debug("GetAttr")
-	fsType, err := s.store.Type(name)
+
+	fsItem, err := s.store.GetItem(context.TODO(), name)
+
+	logEntry.WithFields(log.Fields{
+		"fsItem": fsItem,
+		"err":    err,
+	}).Debug("GetAttr")
+
 	if err != nil {
 		if err == store.NotFound {
 			return nil, fuse.ENOENT
@@ -131,64 +83,42 @@ func (s *MusiclibFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fu
 		return nil, fuse.EIO
 	}
 
-	switch fsType {
-	case store.DIR:
-		return &fuse.Attr{
-			Mode: fuse.S_IFDIR | 0755,
-		}, fuse.OK
-	case store.FLAC_FILE:
-		fileProps, err := s.store.GetFlacProps(name)
-		if err == nil {
-			attr := &fuse.Attr{
-				Mode: fuse.S_IFREG | 0644,
-				Size: fileProps.Size,
-			}
-			attr.SetTimes(nil, &fileProps.MTime, &fileProps.CTime)
-			return attr, fuse.OK
-		}
+	attr := &fuse.Attr{
+		Mode: fsItem.Mode(),
+		Size: fsItem.Size(),
 	}
-	return nil, fuse.EIO
+	attr.SetTimes(fsItem.ATime(), fsItem.MTime(), fsItem.CTime())
+
+	return attr, fuse.OK
 }
 
-func (s *MusiclibFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntry, code fuse.Status) {
+func (s *MusiclibFS) OpenDir(name string, ctx *fuse.Context) (c []fuse.DirEntry, code fuse.Status) {
 	logEntry := s.logger.WithField("name", name)
-	items, err := s.store.ListDir(name)
+
+	dirItems, err := s.store.GetDir(context.TODO(), name)
 	if err != nil {
 		logEntry.WithError(err).Error("list dir error")
+		return nil, fuse.EIO
 	}
 
 	c = []fuse.DirEntry{}
-	for _, item := range items {
-		var dirEntry fuse.DirEntry
-		switch item.Type {
-		case store.DIR:
-			dirEntry = fuse.DirEntry{Name: item.Name, Mode: fuse.S_IFREG}
-		case store.FLAC_FILE:
-			dirEntry = fuse.DirEntry{Name: item.Name, Mode: fuse.S_IFDIR}
-		default:
-			panic("assertion error unknow dirEntry type: " + string(item.Type))
-		}
-		c = append(c, dirEntry)
+	for _, item := range dirItems {
+		c = append(c, fuse.DirEntry{Name: item.Name(), Mode: item.Mode()})
 	}
 
-	logEntry = logEntry.WithField("items", items)
+	logEntry = logEntry.WithField("items", dirItems)
 	logEntry = logEntry.WithField("dirEntries", c)
 	logEntry.Debug("OpenDir")
 	return c, fuse.OK
 }
 
-func (s *MusiclibFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
-	fileProps, err := s.store.GetFlacProps(name)
+func (s *MusiclibFS) Open(name string, flags uint32, ctx *fuse.Context) (nodefs.File, fuse.Status) {
+	file, err := s.store.GetFile(context.TODO(), name)
 	if err != nil {
 		return nil, fuse.ENOENT
 	}
 
-	flacFile, err := newFlacFile(fileProps, s.logger.WithField("flacFile", name))
-	if err != nil {
-		return nil, fuse.ENOENT
-	}
-
-	return flacFile, fuse.OK
+	return newFuseFile(file, s.logger), fuse.OK
 }
 
 func Mount(rdb *redis.Client, logger *log.Entry, mountPoint string) {

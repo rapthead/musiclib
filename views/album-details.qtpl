@@ -37,6 +37,7 @@ type TrackData interface {
 
 type CoverData interface {
     Filename()    string
+    Thumbnail()   string
     URL()         string
     Sort()        IntInputData
     Type()        SelectInputData
@@ -377,7 +378,9 @@ type AlbumDetailsPage struct {
                     <div class ="col s6">
                         <div class="row">
                             <div class="col s6">
-                                <img class="materialboxed responsive-img" src="{%s c.URL() %}" />
+                                <a href="{%s c.URL() %}" target="_blank">
+                                    <img class="responsive-img" src="{%s c.Thumbnail() %}" />
+                                </a>
                             </div>
 
                             <div class="col s6">

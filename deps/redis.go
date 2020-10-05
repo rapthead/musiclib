@@ -1,7 +1,7 @@
 package deps
 
 import (
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/rapthead/musiclib/config"
 )
 

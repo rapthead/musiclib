@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	logChan := usecases.Refresh(deps.New(), context.TODO())
+	logChan := usecases.Sync(deps.New(), context.TODO())
 	for logEvent := range logChan {
 		info, err := logEvent.Info(), logEvent.Err()
 		if err != nil {

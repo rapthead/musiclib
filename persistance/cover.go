@@ -68,3 +68,28 @@ func (p *Queries) InsertCover(ctx context.Context, cover models.Cover) error {
 	}
 	return nil
 }
+
+func (p *Queries) GetFuseCovers(ctx context.Context) ([]models.FuseCover, error) {
+	m := []models.FuseCover{}
+	err := p.db.SelectContext(ctx, &m, `
+        SELECT
+            cover.id as id,
+
+            artist.name as album_artist,
+            album.title as album_title,
+            album.year as original_year,
+            album.release_year as release_year,
+
+            album.created_at as created_at,
+            album.updated_at as updated_at
+        FROM album
+        JOIN cover ON album.id = cover.album_id
+        JOIN artist ON album.artist_id = artist.id
+        WHERE album.state = 'enabled' AND cover.type = 'front out'
+            AND album.id = 'b4d1f106-4b8d-4fbf-a162-81f4ca227194'
+    `)
+	if err != nil {
+		return nil, fmt.Errorf("draft cover insertion error: %w", err)
+	}
+	return m, nil
+}

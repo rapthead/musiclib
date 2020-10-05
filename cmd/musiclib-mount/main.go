@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 
 	"github.com/rapthead/musiclib/config"

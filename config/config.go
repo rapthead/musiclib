@@ -4,16 +4,17 @@ import (
 	"log"
 	"os"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
 
 type ConfigData struct {
-	CoversPath      string
-	Debug           bool
-	LogLevel        logrus.Level
-	PostgresConnStr string
-	RedactedUserID  string
+	CoversPath          string
+	ThumbnailsCachePath string
+	Debug               bool
+	LogLevel            logrus.Level
+	PostgresConnStr     string
+	RedactedUserID      string
 
 	RedisOpts *redis.Options
 
@@ -25,10 +26,11 @@ var Config ConfigData
 
 func init() {
 	Config = ConfigData{
-		Debug:           true,
-		CoversPath:      mustGetEnv("COVERS_PATH"),
-		PostgresConnStr: mustGetEnv("POSTGRES_CONN_STR"),
-		RedactedUserID:  getEnv("REDACTED_USER_ID"),
+		Debug:               true,
+		CoversPath:          mustGetEnv("COVERS_PATH"),
+		ThumbnailsCachePath: mustGetEnv("THUMBNAILS_CACHE_PATH"),
+		PostgresConnStr:     mustGetEnv("POSTGRES_CONN_STR"),
+		RedactedUserID:      getEnv("REDACTED_USER_ID"),
 
 		MusiclibRoot:      mustGetEnv("LIB_ROOT"),
 		MusiclibMountPath: mustGetEnv("MOUNT_PATH"),

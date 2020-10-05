@@ -1,20 +1,23 @@
 package deps
 
 import (
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/rapthead/musiclib/config"
 	"github.com/rapthead/musiclib/coverstorage"
 	"github.com/rapthead/musiclib/persistance"
+	"github.com/rapthead/musiclib/thumbnailer"
 )
 
 type Deps struct {
 	musiclibRoot string
 
 	coverStorage coverstorage.FSCoverStorage
-	sqlxClient   *sqlx.DB
-	redisClient  *redis.Client
-	queries      *persistance.Queries
+	thumbnailer  thumbnailer.Thumbnailer
+
+	sqlxClient  *sqlx.DB
+	redisClient *redis.Client
+	queries     *persistance.Queries
 }
 
 func New() Deps {
@@ -23,6 +26,8 @@ func New() Deps {
 		config.Config.MusiclibRoot,
 
 		coverstorage.FSCoverStorage{StoragePath: config.Config.CoversPath},
+		thumbnailer.Thumbnailer{CachePath: config.Config.CoversPath},
+
 		sqlxClient,
 		makeRedis(),
 		persistance.New(sqlxClient),
@@ -47,4 +52,8 @@ func (d Deps) Queries() *persistance.Queries {
 
 func (d Deps) CoversStorage() coverstorage.FSCoverStorage {
 	return d.coverStorage
+}
+
+func (d Deps) Thumbnailer() thumbnailer.Thumbnailer {
+	return d.thumbnailer
 }
