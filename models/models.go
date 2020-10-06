@@ -338,7 +338,7 @@ func (meta FuseCover) FusePath() string {
 			meta.AlbumArtist,
 			meta.date("_"),
 			meta.AlbumTitle,
-			meta.EditionTitle,
+			meta.albumSuffix(),
 		),
 		"cover.jpeg",
 	)
@@ -367,7 +367,7 @@ func albumPathParts(
 
 	pathParts := []string{
 		fmt.Sprintf(
-			"%s%s–%s–%s",
+			"%s–%s–%s%s",
 			albumArtist,
 			albumSuffix,
 			dashDate,
