@@ -79,6 +79,7 @@ func (p *Queries) GetFuseCovers(ctx context.Context) ([]models.FuseCover, error)
             album.title as album_title,
             album.year as original_year,
             album.release_year as release_year,
+            album.edition_title as edition_title,
 
             album.created_at as created_at,
             album.updated_at as updated_at
