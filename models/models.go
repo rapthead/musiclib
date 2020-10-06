@@ -369,9 +369,9 @@ func albumPathParts(
 		fmt.Sprintf(
 			"%s–%s–%s%s",
 			albumArtist,
-			albumSuffix,
 			dashDate,
 			albumTitle,
+			albumSuffix,
 		),
 	}
 	return pathParts
