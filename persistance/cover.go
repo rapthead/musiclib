@@ -86,7 +86,7 @@ func (p *Queries) GetFuseCovers(ctx context.Context) ([]models.FuseCover, error)
         JOIN cover ON album.id = cover.album_id
         JOIN artist ON album.artist_id = artist.id
         WHERE album.state = 'enabled' AND cover.type = 'front out'
-            AND album.id = 'b4d1f106-4b8d-4fbf-a162-81f4ca227194'
+            -- AND album.id = 'b4d1f106-4b8d-4fbf-a162-81f4ca227194'
     `)
 	if err != nil {
 		return nil, fmt.Errorf("draft cover insertion error: %w", err)
