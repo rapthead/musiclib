@@ -189,15 +189,12 @@ func (meta Metadata) FusePath() string {
 		firstArtistChar = '#'
 	}
 
-	pathParts := []string{
-		string(firstArtistChar),
+	pathParts := albumPathParts(
+		meta.sortAlbumArtist(),
 		meta.AlbumArtist,
-		fmt.Sprintf(
-			"%s-%s",
-			meta.date("-"),
-			meta.AlbumTitle,
-		),
-	}
+		meta.date("-"),
+		meta.AlbumTitle,
+	)
 
 	pathSuffix := fmt.Sprintf(
 		"%02d-%s.flac",
@@ -317,7 +314,31 @@ func (meta FuseCover) ID() uuid.UUID {
 }
 
 func (meta FuseCover) FusePath() string {
-	firstArtistChar := unicode.ToLower([]rune(meta.sortAlbumArtist())[0])
+	pathParts := append(
+		albumPathParts(
+			meta.sortAlbumArtist(),
+			meta.AlbumArtist,
+			meta.date("-"),
+			meta.AlbumTitle,
+		),
+		"cover.jpeg",
+	)
+
+	fusePath := ""
+	for _, pathPart := range pathParts {
+		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
+	}
+	fusePath = strings.TrimPrefix(fusePath, "/")
+	return fusePath
+}
+
+func albumPathParts(
+	sortAlbumArtist string,
+	albumArtist string,
+	dashDate string,
+	albumTitle string,
+) []string {
+	firstArtistChar := unicode.ToLower([]rune(sortAlbumArtist)[0])
 	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
 		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
 	} else {
@@ -326,19 +347,12 @@ func (meta FuseCover) FusePath() string {
 
 	pathParts := []string{
 		string(firstArtistChar),
-		meta.AlbumArtist,
+		albumArtist,
 		fmt.Sprintf(
 			"%s-%s",
-			meta.date("-"),
-			meta.AlbumTitle,
+			dashDate,
+			albumTitle,
 		),
-		"cover.jpeg",
 	}
-
-	fusePath := ""
-	for _, pathPart := range pathParts {
-		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
-	}
-	fusePath = strings.TrimPrefix(fusePath, "/")
-	return fusePath
+	return pathParts
 }
