@@ -346,10 +346,9 @@ func albumPathParts(
 	}
 
 	pathParts := []string{
-		string(firstArtistChar),
-		albumArtist,
 		fmt.Sprintf(
-			"%s-%s",
+			"%s–%s–%s",
+			albumArtist,
 			dashDate,
 			albumTitle,
 		),
