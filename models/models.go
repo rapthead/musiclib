@@ -155,6 +155,14 @@ func (meta Metadata) sortAlbumArtist() string {
 	return strings.TrimPrefix(meta.AlbumArtist, "The ")
 }
 
+func (meta Metadata) albumSuffix() string {
+	var albumSuffix string
+	if meta.EditionTitle != "" && meta.EditionTitle != "Original Release" {
+		albumSuffix = " ◆ " + meta.EditionTitle
+	}
+	return albumSuffix
+}
+
 func (meta Metadata) date(delemiter string) string {
 	if meta.ReleaseYear.Valid &&
 		meta.OriginalYear != meta.ReleaseYear.Int64 {
@@ -192,8 +200,9 @@ func (meta Metadata) FusePath() string {
 	pathParts := albumPathParts(
 		meta.sortAlbumArtist(),
 		meta.AlbumArtist,
-		meta.date("-"),
+		meta.date("_"),
 		meta.AlbumTitle,
+		meta.albumSuffix(),
 	)
 
 	pathSuffix := fmt.Sprintf(
@@ -226,7 +235,7 @@ func (meta Metadata) VorbisComments() [][2]string {
 	}
 
 	vorbisComments := [][2]string{
-		{"SORTALBUMARTIST", strings.TrimPrefix(meta.AlbumArtist, "The ")},
+		{"SORTALBUMARTIST", meta.sortAlbumArtist()},
 		{"ALBUMARTIST", meta.AlbumArtist},
 		{"ARTIST", strCoalesce(meta.TrackArtist, meta.AlbumArtist)},
 		{"DATE", meta.date("/")},
@@ -278,6 +287,7 @@ type FuseCover struct {
 	AlbumTitle   string    `db:"album_title"`
 	OriginalYear int64     `db:"original_year"`
 	ReleaseYear  null.Int  `db:"release_year"`
+	EditionTitle string    `db:"edition_title"`
 
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
@@ -285,6 +295,14 @@ type FuseCover struct {
 
 func (meta FuseCover) sortAlbumArtist() string {
 	return strings.TrimPrefix(meta.AlbumArtist, "The ")
+}
+
+func (meta FuseCover) albumSuffix() string {
+	var albumSuffix string
+	if meta.EditionTitle != "" && meta.EditionTitle != "Original Release" {
+		albumSuffix = " ◆ " + meta.EditionTitle
+	}
+	return albumSuffix
 }
 
 func (meta FuseCover) date(delemiter string) string {
@@ -318,8 +336,9 @@ func (meta FuseCover) FusePath() string {
 		albumPathParts(
 			meta.sortAlbumArtist(),
 			meta.AlbumArtist,
-			meta.date("-"),
+			meta.date("_"),
 			meta.AlbumTitle,
+			meta.EditionTitle,
 		),
 		"cover.jpeg",
 	)
@@ -337,18 +356,20 @@ func albumPathParts(
 	albumArtist string,
 	dashDate string,
 	albumTitle string,
+	albumSuffix string,
 ) []string {
-	firstArtistChar := unicode.ToLower([]rune(sortAlbumArtist)[0])
-	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
-		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
-	} else {
-		firstArtistChar = '#'
-	}
+	// firstArtistChar := unicode.ToLower([]rune(sortAlbumArtist)[0])
+	// if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
+	// 	(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
+	// } else {
+	// 	firstArtistChar = '#'
+	// }
 
 	pathParts := []string{
 		fmt.Sprintf(
-			"%s–%s–%s",
+			"%s%s–%s–%s",
 			albumArtist,
+			albumSuffix,
 			dashDate,
 			albumTitle,
 		),
