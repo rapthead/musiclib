@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/rapthead/musiclib/coverstorage"
 	"github.com/rapthead/musiclib/pkg/fs/store"
-	"github.com/rapthead/musiclib/thumbnailer"
 )
 
 type FuseCoverEntity interface {
@@ -21,8 +19,7 @@ type FuseCoverEntity interface {
 }
 
 func SyncCovers(
-	storage coverstorage.FSCoverStorage,
-	thumbnailer thumbnailer.Thumbnailer,
+	thumbnailer coverstorage.ThumbnailStorage,
 	fuseStore *store.FuseStore,
 	entities []FuseCoverEntity,
 ) <-chan ProgressInfo {
@@ -31,19 +28,15 @@ func SyncCovers(
 		defer close(progressChan)
 		total := len(entities)
 		for i, entity := range entities {
-			_, file, err := storage.Get(entity.ID())
+			_, content, err := thumbnailer.Get(context.TODO(), entity.ID(), 300, 300)
 			if err != nil {
 				progressChan <- ProgressInfo{
-					Error: fmt.Errorf("Get file for %s error: %w", entity.FusePath(), err),
+					Error: fmt.Errorf("Thumbnail processing error %s: %w", entity.FusePath(), err),
 				}
 				continue
 			}
-			defer file.Close()
 
-			var thumbBuf bytes.Buffer
-			thumbnailer.Thumbnail(&thumbBuf, file, 300, 300)
-
-			fuseStore.AddCoverPath(context.TODO(), entity.FusePath(), &thumbBuf)
+			fuseStore.AddCoverPath(context.TODO(), entity.FusePath(), content)
 
 			progressChan <- ProgressInfo{
 				entity.FusePath(),

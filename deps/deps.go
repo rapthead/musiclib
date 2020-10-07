@@ -1,6 +1,9 @@
 package deps
 
 import (
+	"context"
+	"log"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
 	"github.com/rapthead/musiclib/config"
@@ -12,8 +15,9 @@ import (
 type Deps struct {
 	musiclibRoot string
 
-	coverStorage coverstorage.FSCoverStorage
-	thumbnailer  thumbnailer.Thumbnailer
+	coverStorage     coverstorage.FSCoverStorage
+	thumbnailStorage coverstorage.ThumbnailStorage
+	thumbnailer      thumbnailer.Thumbnailer
 
 	sqlxClient  *sqlx.DB
 	redisClient *redis.Client
@@ -22,14 +26,28 @@ type Deps struct {
 
 func New() Deps {
 	sqlxClient := makeSqlxClient()
+
+	fsCoverStorage := coverstorage.FSCoverStorage{StoragePath: config.Config.CoversPath}
+	tnailer := thumbnailer.Thumbnailer{}
+
+	redisClient := makeRedis()
+	thumbnailConn := redisClient.Conn(context.TODO())
+	if err := thumbnailConn.Select(context.TODO(), config.ThumbnailsDBIndex).Err(); err != nil {
+		log.Fatalf("can't select thumbnail redis db")
+	}
 	return Deps{
 		config.Config.MusiclibRoot,
 
-		coverstorage.FSCoverStorage{StoragePath: config.Config.CoversPath},
-		thumbnailer.Thumbnailer{CachePath: config.Config.CoversPath},
+		fsCoverStorage,
+		coverstorage.NewThumbnailStorage(
+			fsCoverStorage,
+			tnailer,
+			thumbnailConn,
+		),
+		tnailer,
 
 		sqlxClient,
-		makeRedis(),
+		redisClient,
 		persistance.New(sqlxClient),
 	}
 }
@@ -52,6 +70,10 @@ func (d Deps) Queries() *persistance.Queries {
 
 func (d Deps) CoversStorage() coverstorage.FSCoverStorage {
 	return d.coverStorage
+}
+
+func (d Deps) ThumbnailStorage() coverstorage.ThumbnailStorage {
+	return d.thumbnailStorage
 }
 
 func (d Deps) Thumbnailer() thumbnailer.Thumbnailer {

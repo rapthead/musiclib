@@ -1,7 +1,6 @@
 package store
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -59,12 +58,12 @@ func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input model
 	return nil
 }
 
-func (s *FuseStore) AddCoverPath(ctx context.Context, rawPath string, data *bytes.Buffer) error {
+func (s *FuseStore) AddCoverPath(ctx context.Context, rawPath string, data []byte) error {
 	fusePath := preparePath(rawPath)
 	s.addDirs(ctx, COVER_FILE, fusePath)
 
 	s.client.Set(ctx, "type:"+fusePath, string(COVER_FILE), 0)
-	s.client.Set(ctx, "content:"+fusePath, data.String(), 0)
+	s.client.Set(ctx, "content:"+fusePath, string(data), 0)
 	return nil
 }
 

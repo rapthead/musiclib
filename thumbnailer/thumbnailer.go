@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
+	_ "image/png"
 	"io"
 
 	"github.com/nfnt/resize"
 )
 
-const sniffLen = 512
-
 type Thumbnailer struct {
-	CachePath string
 }
 
 func (s Thumbnailer) Thumbnail(w io.Writer, r io.Reader, maxWidth, maxHeight uint) error {

@@ -8,6 +8,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	FSPrimaryDBIndex = iota
+	FSSecondaryDBIndex
+	ThumbnailsDBIndex
+)
+
 type ConfigData struct {
 	CoversPath      string
 	Debug           bool

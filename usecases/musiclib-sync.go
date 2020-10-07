@@ -10,7 +10,6 @@ import (
 	"github.com/rapthead/musiclib/persistance"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/sync"
-	"github.com/rapthead/musiclib/thumbnailer"
 )
 
 type SyncDeps interface {
@@ -18,7 +17,7 @@ type SyncDeps interface {
 	Queries() *persistance.Queries
 
 	CoversStorage() coverstorage.FSCoverStorage
-	Thumbnailer() thumbnailer.Thumbnailer
+	ThumbnailStorage() coverstorage.ThumbnailStorage
 }
 
 type FuseEntity struct {
@@ -47,7 +46,7 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 	go func() {
 		defer close(logChan)
 		redisPipe := rdb.Pipeline()
-		redisPipe.Select(ctx, 1)
+		redisPipe.Select(ctx, config.FSSecondaryDBIndex)
 		redisPipe.FlushDB(ctx)
 
 		var allErrors []string
@@ -96,8 +95,7 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 			}
 
 			progressChan := sync.SyncCovers(
-				deps.CoversStorage(),
-				deps.Thumbnailer(),
+				deps.ThumbnailStorage(),
 				store.NewFuseStore(redisPipe),
 				coverEntities,
 			)
@@ -118,7 +116,7 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 			logInfo(errText)
 		}
 
-		redisPipe.SwapDB(ctx, 0, 1)
+		redisPipe.SwapDB(ctx, config.FSPrimaryDBIndex, config.FSSecondaryDBIndex)
 		if _, err := redisPipe.Exec(ctx); err != nil {
 			logError(fmt.Errorf("redis pipeline exec error: %w", err))
 		}
