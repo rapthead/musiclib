@@ -3,40 +3,32 @@ package sync
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/gofrs/uuid"
-
-	"github.com/rapthead/musiclib/coverstorage"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 )
 
-type FuseCoverEntity interface {
-	ID() uuid.UUID
+type ContentEntity interface {
 	FusePath() string
-	CTime() time.Time
-	MTime() time.Time
+	Content() ([]byte, error)
 }
 
-func SyncCovers(
-	thumbnailer coverstorage.ThumbnailStorage,
+func SyncContent(
 	fuseStore *store.FuseStore,
-	entities []FuseCoverEntity,
+	entities []ContentEntity,
 ) <-chan ProgressInfo {
 	progressChan := make(chan ProgressInfo)
 	go func() {
 		defer close(progressChan)
 		total := len(entities)
 		for i, entity := range entities {
-			_, content, err := thumbnailer.Get(context.TODO(), entity.ID(), 300, 300)
+			content, err := entity.Content()
 			if err != nil {
 				progressChan <- ProgressInfo{
-					Error: fmt.Errorf("Thumbnail processing error %s: %w", entity.FusePath(), err),
+					Error: fmt.Errorf("Getting item content error %s: %w", entity.FusePath(), err),
 				}
 				continue
 			}
-
-			fuseStore.AddCoverPath(context.TODO(), entity.FusePath(), content)
+			fuseStore.AddContentPath(context.TODO(), entity.FusePath(), content)
 
 			progressChan <- ProgressInfo{
 				entity.FusePath(),

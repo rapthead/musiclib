@@ -24,9 +24,9 @@ var NotFound = errors.New("entity not found")
 type entityType string
 
 const (
-	DIR        entityType = "d"
-	FLAC_FILE             = "f"
-	COVER_FILE            = "c"
+	DIR          entityType = "d"
+	FLAC_FILE               = "f"
+	CONTENT_FILE            = "c"
 )
 
 type fusePath string
@@ -58,11 +58,11 @@ func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input model
 	return nil
 }
 
-func (s *FuseStore) AddCoverPath(ctx context.Context, rawPath string, data []byte) error {
+func (s *FuseStore) AddContentPath(ctx context.Context, rawPath string, data []byte) error {
 	fusePath := preparePath(rawPath)
-	s.addDirs(ctx, COVER_FILE, fusePath)
+	s.addDirs(ctx, CONTENT_FILE, fusePath)
 
-	s.client.Set(ctx, "type:"+fusePath, string(COVER_FILE), 0)
+	s.client.Set(ctx, "type:"+fusePath, string(CONTENT_FILE), 0)
 	s.client.Set(ctx, "content:"+fusePath, string(data), 0)
 	return nil
 }
@@ -101,8 +101,8 @@ func (s *FuseStore) GetItem(ctx context.Context, rawPath string) (models.FSItem,
 		return dirFsItem{}, nil
 	case FLAC_FILE:
 		return s.GetFlacFile(ctx, rawPath)
-	case COVER_FILE:
-		return s.GetCoverFile(ctx, rawPath)
+	case CONTENT_FILE:
+		return s.GetContentFile(ctx, rawPath)
 	default:
 		return nil, NotFound
 	}
@@ -118,8 +118,8 @@ func (s *FuseStore) GetFile(ctx context.Context, rawPath string) (models.File, e
 	switch itemType {
 	case FLAC_FILE:
 		return s.GetFlacFile(ctx, rawPath)
-	case COVER_FILE:
-		return s.GetCoverFile(ctx, rawPath)
+	case CONTENT_FILE:
+		return s.GetContentFile(ctx, rawPath)
 	default:
 		return nil, NotFound
 	}
@@ -170,7 +170,7 @@ func (s *FuseStore) GetFlacFile(ctx context.Context, rawPath string) (models.Fil
 	return models.NewFlacFile(fd)
 }
 
-func (s *FuseStore) GetCoverFile(ctx context.Context, rawPath string) (models.File, error) {
+func (s *FuseStore) GetContentFile(ctx context.Context, rawPath string) (models.File, error) {
 	fusePath := preparePath(rawPath)
 	content, err := s.client.Get(ctx, "content:"+fusePath).Result()
 
