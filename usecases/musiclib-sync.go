@@ -93,7 +93,7 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 					contentEntities = append(contentEntities, &nextPlaylist)
 				}
 				currentPlaylist.itemPaths = append(
-					currentPlaylist.itemPaths, strings.Repeat("../", 4)+FuseFlacEntity{meta}.FusePath(),
+					currentPlaylist.itemPaths, strings.Repeat("../", 3)+FuseFlacEntity{meta}.FusePath(),
 				)
 			}
 
