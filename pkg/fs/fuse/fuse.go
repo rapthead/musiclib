@@ -113,6 +113,9 @@ func (s *MusiclibFS) OpenDir(name string, ctx *fuse.Context) (c []fuse.DirEntry,
 }
 
 func (s *MusiclibFS) Open(name string, flags uint32, ctx *fuse.Context) (nodefs.File, fuse.Status) {
+	logEntry := s.logger.WithField("name", name)
+	logEntry.Debug("OpenFile")
+
 	file, err := s.store.GetFile(context.TODO(), name)
 	if err != nil {
 		return nil, fuse.ENOENT
