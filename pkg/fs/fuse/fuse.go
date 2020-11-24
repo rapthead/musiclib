@@ -48,6 +48,12 @@ func (f *fuseFile) Read(buf []byte, off int64) (fuse.ReadResult, fuse.Status) {
 		return nil, fuse.EIO
 	}
 
+    f.logger.
+        WithField("readed bytes", n).
+        WithField("offset", off).
+        WithField("len(buf)", len(buf)).
+        Debug("read")
+
 	res := fuse.ReadResultData(buf)
 	return res, fuse.OK
 }
