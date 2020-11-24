@@ -81,7 +81,7 @@ func (f *FlacFile) ReadAt(buf []byte, off int64) (int, error) {
                 seekTo = 0
             }
 
-            _, err := section.Seek(off-position, io.SeekStart)
+            _, err := section.Seek(seekTo, io.SeekStart)
             if err != nil {
                 panic(err)
             }
