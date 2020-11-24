@@ -74,12 +74,17 @@ func (f *FlacFile) ReadAt(buf []byte, off int64) (int, error) {
 	var position int64
 	for _, section := range f.sections {
 		if section.Size()+position > off {
+            var seekTo int64
 			if off-position > 0 {
-				_, err := section.Seek(off-position, io.SeekStart)
-				if err != nil {
-					panic(err)
-				}
-			}
+                seekTo = off-position
+			} else {
+                seekTo = 0
+            }
+
+            _, err := section.Seek(off-position, io.SeekStart)
+            if err != nil {
+                panic(err)
+            }
 			readers = append(readers, section)
 		}
 		position += section.Size()

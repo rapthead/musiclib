@@ -77,10 +77,10 @@ func (s *MusiclibFS) GetAttr(name string, ctx *fuse.Context) (*fuse.Attr, fuse.S
 
 	fsItem, err := s.store.GetItem(context.TODO(), name)
 
-	logEntry.WithFields(log.Fields{
-		"fsItem": fsItem,
-		"err":    err,
-	}).Debug("GetAttr")
+	logEntry
+        .WithField("fsItem", fsItem)
+        .WithField("err", err)
+        .Debug("GetAttr")
 
 	if err != nil {
 		if err == store.NotFound {
