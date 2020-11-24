@@ -121,7 +121,7 @@ func (s *MusiclibFS) Open(name string, flags uint32, ctx *fuse.Context) (nodefs.
 		return nil, fuse.ENOENT
 	}
 
-	return newFuseFile(file, s.logger), fuse.OK
+	return newFuseFile(file, logEntry), fuse.OK
 }
 
 func Mount(rdb *redis.Client, logger *log.Entry, mountPoint string) {
