@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/hanwen/go-fuse/fuse"
-	"github.com/hanwen/go-fuse/fuse/nodefs"
-	"github.com/hanwen/go-fuse/fuse/pathfs"
+	"github.com/hanwen/go-fuse/v2/fuse"
+	"github.com/hanwen/go-fuse/v2/fuse/nodefs"
+	"github.com/hanwen/go-fuse/v2/fuse/pathfs"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/rapthead/musiclib/pkg/fs/models"
