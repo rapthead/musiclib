@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -44,7 +43,7 @@ func NewFuseStore(client redis.Cmdable) *FuseStore {
 }
 
 func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input models.FlacData) error {
-	propsJson, err := json.Marshal(input)
+	serializedData, err := input.Marshal()
 	if err != nil {
 		return fmtError("flac file marshaling error", err)
 	}
@@ -53,7 +52,7 @@ func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input model
 	s.addDirs(ctx, FLAC_FILE, fusePath)
 
 	s.client.Set(ctx, "type:"+fusePath, string(FLAC_FILE), 0)
-	s.client.Set(ctx, "content:"+fusePath, propsJson, 0)
+	s.client.Set(ctx, "content:"+fusePath, serializedData, 0)
 
 	return nil
 }
@@ -156,14 +155,14 @@ func (s *FuseStore) GetDir(ctx context.Context, rawPath string) ([]models.DirIte
 
 func (s *FuseStore) GetFlacFile(ctx context.Context, rawPath string) (models.File, error) {
 	fusePath := preparePath(rawPath)
-	propsJson, err := s.client.Get(ctx, "content:"+fusePath).Result()
+	serializedData, err := s.client.Get(ctx, "content:"+fusePath).Result()
 
 	if err != nil {
 		return nil, fmtError("getting flac data error", err)
 	}
 
 	fd := models.FlacData{}
-	if err := json.Unmarshal([]byte(propsJson), &fd); err != nil {
+	if err := fd.Unmarshal([]byte(serializedData)); err != nil {
 		return nil, fmtError("parsing flac data error", err)
 	}
 

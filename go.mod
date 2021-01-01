@@ -20,9 +20,10 @@ require (
 	github.com/mewkiz/pkg v0.0.0-20200702171441-dd47075182ea
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/sirupsen/logrus v1.7.0
+	github.com/tinylib/msgp v1.1.5
 	github.com/valyala/quicktemplate v1.6.3
 	golang.org/x/mod v0.4.0 // indirect
 	golang.org/x/sys v0.0.0-20201223074533-0d417f636930 // indirect
-	golang.org/x/tools v0.0.0-20201224043029-2b0845dc783e
+	golang.org/x/tools v0.0.0-20201230224404-63754364767c
 	google.golang.org/appengine v1.6.6 // indirect
 )

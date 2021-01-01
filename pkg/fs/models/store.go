@@ -1,6 +1,11 @@
+//go:generate msgp
+
 package models
 
-import "time"
+import (
+    "time"
+	// "encoding/json"
+)
 
 type FlacData struct {
 	OriginPath       string
@@ -12,3 +17,24 @@ type FlacData struct {
 	CTime time.Time
 	MTime time.Time
 }
+
+// msgpack {
+func (d *FlacData) Marshal() ([]byte, error) {
+    return d.MarshalMsg(nil)
+}
+
+func (d *FlacData) Unmarshal(b []byte) (error) {
+    _, err := d.UnmarshalMsg(b)
+    return err
+}
+// msgpack }
+
+// json {
+// func (d *FlacData) Marshal() ([]byte, error) {
+//     return json.Marshal(*d)
+// }
+// 
+// func (d *FlacData) Unmarshal(b []byte) (error) {
+//     return json.Unmarshal(b, d)
+// }
+// json }
