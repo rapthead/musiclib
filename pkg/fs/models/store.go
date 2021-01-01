@@ -4,7 +4,7 @@ package models
 
 import (
     "time"
-	// "encoding/json"
+	"encoding/json"
 )
 
 type FlacData struct {
@@ -19,22 +19,22 @@ type FlacData struct {
 }
 
 // msgpack {
-func (d *FlacData) Marshal() ([]byte, error) {
-    return d.MarshalMsg(nil)
-}
-
-func (d *FlacData) Unmarshal(b []byte) (error) {
-    _, err := d.UnmarshalMsg(b)
-    return err
-}
-// msgpack }
-
-// json {
 // func (d *FlacData) Marshal() ([]byte, error) {
-//     return json.Marshal(*d)
+//     return d.MarshalMsg(nil)
 // }
 // 
 // func (d *FlacData) Unmarshal(b []byte) (error) {
-//     return json.Unmarshal(b, d)
+//     _, err := d.UnmarshalMsg(b)
+//     return err
 // }
+// msgpack }
+
+// json {
+func (d *FlacData) Marshal() ([]byte, error) {
+    return json.Marshal(*d)
+}
+
+func (d *FlacData) Unmarshal(b []byte) (error) {
+    return json.Unmarshal(b, d)
+}
 // json }
