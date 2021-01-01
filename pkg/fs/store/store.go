@@ -187,6 +187,9 @@ func (s *FuseStore) getType(ctx context.Context, rawPath string) (entityType, er
 	fusePath := preparePath(rawPath)
 	rawType, err := s.client.Get(ctx, "type:"+fusePath).Result()
 	if err != nil {
+        if err == redis.Nil {
+            return DIR, NotFound
+        }
 		return DIR, fmtError("getting file type error", err)
 	}
 
