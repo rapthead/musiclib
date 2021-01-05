@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -109,19 +108,6 @@ func (e ImageTypeEnum) MakeExt() string {
 	}
 }
 
-var pathReplacer = strings.NewReplacer(
-	"<", "_",
-	">", "_",
-	":", "_",
-	"\"", "_",
-	"/", "_",
-	"\\", "_",
-	"|", "_",
-	"?", "_",
-	"*", "_",
-	",", "_",
-)
-
 type Metadata struct {
 	OriginalFilename string         `db:"original_filename"`
 	AlbumID          uuid.UUID      `db:"album_id"`
@@ -161,3 +147,65 @@ type FuseCover struct {
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
+
+// type MetadataPaths Metadata
+//
+// func (e MetadataPaths) sortAlbumArtist() string {
+// 	return strings.TrimPrefix(e.AlbumArtist, "The ")
+// }
+//
+// func (e MetadataPaths) date(delemiter string) string {
+// 	if e.ReleaseYear.Valid &&
+// 		e.OriginalYear != e.ReleaseYear.Int64 {
+// 		return fmt.Sprintf(
+// 			"%d%s%d",
+// 			e.OriginalYear,
+// 			delemiter,
+// 			e.ReleaseYear.Int64,
+// 		)
+// 	} else {
+// 		return strconv.FormatInt(e.OriginalYear, 10)
+// 	}
+// }
+//
+// func (e MetadataPaths) PlaylistFusePath() string {
+// 	firstArtistChar := unicode.ToLower([]rune(e.sortAlbumArtist())[0])
+// 	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
+// 		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
+// 	} else {
+// 		firstArtistChar = '#'
+// 	}
+//
+// 	return joinParts(
+// 		"grouped",
+// 		string(firstArtistChar),
+// 		e.AlbumArtist,
+// 		fmt.Sprintf(
+// 			"%s-%s.m3u",
+// 			e.date("-"),
+// 			e.AlbumTitle,
+// 		),
+// 	)
+// }
+//
+// func joinParts(pathParts ...string) string {
+// 	fusePath := ""
+// 	for _, pathPart := range pathParts {
+// 		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
+// 	}
+// 	fusePath = strings.TrimPrefix(fusePath, "/")
+// 	return fusePath
+// }
+//
+// var pathReplacer = strings.NewReplacer(
+// 	"<", "_",
+// 	">", "_",
+// 	":", "_",
+// 	"\"", "_",
+// 	"/", "_",
+// 	"\\", "_",
+// 	"|", "_",
+// 	"?", "_",
+// 	"*", "_",
+// 	",", "_",
+// )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
+	"path"
 	"syscall"
 	"time"
 
@@ -28,12 +28,6 @@ const (
 	CONTENT_FILE            = "c"
 )
 
-type fusePath string
-
-func preparePath(rawPath string) string {
-	return strings.Trim(rawPath, "/")
-}
-
 type FuseStore struct {
 	client redis.Cmdable
 }
@@ -42,55 +36,82 @@ func NewFuseStore(client redis.Cmdable) *FuseStore {
 	return &FuseStore{client}
 }
 
+func (s *FuseStore) RemovePath(ctx context.Context, rawPath string) error {
+	s.removeDirs(ctx, NewFusePath(rawPath))
+
+	return nil
+}
+
+func (s *FuseStore) removeDirs(ctx context.Context, path IFusePath) {
+	p := path
+	for p != nil {
+		parent := p.Parent()
+		if parent == nil {
+			return
+		}
+
+		dirname := parent.Path()
+		s.client.SRem(ctx, "members:"+dirname, p.Base())
+		scardVal, err := s.client.SCard(ctx, "members:"+dirname).Result()
+		if err != nil {
+			panic(err)
+		}
+
+		if scardVal == 0 {
+			s.client.Del(ctx, "members:"+dirname)
+			s.client.Del(ctx, "type:"+dirname)
+		}
+
+		p = parent
+	}
+}
+
 func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input models.FlacData) error {
 	serializedData, err := input.Marshal()
 	if err != nil {
 		return fmtError("flac file marshaling error", err)
 	}
 
-	fusePath := preparePath(rawPath)
-	s.addDirs(ctx, FLAC_FILE, fusePath)
-
-	s.client.Set(ctx, "type:"+fusePath, string(FLAC_FILE), 0)
-	s.client.Set(ctx, "content:"+fusePath, serializedData, 0)
-
+	path := NewFusePath(rawPath)
+	s.addFileEntry(ctx, path, FLAC_FILE, serializedData)
 	return nil
 }
 
 func (s *FuseStore) AddContentPath(ctx context.Context, rawPath string, data []byte) error {
-	fusePath := preparePath(rawPath)
-	s.addDirs(ctx, CONTENT_FILE, fusePath)
-
-	s.client.Set(ctx, "type:"+fusePath, string(CONTENT_FILE), 0)
-	s.client.Set(ctx, "content:"+fusePath, string(data), 0)
+	path := NewFusePath(rawPath)
+	s.addFileEntry(ctx, path, FLAC_FILE, data)
 	return nil
 }
 
-func (s *FuseStore) addDirs(ctx context.Context, fileET entityType, path string) {
-	pathChunks := strings.Split(path, "/")
+func (s *FuseStore) addFileEntry(
+	ctx context.Context,
+	fusePath IFusePath,
+	et entityType,
+	content []byte,
+) {
+	parent := fusePath.Parent()
+	if parent != nil {
+		s.client.SAdd(ctx, "members:"+parent.Path(), fusePath.Base())
+	}
+	s.client.Set(ctx, "type:"+fusePath.Path(), string(et), 0).Val()
+	s.client.Set(ctx, "content:"+fusePath.Path(), content, 0).Val()
 
-	var parentPath string
-	for i, pathChunk := range pathChunks {
-		var et entityType
-		if i < len(pathChunks)-1 {
-			et = DIR
-		} else {
-			et = fileET
-		}
-		s.client.Set(ctx, "type:"+parentPath, string(DIR), 0)
-		s.client.SAdd(ctx, "members:"+parentPath, string(et)+":"+pathChunk)
-
-		if i == 0 {
-			parentPath = pathChunk
-		} else {
-			parentPath = parentPath + "/" + pathChunk
-		}
+	for p := fusePath.Parent(); p != nil; p = p.Parent() {
+		s.addDirEntry(ctx, p)
 	}
 }
 
-func (s *FuseStore) GetItem(ctx context.Context, rawPath string) (models.FSItem, error) {
-	fusePath := preparePath(rawPath)
-	itemType, err := s.getType(ctx, fusePath)
+// return is parent exists (recursion stop flag)
+func (s *FuseStore) addDirEntry(ctx context.Context, fusePath IFusePath) {
+	parent := fusePath.Parent()
+	if parent != nil {
+		s.client.SAdd(ctx, "members:"+parent.Path(), fusePath.Base())
+	}
+	s.client.SetNX(ctx, "type:"+fusePath.Path(), string(DIR), 0).Result()
+}
+
+func (s *FuseStore) GetItem(ctx context.Context, path string) (models.FSItem, error) {
+	itemType, err := s.getType(ctx, path)
 	if err != nil {
 		return nil, err
 	}
@@ -99,42 +120,54 @@ func (s *FuseStore) GetItem(ctx context.Context, rawPath string) (models.FSItem,
 	case DIR:
 		return dirFsItem{}, nil
 	case FLAC_FILE:
-		return s.GetFlacFile(ctx, rawPath)
+		return s.GetFlacFile(ctx, path)
 	case CONTENT_FILE:
-		return s.GetContentFile(ctx, rawPath)
+		return s.GetContentFile(ctx, path)
 	default:
 		return nil, NotFound
 	}
 }
 
-func (s *FuseStore) GetFile(ctx context.Context, rawPath string) (models.File, error) {
-	fusePath := preparePath(rawPath)
-	itemType, err := s.getType(ctx, fusePath)
+func (s *FuseStore) GetFile(ctx context.Context, path string) (models.File, error) {
+	itemType, err := s.getType(ctx, path)
 	if err != nil {
 		return nil, err
 	}
 
 	switch itemType {
 	case FLAC_FILE:
-		return s.GetFlacFile(ctx, rawPath)
+		return s.GetFlacFile(ctx, path)
 	case CONTENT_FILE:
-		return s.GetContentFile(ctx, rawPath)
+		return s.GetContentFile(ctx, path)
 	default:
 		return nil, NotFound
 	}
 }
 
-func (s *FuseStore) GetDir(ctx context.Context, rawPath string) ([]models.DirItem, error) {
-	fusePath := preparePath(rawPath)
+func (s *FuseStore) GetDir(ctx context.Context, fusePath string) ([]models.DirItem, error) {
 	members, err := s.client.SMembers(ctx, "members:"+fusePath).Result()
 	if err != nil {
 		return nil, fmtError("getting dir items error", err)
 	}
 
-	result := make([]models.DirItem, len(members))
+	typeKeys := make([]string, len(members))
 	for i, member := range members {
-		x := strings.SplitN(member, ":", 2)
-		fsType, name := entityType(x[0]), x[1]
+		typeKeys[i] = "type:" + path.Join(fusePath, member)
+	}
+
+	vals, err := s.client.MGet(ctx, typeKeys...).Result()
+	if err != nil {
+		return nil, fmtError("getting dir item types error", err)
+	}
+
+	result := make([]models.DirItem, len(members))
+	for i, val := range vals {
+		if val == redis.Nil {
+			return nil, fmt.Errorf("assertion error not found key: %s", typeKeys[i])
+		}
+		fsType := entityType(val.(string))
+
+		name := members[i]
 		var item dirItem
 		switch fsType {
 		case DIR:
@@ -153,9 +186,8 @@ func (s *FuseStore) GetDir(ctx context.Context, rawPath string) ([]models.DirIte
 	return result, nil
 }
 
-func (s *FuseStore) GetFlacFile(ctx context.Context, rawPath string) (models.File, error) {
-	fusePath := preparePath(rawPath)
-	serializedData, err := s.client.Get(ctx, "content:"+fusePath).Result()
+func (s *FuseStore) GetFlacFile(ctx context.Context, path string) (models.File, error) {
+	serializedData, err := s.client.Get(ctx, "content:"+path).Result()
 
 	if err != nil {
 		return nil, fmtError("getting flac data error", err)
@@ -169,30 +201,28 @@ func (s *FuseStore) GetFlacFile(ctx context.Context, rawPath string) (models.Fil
 	return models.NewFlacFile(fd)
 }
 
-func (s *FuseStore) GetContentFile(ctx context.Context, rawPath string) (models.File, error) {
-	fusePath := preparePath(rawPath)
-	content, err := s.client.Get(ctx, "content:"+fusePath).Result()
+func (s *FuseStore) GetContentFile(ctx context.Context, path string) (models.File, error) {
+	content, err := s.client.Get(ctx, "content:"+path).Result()
 
 	if err != nil {
 		return nil, fmtError(
-			fmt.Sprintf("getting cover file error (%s)", fusePath), err,
+			fmt.Sprintf("getting cover file error (%s)", path), err,
 		)
 	}
 
 	return models.NewContentFile([]byte(content)), nil
 }
 
-func (s *FuseStore) getType(ctx context.Context, rawPath string) (entityType, error) {
-	fusePath := preparePath(rawPath)
-	rawType, err := s.client.Get(ctx, "type:"+fusePath).Result()
+func (s *FuseStore) getType(ctx context.Context, path string) (entityType, error) {
+	strType, err := s.client.Get(ctx, "type:"+path).Result()
 	if err != nil {
-        if err == redis.Nil {
-            return DIR, NotFound
-        }
+		if err == redis.Nil {
+			return DIR, NotFound
+		}
 		return DIR, fmtError("getting file type error", err)
 	}
 
-	return entityType(rawType), nil
+	return entityType(strType), nil
 }
 
 // элемент списка файлов директории

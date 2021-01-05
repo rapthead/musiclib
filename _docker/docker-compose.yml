@@ -11,11 +11,11 @@ services:
     env_file:
       - ${PWD}/secrets/postgres/credentials.env
     ports:
-      - "5433:5432"
+      - "10432:5432"
 
   redis:
     restart: always
     image: redis:5
     container_name: musiclib-redis
     ports:
-      - "6380:6379"
+      - "10379:6379"

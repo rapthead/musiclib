@@ -33,7 +33,7 @@ func New() Deps {
 	redisClient := makeRedis()
 	thumbnailConn := redisClient.Conn(context.TODO())
 	if err := thumbnailConn.Select(context.TODO(), config.ThumbnailsDBIndex).Err(); err != nil {
-		log.Fatalf("can't select thumbnail redis db")
+		log.Fatalln("can't select thumbnail redis db", err)
 	}
 	return Deps{
 		config.Config.MusiclibRoot,

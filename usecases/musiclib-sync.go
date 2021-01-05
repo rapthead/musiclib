@@ -86,7 +86,7 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 			for i, meta := range allMetadata {
 				if i == 0 || allMetadata[i-1].AlbumID != meta.AlbumID {
 					nextPlaylist := PlaylistEntity{
-						fusePath:  FuseFlacEntity{meta}.groupingPlaylistFusePath(),
+						fusePath:  FuseFlacEntity{meta}.GroupingPlaylistFusePath(),
 						itemPaths: []string{},
 					}
 					currentPlaylist = &nextPlaylist
@@ -248,7 +248,7 @@ type FuseFlacEntity struct {
 	m models.Metadata
 }
 
-func (e FuseFlacEntity) groupingPlaylistFusePath() string {
+func (e FuseFlacEntity) GroupingPlaylistFusePath() string {
 	firstArtistChar := unicode.ToLower([]rune(e.sortAlbumArtist())[0])
 	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
 		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
