@@ -183,7 +183,7 @@ func (e FuseFlacEntity) MTime() time.Time {
 }
 
 func (e FuseFlacEntity) OriginPath() string {
-	return e.m.OriginalFilename
+	return e.m.OriginalFilename()
 }
 
 func (e FuseFlacEntity) VorbisComments() [][2]string {
@@ -210,7 +210,7 @@ func (e FuseFlacEntity) VorbisComments() [][2]string {
 		{"REPLAYGAIN_TRACK_GAIN", fmt.Sprintf("%.2f dB", e.m.ReplayGainTrackGain)},
 		{"REPLAYGAIN_TRACK_PEAK", fmt.Sprintf("%.8f", e.m.ReplayGainTrackPeak)},
 
-		{"ORIGINALFILENAME", e.m.OriginalFilename},
+		{"ORIGINALFILENAME", e.m.OriginalFilename()},
 
 		// CATALOGNUMBER=REBL021
 		// GENRE=Ska

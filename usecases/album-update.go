@@ -38,6 +38,14 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 	err = func() error {
 		album := params.Album
 
+		// remove old fuse data
+		// {
+		// 	meta, err := txQueries.GetAlbumMetadata(ctx, album.ID)
+		// 	if err != nil {
+		// 		return fmt.Errorf("Unable to update album: %w", err)
+		// 	}
+		// }
+
 		if album.State != models.AlbumStateEnumDraft && album.DraftArtist != "" {
 			artist, err := txQueries.InsertOrGetArtist(ctx, album.DraftArtist)
 			if err != nil {

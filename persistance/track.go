@@ -77,7 +77,20 @@ func (p *Queries) InsertTrack(ctx context.Context, track models.Track) error {
 	return nil
 }
 
+func (p *Queries) GetAlbumMetadata(ctx context.Context, albumId uuid.UUID) ([]models.Metadata, error) {
+	return p.getMetadata(ctx, uuid.NullUUID{
+		UUID:  albumId,
+		Valid: true,
+	})
+}
+
 func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error) {
+	return p.getMetadata(ctx, uuid.NullUUID{})
+}
+
+func (p *Queries) getMetadata(
+	ctx context.Context, albumId uuid.NullUUID,
+) ([]models.Metadata, error) {
 	metas := []models.Metadata{}
 	err := p.db.SelectContext(ctx, &metas, `
 	SELECT
@@ -129,13 +142,15 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
 	FROM track
 	JOIN album ON track.album_id = album.id
 	JOIN artist ON album.artist_id = artist.id
-	WHERE track.album_state = 'enabled'
-        -- AND album.id = 'b4d1f106-4b8d-4fbf-a162-81f4ca227194'
+	WHERE
+        ($1 IS NULL OR track.album_state = 'enabled')
+        AND
+        ($1 IS NOT NULL OR album.id = $1)
 	ORDER BY
 	    track.album_id ASC,
 	    track.disc ASC,
 	    track.track_num ASC
-    `)
+    `, albumId)
 	if err != nil {
 		return nil, fmt.Errorf("meta featching error: %w", err)
 	}
