@@ -144,8 +144,8 @@ func (p *Queries) getMetadata(
 	JOIN artist ON album.artist_id = artist.id
 	WHERE
         ($1::uuid IS NULL AND track.album_state = 'enabled')
-        AND
-        ($1::uuid IS NOT NULL OR album.id = $1)
+        OR
+        ($1::uuid IS NOT NULL AND album.id = $1)
 	ORDER BY
 	    track.album_id ASC,
 	    track.disc ASC,
