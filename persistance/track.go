@@ -101,7 +101,7 @@ func (p *Queries) getMetadata(
         album.year as original_year,
         album.release_year as release_year,
 		album.type as release_type,
-        album.path as album_path
+        album.path as album_path,
 
 		album.created_at as created_at,
 		album.updated_at as updated_at,
@@ -143,9 +143,9 @@ func (p *Queries) getMetadata(
 	JOIN album ON track.album_id = album.id
 	JOIN artist ON album.artist_id = artist.id
 	WHERE
-        ($1 IS NULL OR track.album_state = 'enabled')
+        ($1::uuid IS NULL AND track.album_state = 'enabled')
         AND
-        ($1 IS NOT NULL OR album.id = $1)
+        ($1::uuid IS NOT NULL OR album.id = $1)
 	ORDER BY
 	    track.album_id ASC,
 	    track.disc ASC,
