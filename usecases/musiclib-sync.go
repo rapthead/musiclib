@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/rapthead/musiclib/config"
@@ -15,6 +14,7 @@ import (
 	"github.com/rapthead/musiclib/persistance"
 	"github.com/rapthead/musiclib/pkg/fs/store"
 	"github.com/rapthead/musiclib/pkg/fs/sync"
+	"github.com/rapthead/musiclib/utils"
 )
 
 type SyncDeps interface {
@@ -137,39 +137,6 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 	return logChan
 }
 
-var pathReplacer = strings.NewReplacer(
-	"<", "_",
-	">", "_",
-	":", "_",
-	"\"", "_",
-	"/", "_",
-	"\\", "_",
-	"|", "_",
-	"?", "_",
-	"*", "_",
-	",", "_",
-)
-
-func albumPathParts(
-	sortAlbumArtist string,
-	albumArtist string,
-	dashDate string,
-	albumTitle string,
-	albumSuffix string,
-) []string {
-	pathParts := []string{
-		"albums",
-		fmt.Sprintf(
-			"%s–%s–%s%s",
-			albumArtist,
-			dashDate,
-			albumTitle,
-			albumSuffix,
-		),
-	}
-	return pathParts
-}
-
 // файл-плейлист
 type PlaylistEntity struct {
 	fusePath  string
@@ -190,49 +157,8 @@ type FuseCoverEntity struct {
 	thumbnailer coverstorage.ThumbnailStorage
 }
 
-func (e FuseCoverEntity) sortAlbumArtist() string {
-	meta := e.m
-	return strings.TrimPrefix(meta.AlbumArtist, "The ")
-}
-
-func (e FuseCoverEntity) albumSuffix() string {
-	meta := e.m
-	var albumSuffix string
-	if meta.EditionTitle != "" && meta.EditionTitle != "Original Release" {
-		albumSuffix = " ◆ " + meta.EditionTitle
-	}
-	return albumSuffix
-}
-
-func (e FuseCoverEntity) date(delemiter string) string {
-	meta := e.m
-	if meta.ReleaseYear.Valid &&
-		meta.OriginalYear != meta.ReleaseYear.Int64 {
-		return fmt.Sprintf(
-			"%d%s%d",
-			meta.OriginalYear,
-			delemiter,
-			meta.ReleaseYear.Int64,
-		)
-	} else {
-		return strconv.FormatInt(meta.OriginalYear, 10)
-	}
-}
-
 func (e FuseCoverEntity) FusePath() string {
-	meta := e.m
-	return joinParts(
-		append(
-			albumPathParts(
-				e.sortAlbumArtist(),
-				meta.AlbumArtist,
-				e.date("_"),
-				meta.AlbumTitle,
-				e.albumSuffix(),
-			),
-			"cover.jpeg",
-		)...,
-	)
+	return models.CoverFusePath(e.m)
 }
 
 func (e FuseCoverEntity) Content() ([]byte, error) {
@@ -248,52 +174,6 @@ type FuseFlacEntity struct {
 	m models.Metadata
 }
 
-func (e FuseFlacEntity) GroupingPlaylistFusePath() string {
-	firstArtistChar := unicode.ToLower([]rune(e.sortAlbumArtist())[0])
-	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
-		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
-	} else {
-		firstArtistChar = '#'
-	}
-
-	return joinParts(
-		"grouped",
-		string(firstArtistChar),
-		e.m.AlbumArtist,
-		fmt.Sprintf(
-			"%s-%s.m3u",
-			e.date("-"),
-			e.m.AlbumTitle,
-		),
-	)
-}
-
-func (e FuseFlacEntity) sortAlbumArtist() string {
-	return strings.TrimPrefix(e.m.AlbumArtist, "The ")
-}
-
-func (e FuseFlacEntity) albumSuffix() string {
-	var albumSuffix string
-	if e.m.EditionTitle != "" && e.m.EditionTitle != "Original Release" {
-		albumSuffix = " ◆ " + e.m.EditionTitle
-	}
-	return albumSuffix
-}
-
-func (e FuseFlacEntity) date(delemiter string) string {
-	if e.m.ReleaseYear.Valid &&
-		e.m.OriginalYear != e.m.ReleaseYear.Int64 {
-		return fmt.Sprintf(
-			"%d%s%d",
-			e.m.OriginalYear,
-			delemiter,
-			e.m.ReleaseYear.Int64,
-		)
-	} else {
-		return strconv.FormatInt(e.m.OriginalYear, 10)
-	}
-}
-
 func (e FuseFlacEntity) CTime() time.Time {
 	return e.m.CreatedAt
 }
@@ -306,46 +186,14 @@ func (e FuseFlacEntity) OriginPath() string {
 	return e.m.OriginalFilename
 }
 
-func (e FuseFlacEntity) FusePath() string {
-	pathParts := albumPathParts(
-		e.sortAlbumArtist(),
-		e.m.AlbumArtist,
-		e.date("_"),
-		e.m.AlbumTitle,
-		e.albumSuffix(),
-	)
-
-	pathSuffix := fmt.Sprintf(
-		"%02d-%s.flac",
-		e.m.TrackNumber,
-		e.m.TrackTitle,
-	)
-	if e.m.DiscTotal != 1 {
-		pathParts = append(pathParts, fmt.Sprintf(
-			"%d.%s",
-			e.m.DiscNumber,
-			pathSuffix,
-		))
-	} else {
-		pathParts = append(pathParts, pathSuffix)
-	}
-
-	return joinParts(pathParts...)
-}
-
 func (e FuseFlacEntity) VorbisComments() [][2]string {
-	var albumSuffix string
-	if e.m.EditionTitle != "" && e.m.EditionTitle != "Original Release" {
-		albumSuffix = " ◆ " + e.m.EditionTitle
-	}
-
 	vorbisComments := [][2]string{
-		{"SORTALBUMARTIST", e.sortAlbumArtist()},
+		{"SORTALBUMARTIST", e.m.SortAlbumArtist()},
 		{"ALBUMARTIST", e.m.AlbumArtist},
-		{"ARTIST", strCoalesce(e.m.TrackArtist, e.m.AlbumArtist)},
-		{"DATE", e.date("/")},
+		{"ARTIST", utils.StrCoalesce(e.m.TrackArtist, e.m.AlbumArtist)},
+		{"DATE", e.m.Date("/")},
 		{"ORIGINALDATE", strconv.FormatInt(e.m.OriginalYear, 10)},
-		{"ALBUM", e.m.AlbumTitle + albumSuffix},
+		{"ALBUM", e.m.AlbumTitle + e.m.AlbumSuffix()},
 		{"TITLE", e.m.TrackTitle},
 		{"RELEASETYPE", string(e.m.ReleaseType)},
 
@@ -377,20 +225,10 @@ func (e FuseFlacEntity) VorbisComments() [][2]string {
 	return vorbisComments
 }
 
-func strCoalesce(strs ...string) string {
-	for _, str := range strs {
-		if str != "" {
-			return str
-		}
-	}
-	return ""
+func (e FuseFlacEntity) GroupingPlaylistFusePath() string {
+	return models.PlaylistFusePath(e.m)
 }
 
-func joinParts(pathParts ...string) string {
-	fusePath := ""
-	for _, pathPart := range pathParts {
-		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
-	}
-	fusePath = strings.TrimPrefix(fusePath, "/")
-	return fusePath
+func (e FuseFlacEntity) FusePath() string {
+	return models.FlacFusePath(e.m)
 }

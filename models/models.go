@@ -2,6 +2,9 @@ package models
 
 import (
 	"fmt"
+	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -109,17 +112,19 @@ func (e ImageTypeEnum) MakeExt() string {
 }
 
 type Metadata struct {
-	OriginalFilename string         `db:"original_filename"`
-	AlbumID          uuid.UUID      `db:"album_id"`
-	AlbumArtist      string         `db:"album_artist"`
-	AlbumTitle       string         `db:"album_title"`
-	OriginalYear     int64          `db:"original_year"`
-	ReleaseYear      null.Int       `db:"release_year"`
-	TrackArtist      string         `db:"track_artist"`
-	TrackTitle       string         `db:"track_title"`
-	EditionTitle     string         `db:"edition_title"`
-	ReleaseType      AlbumTypeEnum  `db:"release_type"`
-	Labels           pq.StringArray `db:"labels"`
+	AlbumID     uuid.UUID `db:"album_id"`
+	AlbumArtist string    `db:"album_artist"`
+	AlbumTitle  string    `db:"album_title"`
+	AlbumPath   string    `db:"album_path"`
+
+	OriginalYear int64          `db:"original_year"`
+	ReleaseYear  null.Int       `db:"release_year"`
+	TrackArtist  string         `db:"track_artist"`
+	TrackTitle   string         `db:"track_title"`
+	TrackPath    string         `db:"track_path"`
+	EditionTitle string         `db:"edition_title"`
+	ReleaseType  AlbumTypeEnum  `db:"release_type"`
+	Labels       pq.StringArray `db:"labels"`
 
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
@@ -136,6 +141,22 @@ type Metadata struct {
 	ReplayGainTrackPeak float32 `db:"replaygain_track_peak"`
 }
 
+func (m Metadata) OriginalFilename() string {
+	return path.Join(m.AlbumPath, m.TrackPath)
+}
+
+func (m Metadata) SortAlbumArtist() string {
+	return sortTitle(m.AlbumArtist)
+}
+
+func (m Metadata) Date(delemiter string) string {
+	return albumDate(m.OriginalYear, m.ReleaseYear, delemiter)
+}
+
+func (m Metadata) AlbumSuffix() string {
+	return albumSuffix(m.EditionTitle)
+}
+
 type FuseCover struct {
 	CoverID      uuid.UUID `db:"id"`
 	AlbumArtist  string    `db:"album_artist"`
@@ -148,64 +169,41 @@ type FuseCover struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-// type MetadataPaths Metadata
-//
-// func (e MetadataPaths) sortAlbumArtist() string {
-// 	return strings.TrimPrefix(e.AlbumArtist, "The ")
-// }
-//
-// func (e MetadataPaths) date(delemiter string) string {
-// 	if e.ReleaseYear.Valid &&
-// 		e.OriginalYear != e.ReleaseYear.Int64 {
-// 		return fmt.Sprintf(
-// 			"%d%s%d",
-// 			e.OriginalYear,
-// 			delemiter,
-// 			e.ReleaseYear.Int64,
-// 		)
-// 	} else {
-// 		return strconv.FormatInt(e.OriginalYear, 10)
-// 	}
-// }
-//
-// func (e MetadataPaths) PlaylistFusePath() string {
-// 	firstArtistChar := unicode.ToLower([]rune(e.sortAlbumArtist())[0])
-// 	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
-// 		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin
-// 	} else {
-// 		firstArtistChar = '#'
-// 	}
-//
-// 	return joinParts(
-// 		"grouped",
-// 		string(firstArtistChar),
-// 		e.AlbumArtist,
-// 		fmt.Sprintf(
-// 			"%s-%s.m3u",
-// 			e.date("-"),
-// 			e.AlbumTitle,
-// 		),
-// 	)
-// }
-//
-// func joinParts(pathParts ...string) string {
-// 	fusePath := ""
-// 	for _, pathPart := range pathParts {
-// 		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
-// 	}
-// 	fusePath = strings.TrimPrefix(fusePath, "/")
-// 	return fusePath
-// }
-//
-// var pathReplacer = strings.NewReplacer(
-// 	"<", "_",
-// 	">", "_",
-// 	":", "_",
-// 	"\"", "_",
-// 	"/", "_",
-// 	"\\", "_",
-// 	"|", "_",
-// 	"?", "_",
-// 	"*", "_",
-// 	",", "_",
-// )
+func (m FuseCover) SortAlbumArtist() string {
+	return sortTitle(m.AlbumArtist)
+}
+
+func (m FuseCover) Date(delemiter string) string {
+	return albumDate(m.OriginalYear, m.ReleaseYear, delemiter)
+}
+
+func (m FuseCover) AlbumSuffix() string {
+	return albumSuffix(m.EditionTitle)
+}
+
+//// UTILS
+func albumSuffix(editionTitle string) string {
+	var albumSuffix string
+	if editionTitle != "" && editionTitle != "Original Release" {
+		albumSuffix = " ◆ " + editionTitle
+	}
+	return albumSuffix
+}
+
+func sortTitle(s string) string {
+	return strings.TrimPrefix(s, "The ")
+}
+
+func albumDate(originalYear int64, releaseYear null.Int, delemiter string) string {
+	if releaseYear.Valid &&
+		originalYear != releaseYear.Int64 {
+		return fmt.Sprintf(
+			"%d%s%d",
+			originalYear,
+			delemiter,
+			releaseYear.Int64,
+		)
+	} else {
+		return strconv.FormatInt(originalYear, 10)
+	}
+}

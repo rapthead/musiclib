@@ -81,7 +81,6 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
 	metas := []models.Metadata{}
 	err := p.db.SelectContext(ctx, &metas, `
 	SELECT
-		CONCAT(album.path, '/', track.path)::TEXT as original_filename,
 		artist.name as album_artist,
 		album.id as album_id,
 		album.title as album_title,
@@ -89,12 +88,14 @@ func (p *Queries) GetAllMetadata(ctx context.Context) ([]models.Metadata, error)
         album.year as original_year,
         album.release_year as release_year,
 		album.type as release_type,
+        album.path as album_path
 
 		album.created_at as created_at,
 		album.updated_at as updated_at,
 
 		track.track_artist as track_artist,
 		track.title as track_title,
+		track.path as track_path,
 
 		track.disc as disc_number,
 		(
