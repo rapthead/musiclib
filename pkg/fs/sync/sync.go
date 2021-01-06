@@ -159,3 +159,7 @@ func (f FuseSync) SyncContentChan(entities []ContentEntity) <-chan ProgressInfo 
 	}()
 	return progressChan
 }
+
+func (f FuseSync) RemovePath(path string) error {
+	return f.fuseStore.RemovePath(context.TODO(), path)
+}

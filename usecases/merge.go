@@ -9,8 +9,10 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/rapthead/musiclib/coverstorage"
 	"github.com/rapthead/musiclib/models"
 	"github.com/rapthead/musiclib/persistance"
 )
@@ -34,17 +36,25 @@ type MergeAlbums struct {
 	sqlxClient *sqlx.DB
 	queries    *persistance.Queries
 	root       string
+
+	redisClient      *redis.Client
+	thumbnailStorage coverstorage.ThumbnailStorage
 }
 
 func NewMergeAlbums(deps interface {
 	SQLXClient() *sqlx.DB
 	Queries() *persistance.Queries
 	MusiclibRoot() string
+
+	RedisClient() *redis.Client
+	ThumbnailStorage() coverstorage.ThumbnailStorage
 }) MergeAlbums {
 	return MergeAlbums{
 		deps.SQLXClient(),
 		deps.Queries(),
 		deps.MusiclibRoot(),
+		deps.RedisClient(),
+		deps.ThumbnailStorage(),
 	}
 }
 
@@ -185,9 +195,18 @@ func (u MergeAlbums) Exec(
 	}
 	txQueries := u.queries.WithTx(tx)
 
+	albumFuseSync, err := NewAlbumFuseSync(
+		ctx,
+		txQueries,
+		u.redisClient,
+		u.thumbnailStorage,
+	)
+
 	err = func() error {
 		ra := recipientAlbumInfo.Album
 		da := donorAlbumInfo.Album
+
+		albumFuseSync.RemoveOldFuseData(ra.ID)
 
 		ra.Path = da.Path
 		ra.RgPeak = da.RgPeak
@@ -216,6 +235,8 @@ func (u MergeAlbums) Exec(
 		if err != nil {
 			return fmt.Errorf("Unable to delete donor album: %w", err)
 		}
+
+		albumFuseSync.MakeNewFuseData(ra.ID)
 
 		return nil
 	}()
