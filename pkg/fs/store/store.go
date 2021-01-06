@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"path"
 	"syscall"
 	"time"
@@ -37,33 +38,50 @@ func NewFuseStore(client redis.Cmdable) *FuseStore {
 }
 
 func (s *FuseStore) RemovePath(ctx context.Context, rawPath string) error {
-	s.removeDirs(ctx, NewFusePath(rawPath))
+	s.removePath(ctx, NewFusePath(rawPath))
 
 	return nil
 }
 
-func (s *FuseStore) removeDirs(ctx context.Context, path IFusePath) {
-	p := path
-	for p != nil {
-		parent := p.Parent()
-		if parent == nil {
-			return
-		}
+func (s *FuseStore) removePath(ctx context.Context, path IFusePath) error {
+	log.Println("type:" + path.Path())
+	log.Println("content:" + path.Path())
 
-		dirname := parent.Path()
-		s.client.SRem(ctx, "members:"+dirname, p.Base())
-		scardVal, err := s.client.SCard(ctx, "members:"+dirname).Result()
-		if err != nil {
-			panic(err)
-		}
-
-		if scardVal == 0 {
-			s.client.Del(ctx, "members:"+dirname)
-			s.client.Del(ctx, "type:"+dirname)
-		}
-
-		p = parent
+	val, err := s.client.Del(ctx, "type:"+path.Path(), "content:"+path.Path()).Result()
+	if err != nil {
+		return fmt.Errorf("redis del error: %w", err)
 	}
+	log.Println(val)
+
+	parent := path.Parent()
+	if parent != nil {
+		if err := s.client.SRem(ctx, "members:"+parent.Path(), path.Base()).Err(); err != nil {
+			return fmt.Errorf("redis srem error: %w", err)
+		}
+		return s.removeDirIfEmpty(ctx, parent)
+	}
+	return nil
+}
+
+func (s *FuseStore) removeDirIfEmpty(ctx context.Context, path IFusePath) error {
+	card, err := s.client.SCard(ctx, "members:"+path.Path()).Result()
+	if err != nil {
+		return fmt.Errorf("redis scard error: %w", err)
+	}
+
+	if card == 0 {
+		log.Println("type:" + path.Path())
+		err := s.client.Del(ctx, "type:"+path.Path()).Err()
+		if err != nil {
+			return fmt.Errorf("redis del error: %w", err)
+		}
+	}
+
+	parent := path.Parent()
+	if parent != nil {
+		return s.removeDirIfEmpty(ctx, parent)
+	}
+	return nil
 }
 
 func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input models.FlacData) error {

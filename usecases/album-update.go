@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
@@ -45,11 +46,14 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 	}
 	txQueries := deps.Queries().WithTx(tx)
 
-	rdb := deps.RedisClient()
-	redisTXPipe := rdb.TxPipeline()
-	fuseStore := store.NewFuseStore(redisTXPipe)
+	rdbConn := deps.RedisClient().Conn(ctx)
+	if err := rdbConn.Select(context.TODO(), config.FSPrimaryDBIndex).Err(); err != nil {
+		log.Fatalln("can't select primary redis db", err)
+	}
 
-	fuseSync := sync.NewFuseSync(conf.MusiclibRoot, store.NewFuseStore(redisTXPipe))
+	fuseStore := store.NewFuseStore(rdbConn)
+
+	fuseSync := sync.NewFuseSync(conf.MusiclibRoot, store.NewFuseStore(rdbConn))
 
 	err = func() error {
 		album := params.Album
@@ -150,6 +154,7 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 			return fmt.Errorf("Unable to delete unused artists: %w", err)
 		}
 
+		log.Println(album.State)
 		// add new store data
 		if album.State == models.AlbumStateEnumEnabled {
 			{
@@ -203,14 +208,10 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 
 	if err != nil {
 		tx.Rollback()
-		redisTXPipe.Discard()
 		return err
 	} else {
 		if err = tx.Commit(); err != nil {
 			return fmt.Errorf("Unable to commit postgres transaction: %w", err)
-		}
-		if _, err = redisTXPipe.Exec(ctx); err != nil {
-			return fmt.Errorf("Unable to commit redis transaction: %w", err)
 		}
 		return nil
 	}
