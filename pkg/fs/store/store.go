@@ -44,14 +44,10 @@ func (s *FuseStore) RemovePath(ctx context.Context, rawPath string) error {
 }
 
 func (s *FuseStore) removePath(ctx context.Context, path IFusePath) error {
-	log.Println("type:" + path.Path())
-	log.Println("content:" + path.Path())
-
-	val, err := s.client.Del(ctx, "type:"+path.Path(), "content:"+path.Path()).Result()
+	_, err := s.client.Del(ctx, "type:"+path.Path(), "content:"+path.Path()).Result()
 	if err != nil {
 		return fmt.Errorf("redis del error: %w", err)
 	}
-	log.Println(val)
 
 	parent := path.Parent()
 	if parent != nil {
@@ -70,16 +66,19 @@ func (s *FuseStore) removeDirIfEmpty(ctx context.Context, path IFusePath) error 
 	}
 
 	if card == 0 {
-		log.Println("type:" + path.Path())
 		err := s.client.Del(ctx, "type:"+path.Path()).Err()
 		if err != nil {
 			return fmt.Errorf("redis del error: %w", err)
 		}
-	}
 
-	parent := path.Parent()
-	if parent != nil {
-		return s.removeDirIfEmpty(ctx, parent)
+		parent := path.Parent()
+		if parent != nil {
+			if err := s.client.SRem(ctx, "members:"+parent.Path(), path.Base()).Err(); err != nil {
+				return fmt.Errorf("redis srem error: %w", err)
+			}
+
+			return s.removeDirIfEmpty(ctx, parent)
+		}
 	}
 	return nil
 }
@@ -178,14 +177,20 @@ func (s *FuseStore) GetDir(ctx context.Context, fusePath string) ([]models.DirIt
 		return nil, fmtError("getting dir item types error", err)
 	}
 
-	result := make([]models.DirItem, len(members))
+	result := []models.DirItem{}
 	for i, val := range vals {
 		if val == redis.Nil {
 			return nil, fmt.Errorf("assertion error not found key: %s", typeKeys[i])
 		}
-		fsType := entityType(val.(string))
 
 		name := members[i]
+		if val == nil {
+			log.Printf("not found type for member: %s\n", name)
+			continue
+		}
+
+		fsType := entityType(val.(string))
+
 		var item dirItem
 		switch fsType {
 		case DIR:
@@ -199,7 +204,7 @@ func (s *FuseStore) GetDir(ctx context.Context, fusePath string) ([]models.DirIt
 				syscall.S_IFREG,
 			}
 		}
-		result[i] = item
+		result = append(result, item)
 	}
 	return result, nil
 }
