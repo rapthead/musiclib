@@ -79,7 +79,7 @@ func (s *FuseStore) AddFlacPath(ctx context.Context, rawPath string, input model
 
 func (s *FuseStore) AddContentPath(ctx context.Context, rawPath string, data []byte) error {
 	path := NewFusePath(rawPath)
-	s.addFileEntry(ctx, path, FLAC_FILE, data)
+	s.addFileEntry(ctx, path, CONTENT_FILE, data)
 	return nil
 }
 
