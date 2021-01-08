@@ -71,7 +71,7 @@ func CoverFusePath(meta FuseCover) string {
 func joinParts(pathParts ...string) string {
 	fusePath := ""
 	for _, pathPart := range pathParts {
-		fusePath = fusePath + "/" + pathReplacer.Replace(pathPart)
+		fusePath = fusePath + "/" + strings.TrimRight(pathReplacer.Replace(pathPart), ".")
 	}
 	fusePath = strings.TrimPrefix(fusePath, "/")
 	return fusePath
