@@ -43,7 +43,7 @@ type Album struct {
 	Type           AlbumTypeEnum      `db:"type"`
 	DownloadSource DownloadSourceEnum `db:"download_source"`
 	SourceURL      string             `db:"source_url"`
-	EnabledAt      time.Time          `db:"enabled_at"`
+	EnabledAt      null.Time          `db:"enabled_at"`
 	CreatedAt      time.Time          `db:"created_at"`
 	UpdatedAt      time.Time          `db:"updated_at"`
 }
