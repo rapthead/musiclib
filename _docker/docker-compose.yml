@@ -1,6 +1,6 @@
 version: '2'
 services:
-  postgres:
+  musiclib-postgres:
     restart: always
     image: postgres:12
     container_name: musiclib-postgres
@@ -13,7 +13,7 @@ services:
     ports:
       - "10432:5432"
 
-  redis:
+  musiclib-redis:
     restart: always
     image: redis:5
     container_name: musiclib-redis

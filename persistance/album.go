@@ -38,7 +38,7 @@ func (p *Queries) ListAlbums(ctx context.Context) ([]models.Album, error) {
                 WHEN state = 'enabled' THEN 2
                 ELSE 3
             END
-        ) ASC, created_at DESC, path ASC
+        ) ASC, enabled_at DESC, created_at DESC, path ASC
     `)
 	return albums, err
 }
