@@ -97,6 +97,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 		Path:           string(albumTagsInfo.RelPath),
 		Type:           models.AlbumTypeEnumLP,
 		DownloadSource: downloadSource,
+		DraftArtist:    "Various Artists",
 	}
 
 	tracksInfo := albumTagsInfo.TracksInfo
@@ -111,6 +112,7 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 	var disc int
 	prevDir := ""
 
+	allArtists := make(map[string]int)
 	for _, path := range op {
 		trackInfo := tracksInfo[path]
 		trackNormalPath, err := filepath.Rel(
@@ -140,7 +142,8 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 			case "album":
 				draftAlbum.Title = tagValue
 			case "artist":
-				draftAlbum.DraftArtist = tagValue
+				allArtists[tagValue]++
+				draftTrack.TrackArtist = tagValue
 			case "date":
 				dateParts := strings.Split(tagValue, "-")
 				if year, err := strconv.ParseInt(dateParts[0], 10, 64); err == nil {
@@ -164,6 +167,20 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 		}
 		draftTracks[path] = draftTrack
 	}
+
+	for artist, count := range allArtists {
+		if count >= len(op)/2 {
+			for path, dt := range draftTracks {
+				draftAlbum.DraftArtist = artist
+				if dt.TrackArtist == artist {
+					dt.TrackArtist = ""
+					draftTracks[path] = dt
+				}
+			}
+			break
+		}
+	}
+
 	return DraftData{draftAlbum, draftTracks}, nil
 }
 
