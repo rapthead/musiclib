@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-redis/redis/v8"
@@ -51,7 +52,8 @@ func (a AlbumFuseSync) RemoveOldFuseData(albumID uuid.UUID) error {
 	}
 
 	if len(metas) > 0 {
-		a.fuseSync.RemovePath(models.PlaylistFusePath(metas[0]))
+		a.fuseSync.RemovePath(models.GroupedPlaylistFusePath(metas[0]))
+		a.fuseSync.RemovePath(models.RecentPlaylistFusePath(metas[0]))
 		for _, meta := range metas {
 			a.fuseSync.RemovePath(models.FlacFusePath(meta))
 		}
@@ -75,6 +77,10 @@ func (a AlbumFuseSync) MakeNewFuseData(albumID uuid.UUID) error {
 			return fmt.Errorf("Unable to fetch album metas: %w", err)
 		}
 
+		if len(allMetadata) == 0 {
+			return errors.New("album has no tracks!")
+		}
+
 		{
 			flacEntities := make([]sync.FuseFlacEntity, len(allMetadata), len(allMetadata))
 			for i, meta := range allMetadata {
@@ -89,7 +95,16 @@ func (a AlbumFuseSync) MakeNewFuseData(albumID uuid.UUID) error {
 
 		{
 			err := a.fuseSync.SyncContent([]sync.ContentEntity{
-				fuse_entities.NewPlaylistEntity(allMetadata),
+				fuse_entities.NewGroupedPlaylistEntity(allMetadata),
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if allMetadata[0].IsRecent() {
+			err := a.fuseSync.SyncContent([]sync.ContentEntity{
+				fuse_entities.NewRecentPlaylistEntity(allMetadata),
 			})
 			if err != nil {
 				return err

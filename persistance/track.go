@@ -102,6 +102,7 @@ func (p *Queries) getMetadata(
         album.release_year as release_year,
 		album.type as release_type,
         album.path as album_path,
+        album.enabled_at as enabled_at,
 
 		album.created_at as created_at,
 		album.updated_at as updated_at,

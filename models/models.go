@@ -140,6 +140,13 @@ type Metadata struct {
 	ReplayGainAlbumPeak float32 `db:"replaygain_album_peak"`
 	ReplayGainTrackGain float32 `db:"replaygain_track_gain"`
 	ReplayGainTrackPeak float32 `db:"replaygain_track_peak"`
+
+	EnabledAt time.Time `db:"enabled_at"`
+}
+
+func (m Metadata) IsRecent() bool {
+	recentLimit := time.Now().AddDate(0, -1, 0)
+	return m.EnabledAt.After(recentLimit)
 }
 
 func (m Metadata) OriginalFilename() string {

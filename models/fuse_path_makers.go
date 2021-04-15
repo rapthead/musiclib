@@ -6,7 +6,21 @@ import (
 	"unicode"
 )
 
-func PlaylistFusePath(e Metadata) string {
+func RecentPlaylistFusePath(e Metadata) string {
+	return joinParts(
+		"recent",
+		fmt.Sprintf(
+			"%s–%s–%s–%s%s.m3u",
+			e.EnabledAt.Format("2006-01-02"),
+			e.AlbumArtist,
+			e.Date("_"),
+			e.AlbumTitle,
+			e.AlbumSuffix(),
+		),
+	)
+}
+
+func GroupedPlaylistFusePath(e Metadata) string {
 	firstArtistChar := unicode.ToLower([]rune(e.SortAlbumArtist())[0])
 	if (firstArtistChar >= '\u0430' && firstArtistChar <= '\u044F') || // is russian
 		(firstArtistChar >= '\u0061' && firstArtistChar <= '\u007A') { // is latin

@@ -82,14 +82,21 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 
 			contentEntities := []sync.ContentEntity{}
 			albumMetas := []models.Metadata{}
+
 			for i, meta := range allMetadata {
 				albumMetas = append(albumMetas, meta)
 
 				if i == len(allMetadata)-1 || allMetadata[i+1].AlbumID != meta.AlbumID {
 					contentEntities = append(
 						contentEntities,
-						fuse_entities.NewPlaylistEntity(albumMetas),
+						fuse_entities.NewGroupedPlaylistEntity(albumMetas),
 					)
+					if albumMetas[0].IsRecent() {
+						contentEntities = append(
+							contentEntities,
+							fuse_entities.NewRecentPlaylistEntity(albumMetas),
+						)
+					}
 					albumMetas = albumMetas[:0]
 				}
 			}
