@@ -145,7 +145,7 @@ type Metadata struct {
 }
 
 func (m Metadata) IsRecent() bool {
-	recentLimit := time.Now().AddDate(0, -1, 0)
+	recentLimit := time.Now().AddDate(0, -3, 0)
 	return m.EnabledAt.After(recentLimit)
 }
 
