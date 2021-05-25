@@ -10,7 +10,7 @@ func RecentPlaylistFusePath(e Metadata) string {
 	return joinParts(
 		"recent",
 		fmt.Sprintf(
-			"%s–%s–%s–%s%s.m3u",
+			"%s–%s–%s–%s%s.m3u8",
 			e.EnabledAt.Format("2006-01-02"),
 			e.AlbumArtist,
 			e.Date("_"),
@@ -33,7 +33,7 @@ func GroupedPlaylistFusePath(e Metadata) string {
 		string(firstArtistChar),
 		e.AlbumArtist,
 		fmt.Sprintf(
-			"%s-%s.m3u",
+			"%s-%s.m3u8",
 			e.Date("-"),
 			e.AlbumTitle,
 		),
