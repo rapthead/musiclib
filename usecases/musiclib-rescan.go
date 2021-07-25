@@ -86,10 +86,12 @@ func (r rescanCase) processAlbumTags(albumTagsInfo AlbumFilesInfo) (DraftData, e
 		downloadSource = models.DownloadSourceEnumWAFFLESFM
 	case "redacted.ch":
 		downloadSource = models.DownloadSourceEnumREDACTEDCH
-	case "bandcamp.com", "soundcloud.com":
-		downloadSource = models.DownloadSourceEnumWEB
 	default:
-		return DraftData{}, fmt.Errorf("Unknown source: %s", pathComponents[0])
+		downloadSource = models.DownloadSourceEnumWEB
+    // case "bandcamp.com", "soundcloud.com":
+    // 	  downloadSource = models.DownloadSourceEnumWEB
+    // default:
+    // 	  return DraftData{}, fmt.Errorf("Unknown source: %s", pathComponents[0])
 	}
 	draftAlbum := models.Album{
 		State:          models.AlbumStateEnumDraft,
