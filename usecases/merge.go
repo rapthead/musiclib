@@ -245,9 +245,11 @@ func (u MergeAlbums) Exec(
 		tx.Rollback()
 		return err
 	} else {
-		if err = os.RemoveAll(oldPath); err != nil {
-			return fmt.Errorf("Unable to delete old files path: %w", err)
-		}
+        if deleteOld {
+            if err = os.RemoveAll(oldPath); err != nil {
+                return fmt.Errorf("Unable to delete old files path: %w", err)
+            }
+        }
 
 		if err = tx.Commit(); err != nil {
 			return fmt.Errorf("Unable to commit transaction: %w", err)
