@@ -55,8 +55,7 @@ func MakeRoutes(d deps.Deps) http.Handler {
         // donorIDStr := chi.URLParam(r, "donorID")
 		// recepientIDStr := chi.URLParam(r, "recepientID")
 		// deleteOld := r.PostForm.Get("delete-old") != ""
-        r.ParseForm()
-        showError(w, fmt.Errorf("delete-old is %s", r.PostForm.Get("delete-old")), http.StatusBadRequest)
+        showError(w, fmt.Errorf("delete-old is %s", r.PostFormValue("delete-old")), http.StatusBadRequest)
 		// mergeHandler(donorIDStr, recepientIDStr, deleteOld, w, r)
 	})
 
