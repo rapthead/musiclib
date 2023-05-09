@@ -16,8 +16,8 @@ func NewRecentPlaylistEntity(mm []models.Metadata) RecentPlaylistEntity {
 	itemPaths := []string{}
 	for _, m := range mm {
 		itemPaths = append(
-			// itemPaths, "../"+NewFuseFlacEntity(m).FusePath(),
-			itemPaths, "/"+NewFuseFlacEntity(m).FusePath(),
+			itemPaths, "../"+NewFuseFlacEntity(m).FusePath(),
+			// itemPaths, "/"+NewFuseFlacEntity(m).FusePath(),
 		)
 	}
 

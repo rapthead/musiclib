@@ -16,8 +16,8 @@ func NewGroupedPlaylistEntity(mm []models.Metadata) GroupedPlaylistEntity {
 	itemPaths := []string{}
 	for _, m := range mm {
 		itemPaths = append(
-			// itemPaths, strings.Repeat("../", 3)+NewFuseFlacEntity(m).FusePath(),
-			itemPaths, "/"+NewFuseFlacEntity(m).FusePath(),
+			itemPaths, strings.Repeat("../", 3)+NewFuseFlacEntity(m).FusePath(),
+			// itemPaths, "/"+NewFuseFlacEntity(m).FusePath(),
 		)
 	}
 
