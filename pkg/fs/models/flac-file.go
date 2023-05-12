@@ -33,7 +33,7 @@ func NewFlacFile(fp FlacData) (*FlacFile, error) {
 		io.NewSectionReader(
 			fsFile,
 			0,
-			fp.ReplacementStart-1,
+			fp.ReplacementStart,
 		),
 		// io.NewSectionReader(
 		// 	fsFile,
