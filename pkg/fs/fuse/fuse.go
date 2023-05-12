@@ -48,11 +48,11 @@ func (f *fuseFile) Read(buf []byte, off int64) (fuse.ReadResult, fuse.Status) {
 		return nil, fuse.EIO
 	}
 
-    f.logger.
-        WithField("readed bytes", n).
-        WithField("offset", off).
-        WithField("len(buf)", len(buf)).
-        Debug("read")
+	f.logger.
+		WithField("readed bytes", n).
+		WithField("offset", off).
+		WithField("len(buf)", len(buf)).
+		Debug("read")
 
 	res := fuse.ReadResultData(buf)
 	return res, fuse.OK
@@ -78,9 +78,9 @@ func (s *MusiclibFS) GetAttr(name string, ctx *fuse.Context) (*fuse.Attr, fuse.S
 	fsItem, err := s.store.GetItem(context.TODO(), name)
 
 	logEntry.
-        WithField("fsItem", fsItem).
-        WithField("err", err).
-        Debug("GetAttr")
+		WithField("fsItem", fsItem).
+		WithField("err", err).
+		Debug("GetAttr")
 
 	if err != nil {
 		if err == store.NotFound {
@@ -91,7 +91,7 @@ func (s *MusiclibFS) GetAttr(name string, ctx *fuse.Context) (*fuse.Attr, fuse.S
 
 	attr := &fuse.Attr{
 		Mode: fsItem.Mode(),
-		Size: fsItem.Size(),
+		Size: uint64(fsItem.Size()),
 	}
 	attr.SetTimes(fsItem.ATime(), fsItem.MTime(), fsItem.CTime())
 

@@ -4,19 +4,18 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"sync"
 	"syscall"
 	"time"
+
+	"go4.org/readerutil"
 )
 
 type FlacFile struct {
-	lock   sync.Mutex
-	fsFile *os.File
+	cTime time.Time
+	mTime time.Time
 
-	size     uint64
-	cTime    time.Time
-	mTime    time.Time
-	sections []*io.SectionReader
+	closer       io.Closer
+	sizeReaderAt readerutil.SizeReaderAt
 }
 
 func NewFlacFile(fp FlacData) (*FlacFile, error) {
@@ -30,68 +29,53 @@ func NewFlacFile(fp FlacData) (*FlacFile, error) {
 		return nil, err
 	}
 
-	sections := []*io.SectionReader{
+	r := readerutil.NewMultiReaderAt(
 		io.NewSectionReader(
 			fsFile,
 			0,
 			fp.ReplacementStart,
 		),
-		io.NewSectionReader(
-			bytes.NewReader(fp.MetaBlock),
-			0,
-			int64(len(fp.MetaBlock)),
-		),
+		bytes.NewReader(fp.MetaBlock),
 		io.NewSectionReader(
 			fsFile,
 			fp.ReplacementEnd,
 			stat.Size()-fp.ReplacementEnd,
 		),
-	}
+	)
+	// sections := []*io.SectionReader{
+	// 	io.NewSectionReader(
+	// 		fsFile,
+	// 		0,
+	// 		fp.ReplacementStart,
+	// 	),
+	// 	io.NewSectionReader(
+	// 		bytes.NewReader(fp.MetaBlock),
+	// 		0,
+	// 		int64(len(fp.MetaBlock)),
+	// 	),
+	// 	io.NewSectionReader(
+	// 		fsFile,
+	// 		fp.ReplacementEnd,
+	// 		stat.Size()-fp.ReplacementEnd,
+	// 	),
+	// }
 
 	f := FlacFile{
-		sync.Mutex{},
-		fsFile,
-		fp.Size,
 		fp.CTime,
 		fp.MTime,
-		sections,
+
+		fsFile,
+		r,
 	}
 	return &f, nil
 }
 
 func (f *FlacFile) Close() error {
-	f.lock.Lock()
-	err := f.fsFile.Close()
-	f.lock.Unlock()
-	return err
+	return f.closer.Close()
 }
 
 func (f *FlacFile) ReadAt(buf []byte, off int64) (int, error) {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-
-	readers := make([]io.Reader, 0, len(f.sections))
-	var position int64
-	for _, section := range f.sections {
-		if section.Size()+position > off {
-            var seekTo int64
-			if off-position > 0 {
-                seekTo = off-position
-			} else {
-                seekTo = 0
-            }
-
-            _, err := section.Seek(seekTo, io.SeekStart)
-            if err != nil {
-                panic(err)
-            }
-			readers = append(readers, section)
-		}
-		position += section.Size()
-	}
-	r := io.MultiReader(readers...)
-
-	return io.ReadFull(r, buf)
+	return f.sizeReaderAt.ReadAt(buf, off)
 }
 
 func (f *FlacFile) ATime() *time.Time {
@@ -110,6 +94,6 @@ func (f *FlacFile) Mode() uint32 {
 	return syscall.S_IFREG | 0644
 }
 
-func (f *FlacFile) Size() uint64 {
-	return f.size
+func (f *FlacFile) Size() int64 {
+	return f.sizeReaderAt.Size()
 }

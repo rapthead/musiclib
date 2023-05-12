@@ -49,21 +49,21 @@ func (f FuseSync) processFlacEntity(entity FuseFlacEntity) error {
 	stat, err := os.Stat(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("File not found %s", absPath)
+			return fmt.Errorf("file not found %s", absPath)
 		}
-		return fmt.Errorf("Stat origin path error %s: %w", absPath, err)
+		return fmt.Errorf("stat origin path error %s: %w", absPath, err)
 	}
 
 	blockStart, blockEnd, err := utils.GetVorbisCommentPos(absPath)
 	if err != nil {
-		return fmt.Errorf("Vorbis parsing error %s: %w", absPath, err)
+		return fmt.Errorf("vorbis parsing error %s: %w", absPath, err)
 	}
 
 	metaBlock, err := utils.EncodeVorbisComment(
 		"musiclib", entity.VorbisComments(),
 	)
 	if err != nil {
-		return fmt.Errorf("Encode new vorbis error %s: %w", absPath, err)
+		return fmt.Errorf("encode new vorbis error %s: %w", absPath, err)
 	}
 
 	f.fuseStore.AddFlacPath(context.TODO(), entity.FusePath(), models.FlacData{
@@ -71,9 +71,9 @@ func (f FuseSync) processFlacEntity(entity FuseFlacEntity) error {
 		ReplacementStart: blockStart,
 		ReplacementEnd:   blockEnd,
 		MetaBlock:        metaBlock,
-		Size:             uint64(stat.Size() + int64(len(metaBlock)) - (blockEnd - blockStart)),
-		CTime:            entity.CTime(),
-		MTime:            entity.MTime(),
+		// Size:             uint64(stat.Size() + int64(len(metaBlock)) - (blockEnd - blockStart)),
+		CTime: entity.CTime(),
+		MTime: entity.MTime(),
 	})
 
 	return nil
@@ -82,7 +82,7 @@ func (f FuseSync) processFlacEntity(entity FuseFlacEntity) error {
 func (f FuseSync) processContent(entity ContentEntity) error {
 	content, err := entity.Content()
 	if err != nil {
-		return fmt.Errorf("Getting item content error %s: %w", entity.FusePath(), err)
+		return fmt.Errorf("getting item content error %s: %w", entity.FusePath(), err)
 	}
 	f.fuseStore.AddContentPath(context.TODO(), entity.FusePath(), content)
 	return nil

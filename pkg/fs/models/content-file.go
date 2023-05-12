@@ -2,18 +2,16 @@ package models
 
 import (
 	"bytes"
-	"io"
 	"syscall"
 	"time"
 )
 
 type ContentFile struct {
-	readerAt io.ReaderAt
-	size     uint64
+	reader *bytes.Reader
 }
 
 func NewContentFile(content []byte) *ContentFile {
-	return &ContentFile{bytes.NewReader(content), uint64(len(content))}
+	return &ContentFile{bytes.NewReader(content)}
 }
 
 func (f *ContentFile) Close() error {
@@ -21,7 +19,7 @@ func (f *ContentFile) Close() error {
 }
 
 func (f *ContentFile) ReadAt(buf []byte, off int64) (int, error) {
-	return f.readerAt.ReadAt(buf, off)
+	return f.reader.ReadAt(buf, off)
 }
 
 func (f *ContentFile) ATime() *time.Time {
@@ -40,6 +38,6 @@ func (f *ContentFile) Mode() uint32 {
 	return syscall.S_IFREG | 0644
 }
 
-func (f *ContentFile) Size() uint64 {
-	return f.size
+func (f *ContentFile) Size() int64 {
+	return f.reader.Size()
 }

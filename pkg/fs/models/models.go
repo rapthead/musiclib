@@ -11,7 +11,7 @@ type Visitor interface {
 }
 
 type FSItem interface {
-	Size() uint64
+	Size() int64
 	Mode() uint32
 	ATime() *time.Time
 	MTime() *time.Time

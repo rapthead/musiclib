@@ -3,8 +3,8 @@
 package models
 
 import (
-    "time"
 	"encoding/json"
+	"time"
 )
 
 type FlacData struct {
@@ -12,7 +12,7 @@ type FlacData struct {
 	ReplacementStart int64
 	ReplacementEnd   int64
 	MetaBlock        []byte
-	Size             uint64
+	// Size             uint64
 
 	CTime time.Time
 	MTime time.Time
@@ -22,7 +22,7 @@ type FlacData struct {
 // func (d *FlacData) Marshal() ([]byte, error) {
 //     return d.MarshalMsg(nil)
 // }
-// 
+//
 // func (d *FlacData) Unmarshal(b []byte) (error) {
 //     _, err := d.UnmarshalMsg(b)
 //     return err
@@ -31,10 +31,11 @@ type FlacData struct {
 
 // json {
 func (d *FlacData) Marshal() ([]byte, error) {
-    return json.Marshal(*d)
+	return json.Marshal(*d)
 }
 
-func (d *FlacData) Unmarshal(b []byte) (error) {
-    return json.Unmarshal(b, d)
+func (d *FlacData) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, d)
 }
+
 // json }

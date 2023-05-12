@@ -265,7 +265,7 @@ func (d dirItem) Mode() uint32 {
 // захардкоженые атрибуты директории
 type dirFsItem struct{}
 
-func (d dirFsItem) Size() uint64 {
+func (d dirFsItem) Size() int64 {
 	return 0
 }
 
