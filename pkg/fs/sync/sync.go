@@ -46,7 +46,7 @@ func NewFuseSync(
 
 func (f FuseSync) processFlacEntity(entity FuseFlacEntity) error {
 	absPath := path.Join(f.musiclibRoot, entity.OriginPath())
-	stat, err := os.Stat(absPath)
+	_, err := os.Stat(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return fmt.Errorf("file not found %s", absPath)
