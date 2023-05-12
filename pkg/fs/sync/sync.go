@@ -54,13 +54,14 @@ func (f FuseSync) processFlacEntity(entity FuseFlacEntity) error {
 		return fmt.Errorf("stat origin path error %s: %w", absPath, err)
 	}
 
-	blockStart, blockEnd, err := utils.GetVorbisCommentPos(absPath)
+	vorbisCommentPos, err := utils.GetVorbisCommentPos(absPath)
 	if err != nil {
 		return fmt.Errorf("vorbis parsing error %s: %w", absPath, err)
 	}
 
 	metaBlock, err := utils.EncodeVorbisComment(
 		"musiclib", entity.VorbisComments(),
+		vorbisCommentPos.IsLast,
 	)
 	if err != nil {
 		return fmt.Errorf("encode new vorbis error %s: %w", absPath, err)
@@ -68,8 +69,8 @@ func (f FuseSync) processFlacEntity(entity FuseFlacEntity) error {
 
 	f.fuseStore.AddFlacPath(context.TODO(), entity.FusePath(), models.FlacData{
 		OriginPath:       absPath,
-		ReplacementStart: blockStart,
-		ReplacementEnd:   blockEnd,
+		ReplacementStart: vorbisCommentPos.Start,
+		ReplacementEnd:   vorbisCommentPos.End,
 		MetaBlock:        metaBlock,
 		// Size:             uint64(stat.Size() + int64(len(metaBlock)) - (blockEnd - blockStart)),
 		CTime: entity.CTime(),

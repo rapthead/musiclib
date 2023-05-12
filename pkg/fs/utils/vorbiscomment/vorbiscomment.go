@@ -12,10 +12,10 @@ import (
 
 type MyVorbisComment meta.VorbisComment
 
-func (s *MyVorbisComment) Encode() ([]byte, error) {
+func (s *MyVorbisComment) Encode(isLast bool) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	bw := bitio.NewWriter(buf)
-	err := encodeVorbisComment(bw, (*meta.VorbisComment)(s), false)
+	err := encodeVorbisComment(bw, (*meta.VorbisComment)(s), isLast)
 	return buf.Bytes(), err
 }
 

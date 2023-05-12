@@ -24,7 +24,7 @@ func NewFlacFile(fp FlacData) (*FlacFile, error) {
 		return nil, err
 	}
 
-	_, err = fsFile.Stat()
+	stat, err := fsFile.Stat()
 	if err != nil {
 		return nil, err
 	}
@@ -35,35 +35,13 @@ func NewFlacFile(fp FlacData) (*FlacFile, error) {
 			0,
 			fp.ReplacementStart,
 		),
-		// io.NewSectionReader(
-		// 	fsFile,
-		// 	fp.ReplacementStart,
-		// 	fp.ReplacementEnd-fp.ReplacementStart,
-		// ),
 		bytes.NewReader(fp.MetaBlock),
-		// io.NewSectionReader(
-		// 	fsFile,
-		// 	fp.ReplacementEnd,
-		// 	stat.Size()-fp.ReplacementEnd,
-		// ),
+		io.NewSectionReader(
+			fsFile,
+			fp.ReplacementEnd,
+			stat.Size()-fp.ReplacementEnd,
+		),
 	)
-	// sections := []*io.SectionReader{
-	// 	io.NewSectionReader(
-	// 		fsFile,
-	// 		0,
-	// 		fp.ReplacementStart,
-	// 	),
-	// 	io.NewSectionReader(
-	// 		bytes.NewReader(fp.MetaBlock),
-	// 		0,
-	// 		int64(len(fp.MetaBlock)),
-	// 	),
-	// 	io.NewSectionReader(
-	// 		fsFile,
-	// 		fp.ReplacementEnd,
-	// 		stat.Size()-fp.ReplacementEnd,
-	// 	),
-	// }
 
 	f := FlacFile{
 		fp.CTime,
