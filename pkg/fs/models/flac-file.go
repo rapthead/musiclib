@@ -34,11 +34,11 @@ func NewFlacFile(fp FlacData) (*FlacFile, error) {
 			0,
 			fp.ReplacementStart,
 		),
-		io.NewSectionReader(
-			fsFile,
-			fp.ReplacementStart,
-			fp.ReplacementEnd-fp.ReplacementStart,
-		),
+		// io.NewSectionReader(
+		// 	fsFile,
+		// 	fp.ReplacementStart,
+		// 	fp.ReplacementEnd-fp.ReplacementStart,
+		// ),
 		// bytes.NewReader(fp.MetaBlock),
 		io.NewSectionReader(
 			fsFile,
