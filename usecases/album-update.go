@@ -45,6 +45,9 @@ func UpdateAlbum(deps UpdateAlbumDeps, ctx context.Context, params UpdateAlbumPa
 		deps.RedisClient(),
 		deps.ThumbnailStorage(),
 	)
+	if err != nil {
+		return fmt.Errorf("Can't create album fuse sync use case: %w", err)
+	}
 
 	err = func() error {
 		album := params.Album
