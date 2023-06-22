@@ -31,16 +31,11 @@ func NewAlbumFuseSync(
 	rdb *redis.Client,
 	thumbnailStorage coverstorage.ThumbnailStorage,
 ) (AlbumFuseSync, error) {
-	rdbConn := rdb.Conn(ctx)
-	if err := rdbConn.Select(ctx, config.FSPrimaryDBIndex).Err(); err != nil {
-		return AlbumFuseSync{}, fmt.Errorf("can't select primary redis db %w", err)
-	}
-
 	conf := config.Config
 	return AlbumFuseSync{
 		ctx,
 		queries,
-		sync.NewFuseSync(conf.MusiclibRoot, store.NewFuseStore(rdbConn)),
+		sync.NewFuseSync(conf.MusiclibRoot, store.NewFuseStore(rdb)),
 		thumbnailStorage,
 	}, nil
 }

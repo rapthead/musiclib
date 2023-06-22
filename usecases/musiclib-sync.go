@@ -131,6 +131,9 @@ func Sync(deps SyncDeps, ctx context.Context) <-chan LogEvent {
 		if _, err := redisPipe.Exec(ctx); err != nil {
 			logError(fmt.Errorf("redis pipeline exec error: %w", err))
 		}
+		if err := redisPipe.Close(); err != nil {
+			logError(fmt.Errorf("redis pipeline close error: %w", err))
+		}
 	}()
 	return logChan
 }
